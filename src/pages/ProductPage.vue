@@ -251,7 +251,7 @@
 
         <div v-else-if="activeTab === 'reviews'">
           <div class="reviews-list">
-            <div v-for="rev in defaultReviews" :key="rev.id" class="review-item">
+            <div v-for="rev in reviewsList" :key="rev.id" class="review-item">
               <div class="review-author">
                 <b>{{ rev.author }}</b>
                 <RatingStars :rating="rev.rating" />
@@ -293,8 +293,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { categories } from '@/data/categories.js'
-import { defaultReviews } from '@/data/reviews.js'
 import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
@@ -320,6 +318,8 @@ const toastStore = useToastStore()
 const loading = ref(true)
 const product = ref(null)
 const companionProducts = ref([])
+const categoriesList = ref([])
+const reviewsList = ref([])
 
 const activeThumb = ref(0)
 const activeTab = ref('desc')
@@ -343,16 +343,20 @@ const loadProductData = async () => {
   loading.value = true
   try {
     const slug = route.params.slug
-    const p = await api.getProductBySlug(slug)
+    const [p, all, cats, revs] = await Promise.all([
+      api.getProductBySlug(slug),
+      api.getProducts(),
+      api.getCategories(),
+      api.getReviews()
+    ])
     product.value = p
     selectedOption.value = p.options?.[0] ?? null
     activeTab.value = 'desc'
     activeThumb.value = 0
     quantity.value = 1
-
-    // Load companion products
-    const all = await api.getProducts()
     companionProducts.value = all.filter((prod) => prod.id !== p.id).slice(0, 5)
+    categoriesList.value = cats
+    reviewsList.value = revs
   } catch (e) {
     product.value = null
   } finally {
@@ -386,7 +390,7 @@ const userBikeYear = computed(() => {
 
 const breadcrumbItems = computed(() => {
   if (!product.value) return [{ label: 'الرئيسية', to: '/' }, { label: 'المنتج' }]
-  const cat = categories.find((c) => c.slug === product.value.category)
+  const cat = categoriesList.value.find((c) => c.slug === product.value.category)
   const catName = cat ? cat.name : 'المنتجات'
   const catSlug = cat ? cat.slug : 'oils'
   return [

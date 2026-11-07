@@ -51,13 +51,21 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { categories } from '@/data/categories.js'
+import { api } from '@/api/index.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 defineEmits(['open-drawer'])
 
 const route = useRoute()
+const categories = ref([])
+
+onMounted(async () => {
+  try {
+    categories.value = await api.getCategories()
+  } catch (e) {}
+})
 
 const isActiveCategory = (slug) => {
   return route.path === `/c/${slug}`

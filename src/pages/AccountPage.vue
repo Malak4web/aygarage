@@ -403,7 +403,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { products } from '@/data/products.js'
 import { useUserStore } from '@/stores/user.js'
 import { useFavoritesStore } from '@/stores/favorites.js'
 import { useToastStore } from '@/stores/toast.js'

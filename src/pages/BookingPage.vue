@@ -81,11 +81,11 @@
           </div>
         </div>
 
-        <!-- Step 2: Service Selection (Buttons with aria-pressed per Item 36) -->
+        <!-- Step 2: Service Selection (RadioCards per Item 22) -->
         <div class="box">
           <h3>2. الخدمة</h3>
           <div v-if="loadingServices" class="svs">
-            <div v-for="i in 4" :key="i" class="service-item" style="min-height: 80px; background: var(--sf); opacity: 0.6;"></div>
+            <div v-for="i in 4" :key="i" class="service-skeleton" style="min-height: 80px; border: 1px solid var(--ln); border-radius: var(--radius-box); background: var(--sf); opacity: 0.6;"></div>
           </div>
           <div v-else-if="serviceError" style="padding: 16px 0; text-align: center;">
             <p style="color: var(--sale); margin-bottom: 8px;">{{ serviceError }}</p>
@@ -535,43 +535,6 @@ const resetBooking = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-}
-
-.service-item {
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
-  padding: 16px;
-  background: #ffffff;
-  cursor: pointer;
-  text-align: start;
-  font-family: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 0.15s ease;
-}
-
-.service-item:hover {
-  border-color: #b5b5b5;
-}
-
-.service-item.on {
-  border-color: var(--ink);
-  background: var(--sf);
-}
-
-.service-item:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-
-.service-item b {
-  font-size: 15px;
-}
-
-.service-item small {
-  color: var(--mu);
-  font-size: 13px;
 }
 
 /* Date and Time */

@@ -3,6 +3,7 @@ import { bikes } from '../data/bikes.js'
 import { categories } from '../data/categories.js'
 import { services } from '../data/services.js'
 import { serviceHistory } from '../data/serviceHistory.js'
+import { defaultReviews } from '../data/reviews.js'
 import { defaultUser } from '../data/user.js'
 
 // Helper to simulate network latency if needed, default fast for crisp UI
@@ -62,6 +63,11 @@ export const api = {
   async getServiceHistory() {
     await delay()
     return [...serviceHistory]
+  },
+
+  async getReviews(productId) {
+    await delay()
+    return [...defaultReviews]
   },
 
   async getUser() {

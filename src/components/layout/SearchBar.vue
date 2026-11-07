@@ -25,14 +25,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { categories } from '@/data/categories.js'
+import { api } from '@/api/index.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
 const query = ref('')
 const selectedCategory = ref('')
+const categories = ref([])
+
+onMounted(async () => {
+  try {
+    categories.value = await api.getCategories()
+  } catch (e) {}
+})
 
 const handleSearch = () => {
   if (selectedCategory.value) {

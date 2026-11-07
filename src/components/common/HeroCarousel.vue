@@ -168,8 +168,10 @@ defineExpose({
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   background: rgba(22, 22, 22, 0.65);
   color: #ffffff;
@@ -207,8 +209,10 @@ defineExpose({
 @media (max-width: 768px) {
   .carousel-nav-btn {
     opacity: 0.85;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 </style>

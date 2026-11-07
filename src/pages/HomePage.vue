@@ -213,7 +213,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { categories } from '@/data/categories.js'
 import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
@@ -235,17 +234,20 @@ const loading = ref(true)
 const error = ref('')
 const allProducts = ref([])
 const allBikes = ref([])
+const categories = ref([])
 
 const loadHomeData = async () => {
   loading.value = true
   error.value = ''
   try {
-    const [prods, bks] = await Promise.all([
+    const [prods, bks, cats] = await Promise.all([
       api.getProducts(),
-      api.getBikes()
+      api.getBikes(),
+      api.getCategories()
     ])
     allProducts.value = prods
     allBikes.value = bks
+    categories.value = cats
   } catch (e) {
     error.value = 'تعذر تحميل بيانات الصفحة الرئيسية'
   } finally {

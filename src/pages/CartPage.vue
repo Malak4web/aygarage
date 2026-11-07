@@ -143,10 +143,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { products } from '@/data/products.js'
+import { api } from '@/api/index.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useUserStore } from '@/stores/user.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
@@ -161,6 +161,13 @@ import { doesFit } from '@/utils/fit.js'
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const couponInput = ref('')
+const allProducts = ref([])
+
+onMounted(async () => {
+  try {
+    allProducts.value = await api.getProducts()
+  } catch (e) {}
+})
 
 const breadcrumbItems = [
   { label: 'الرئيسية', to: '/' },
@@ -178,7 +185,10 @@ const applyCoupon = () => {
 }
 
 const companionProducts = computed(() => {
-  return [products[5], products[4], products[7], products[3], products[6]]
+  if (allProducts.value.length >= 8) {
+    return [allProducts.value[5], allProducts.value[4], allProducts.value[7], allProducts.value[3], allProducts.value[6]]
+  }
+  return allProducts.value.slice(0, 5)
 })
 </script>
 

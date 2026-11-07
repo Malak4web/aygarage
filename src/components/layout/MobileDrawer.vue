@@ -86,10 +86,10 @@
 </template>
 
 <script setup>
-import { ref, toRef } from 'vue'
+import { ref, toRef, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { categories } from '@/data/categories.js'
+import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useModalTrap } from '@/utils/modal.js'
@@ -107,6 +107,13 @@ const emit = defineEmits(['close'])
 const userStore = useUserStore()
 const cartStore = useCartStore()
 const drawerRef = ref(null)
+const categories = ref([])
+
+onMounted(async () => {
+  try {
+    categories.value = await api.getCategories()
+  } catch (e) {}
+})
 
 const isOpenRef = toRef(props, 'isOpen')
 useModalTrap(isOpenRef, drawerRef, () => emit('close'))

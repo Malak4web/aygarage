@@ -195,7 +195,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { categories } from '@/data/categories.js'
 import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { doesFit } from '@/utils/fit.js'
@@ -215,12 +214,18 @@ const userStore = useUserStore()
 const loading = ref(true)
 const error = ref('')
 const allProducts = ref([])
+const categoriesList = ref([])
 
 const fetchProducts = async () => {
   loading.value = true
   error.value = ''
   try {
-    allProducts.value = await api.getProducts()
+    const [prods, cats] = await Promise.all([
+      api.getProducts(),
+      api.getCategories()
+    ])
+    allProducts.value = prods
+    categoriesList.value = cats
   } catch (e) {
     error.value = 'تعذر الاتصال بقاعدة البيانات، يرجى المحاولة لاحقاً.'
   } finally {
@@ -245,7 +250,7 @@ watch(
 
 // Breadcrumbs
 const categoryName = computed(() => {
-  const cat = categories.find((c) => c.slug === route.params.category)
+  const cat = categoriesList.value.find((c) => c.slug === route.params.category)
   return cat ? cat.name : 'جميع المنتجات'
 })
 
