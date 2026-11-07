@@ -402,9 +402,14 @@ const handleConfirmOrder = async () => {
   font-size: 14.5px;
   background: #ffffff;
   color: var(--ink);
-  outline: none;
   display: flex;
   align-items: center;
+}
+
+.form-input:focus-visible,
+.sel-input-wrap:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .ltr-input {
@@ -424,9 +429,13 @@ const handleConfirmOrder = async () => {
   background: transparent;
   font-size: 14.5px;
   color: var(--ink);
-  outline: none;
   cursor: pointer;
   padding-inline-end: 20px;
+}
+
+.form-select:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .sel-arr {

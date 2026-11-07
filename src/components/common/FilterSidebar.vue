@@ -18,6 +18,7 @@
       <Transition name="slide-up">
         <div
           class="mobile-sheet"
+          ref="sheetRef"
           role="dialog"
           aria-modal="true"
           :aria-label="title"
@@ -54,7 +55,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, toRef, onMounted, onUnmounted } from 'vue'
+import { useModalTrap } from '@/utils/modal.js'
 
 const props = defineProps({
   isOpen: {
@@ -70,6 +72,7 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const isDesktop = ref(typeof window !== 'undefined' ? window.innerWidth > 900 : true)
+const sheetRef = ref(null)
 
 const handleResize = () => {
   if (typeof window !== 'undefined') {
@@ -77,33 +80,15 @@ const handleResize = () => {
   }
 }
 
-const handleKeydown = (e) => {
-  if (e.key === 'Escape' && props.isOpen) {
-    emit('close')
-  }
-}
+const isOpenRef = toRef(props, 'isOpen')
+useModalTrap(isOpenRef, sheetRef, () => emit('close'))
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
-  window.addEventListener('keydown', handleKeydown)
 })
-
-// Body scroll lock when sheet is open
-watch(
-  () => props.isOpen,
-  (open) => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-  }
-)
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  window.removeEventListener('keydown', handleKeydown)
-  document.body.style.overflow = ''
 })
 </script>
 

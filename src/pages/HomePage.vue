@@ -481,7 +481,6 @@ const featuredBikes = computed(() => {
   width: 100%;
   height: 100%;
   border: none;
-  outline: none;
   background: transparent;
   padding: 0 14px 0 32px;
   font-size: 14px;
@@ -489,6 +488,15 @@ const featuredBikes = computed(() => {
   color: var(--ink);
   appearance: none;
   cursor: pointer;
+}
+
+.finder-select:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.finder-field:focus-within {
+  border-color: var(--ink);
 }
 
 :dir(ltr) .finder-select {

@@ -78,7 +78,11 @@ const handleSearch = () => {
   color: var(--ink);
   padding-inline-end: 20px;
   cursor: pointer;
-  outline: none;
+}
+
+.cat-select:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .down-icon {
@@ -94,7 +98,11 @@ const handleSearch = () => {
   padding: 0 16px;
   font-size: 14px;
   color: var(--ink);
-  outline: none;
+}
+
+.search-input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
 .search-input::placeholder {

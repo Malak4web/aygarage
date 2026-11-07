@@ -604,7 +604,7 @@ const paginatedProducts = computed(() => {
   content: '';
   position: absolute;
   top: 1px;
-  left: 4px;
+  inset-inline-start: 4px;
   width: 4px;
   height: 8px;
   border: solid #ffffff;

@@ -353,7 +353,7 @@
 
     <!-- Add Bike Modal -->
     <div v-if="showAddBikeModal" class="modal-backdrop" @click="showAddBikeModal = false">
-      <div class="modal-card" @click.stop role="dialog" aria-modal="true" aria-label="إضافة موتوسيكل">
+      <div class="modal-card" ref="addBikeModalRef" @click.stop role="dialog" aria-modal="true" aria-label="إضافة موتوسيكل">
         <h3>إضافة موتوسيكل جديد لحسابك</h3>
         <form @submit.prevent="handleAddBike">
           <div class="form-group">
@@ -397,6 +397,7 @@ import { useUserStore } from '@/stores/user.js'
 import { useFavoritesStore } from '@/stores/favorites.js'
 import { useToastStore } from '@/stores/toast.js'
 import { api } from '@/api/index.js'
+import { useModalTrap } from '@/utils/modal.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
@@ -473,6 +474,11 @@ const defaultHistory = [
 ]
 
 const showAddBikeModal = ref(false)
+const addBikeModalRef = ref(null)
+
+useModalTrap(showAddBikeModal, addBikeModalRef, () => {
+  showAddBikeModal.value = false
+})
 const newBikeModel = ref(storeConfig.models[0])
 const newBikeYear = ref(2024)
 const newBikePlate = ref('')

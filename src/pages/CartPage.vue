@@ -41,6 +41,7 @@
                 :color="item.product.color"
                 :image="item.product.image"
                 :width="70"
+                :alt="item.product.name"
               />
             </div>
 
@@ -248,7 +249,7 @@ const companionProducts = computed(() => {
 
 .line-total {
   font-size: 16px;
-  text-align: left;
+  text-align: end;
   font-variant-numeric: tabular-nums;
 }
 
@@ -347,7 +348,11 @@ const companionProducts = computed(() => {
   padding: 0 12px;
   font-size: 14px;
   color: var(--ink);
-  outline: none;
+}
+
+.coupon-input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .coupon-btn {

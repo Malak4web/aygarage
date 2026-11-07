@@ -171,7 +171,11 @@ const isProductPage = computed(() => route?.name === 'product')
   padding: 0 12px;
   color: #ffffff;
   font-size: 13px;
-  outline: none;
+}
+
+.nl-input:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
 }
 
 .nl-input::placeholder {

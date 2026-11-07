@@ -172,7 +172,7 @@
 
     <!-- Sell Bike Modal Dialog (Item 29) -->
     <div v-if="showSellModal" class="modal-backdrop" @click="showSellModal = false">
-      <div class="modal-card" @click.stop role="dialog" aria-modal="true" aria-label="بيع موتوسيكلك">
+      <div class="modal-card" ref="sellModalRef" @click.stop role="dialog" aria-modal="true" aria-label="بيع موتوسيكلك">
         <h3>بيع موتوسيكلك مع جراج أبو يوسف</h3>
         <p>هنفحص موتوسيكلك فحص 120 نقطة ونساعدك تبيعه بأفضل سعر وأسرع وقت بعمولة عادلة وبدون وجع دماغ.</p>
         <div class="sell-contacts">
@@ -202,6 +202,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import FilterSidebar from '@/components/common/FilterSidebar.vue'
 import FilterChips from '@/components/common/FilterChips.vue'
 import SortSelect from '@/components/common/SortSelect.vue'
+import { useModalTrap } from '@/utils/modal.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const breadcrumbItems = [
@@ -239,6 +240,11 @@ const maxPrice = ref(400000)
 const sortBy = ref('newest')
 const mobileFilterOpen = ref(false)
 const showSellModal = ref(false)
+const sellModalRef = ref(null)
+
+useModalTrap(showSellModal, sellModalRef, () => {
+  showSellModal.value = false
+})
 
 const sortOptions = [
   { value: 'newest', label: 'ترتيب: الأحدث' },
@@ -530,7 +536,7 @@ const filteredBikes = computed(() => {
   content: '';
   position: absolute;
   top: 1px;
-  left: 4px;
+  inset-inline-start: 4px;
   width: 4px;
   height: 8px;
   border: solid #ffffff;

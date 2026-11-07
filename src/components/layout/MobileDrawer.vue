@@ -3,6 +3,7 @@
     <div class="drawer-backdrop" @click="$emit('close')"></div>
     <aside
       class="mobile-drawer"
+      ref="drawerRef"
       role="dialog"
       aria-modal="true"
       aria-label="القائمة الرئيسية"
@@ -85,12 +86,13 @@
 </template>
 
 <script setup>
-import { watch, onUnmounted } from 'vue'
+import { ref, toRef } from 'vue'
 import { RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { categories } from '@/data/categories.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
+import { useModalTrap } from '@/utils/modal.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const props = defineProps({
@@ -104,31 +106,10 @@ const emit = defineEmits(['close'])
 
 const userStore = useUserStore()
 const cartStore = useCartStore()
+const drawerRef = ref(null)
 
-const handleKeyDown = (e) => {
-  if (e.key === 'Escape') {
-    emit('close')
-  }
-}
-
-watch(
-  () => props.isOpen,
-  (open) => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-      window.addEventListener('keydown', handleKeyDown)
-    } else {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  },
-  { immediate: true }
-)
-
-onUnmounted(() => {
-  document.body.style.overflow = ''
-  window.removeEventListener('keydown', handleKeyDown)
-})
+const isOpenRef = toRef(props, 'isOpen')
+useModalTrap(isOpenRef, drawerRef, () => emit('close'))
 </script>
 
 <style scoped>

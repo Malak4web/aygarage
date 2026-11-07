@@ -49,6 +49,7 @@
               :color="idx === 1 ? '#7d1a14' : product.color"
               :image="product.image"
               :width="50"
+              :alt="product.name"
             />
           </button>
         </div>
@@ -58,6 +59,7 @@
             :color="activeThumb === 1 ? '#7d1a14' : product.color"
             :image="product.image"
             :width="360"
+            :alt="product.name"
           />
         </div>
       </div>
@@ -200,7 +202,7 @@
 
     <!-- Bike Picker Modal Dialog -->
     <div v-if="showBikePicker" class="modal-backdrop" @click="showBikePicker = false">
-      <div class="modal-card" @click.stop role="dialog" aria-modal="true" aria-label="تغيير الموتوسيكل">
+      <div class="modal-card" ref="bikePickerModalRef" @click.stop role="dialog" aria-modal="true" aria-label="تغيير الموتوسيكل">
         <h3>اختر موديل موتوسيكلك</h3>
         <p>هنحدث حالة التوافق لكل قطع الغيار بناءً على اختيارك</p>
         <div class="models-grid">
@@ -298,6 +300,7 @@ import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useToastStore } from '@/stores/toast.js'
 import { doesFit } from '@/utils/fit.js'
+import { useModalTrap } from '@/utils/modal.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import RatingStars from '@/components/common/RatingStars.vue'
@@ -323,6 +326,11 @@ const activeTab = ref('desc')
 const quantity = ref(1)
 const showBikePicker = ref(false)
 const selectedOption = ref(null)
+const bikePickerModalRef = ref(null)
+
+useModalTrap(showBikePicker, bikePickerModalRef, () => {
+  showBikePicker.value = false
+})
 
 const productTabs = computed(() => [
   { id: 'desc', label: 'الوصف' },

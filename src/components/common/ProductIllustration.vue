@@ -10,7 +10,8 @@
     v-else
     :width="width"
     viewBox="0 0 100 96"
-    aria-hidden="true"
+    :aria-label="alt || type"
+    role="img"
     class="prod-svg"
     v-html="svgContent"
   />
