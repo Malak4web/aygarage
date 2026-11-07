@@ -125,8 +125,12 @@ async function main() {
   if (orderRows === 0) throw new Error('Order does not appear in Account!');
 
   // 10. Check booking flow
-  console.log('--- Testing Booking Flow (Item 9 & 22) ---');
+  console.log('--- Testing Booking Flow (Item 9 & 22 & Round 3 Item 1) ---');
   await page.goto('http://localhost:5173/booking', { waitUntil: 'networkidle0' });
+  const summaryCost = await page.$eval('.sum .dl:nth-of-type(5) b', el => el.textContent.trim());
+  console.log('Booking summary cost on page:', summaryCost);
+  if (summaryCost === '—' || !summaryCost) throw new Error('Booking summary cost is empty/dash!');
+
   const confirmBookingBtn = await page.$('button.confirm-btn');
   if (!confirmBookingBtn) throw new Error('Confirm booking button not found');
   await confirmBookingBtn.click();
@@ -134,12 +138,15 @@ async function main() {
   const refText = await page.$eval('.ref-text', el => el.textContent.trim());
   console.log('Booking confirmed successfully:', refText);
 
-  // 11. Check booking appears in Account > حجوزاتي
+  // 11. Check booking appears in Account > حجوزاتي with cost
   await page.goto('http://localhost:5173/account?tab=bookings', { waitUntil: 'networkidle0' });
   await page.waitForSelector('tbody tr');
   const bookingRows = await page.$$eval('tbody tr', els => els.length);
   console.log('Bookings appearing in Account:', bookingRows);
   if (bookingRows === 0) throw new Error('Booking does not appear in Account!');
+  const firstBookingCost = await page.$eval('tbody tr td:last-child', el => el.textContent.trim());
+  console.log('Account booking cost column:', firstBookingCost);
+  if (firstBookingCost === '—' || !firstBookingCost) throw new Error('Account booking cost is empty/dash!');
 
   console.log('\n========================================');
   console.log(`TOTAL BROWSER CONSOLE ERRORS: ${consoleErrors.length}`);

@@ -203,4 +203,12 @@ defineExpose({
   outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
+
+@media (max-width: 768px) {
+  .carousel-nav-btn {
+    opacity: 0.85;
+    width: 32px;
+    height: 32px;
+  }
+}
 </style>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { storeConfig } from '../config/store.js'
+import { useToastStore } from './toast.js'
 
 export const useCartStore = defineStore('cart', {
   state: () => {
@@ -98,14 +99,30 @@ export const useCartStore = defineStore('cart', {
     addItem(product, qty = 1, selectedOption = null) {
       const lineId = `${product.id}_${selectedOption?.id || 'default'}`
       const existing = this.items.find((i) => i.lineId === lineId)
+      const stock = product.stock !== undefined ? product.stock : 99
+      const toastStore = useToastStore()
 
       if (existing) {
-        existing.qty += qty
+        if (existing.qty + qty > stock) {
+          existing.qty = stock
+          if (toastStore) {
+            toastStore.show(`الكمية المتاحة في المخزن ${stock} قطع فقط`, 'info')
+          }
+        } else {
+          existing.qty += qty
+        }
       } else {
+        let initialQty = qty
+        if (initialQty > stock) {
+          initialQty = stock
+          if (toastStore) {
+            toastStore.show(`الكمية المتاحة في المخزن ${stock} قطع فقط`, 'info')
+          }
+        }
         this.items.push({
           lineId,
           productId: product.id,
-          qty,
+          qty: initialQty,
           selectedOption,
           product: {
             id: product.id,
@@ -118,7 +135,7 @@ export const useCartStore = defineStore('cart', {
             oldPrice: product.oldPrice,
             image: product.image,
             fits: product.fits || [],
-            stock: product.stock !== undefined ? product.stock : 99
+            stock
           }
         })
       }

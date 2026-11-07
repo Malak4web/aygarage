@@ -196,7 +196,9 @@
                     <td>{{ bkg.service }}</td>
                     <td>{{ bkg.date }} · {{ bkg.time }}</td>
                     <td><span class="tg">{{ bkg.status }}</span></td>
-                    <td style="text-align: end">{{ bkg.cost }}</td>
+                    <td style="text-align: end">
+                      {{ bkg.cost || (typeof bkg.price === 'number' ? (bkg.price > 0 ? `${bkg.price.toLocaleString('en')} ج.م` : 'حسب الفحص') : '—') }}
+                    </td>
                   </tr>
                 </tbody>
               </table>

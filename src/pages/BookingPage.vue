@@ -174,7 +174,7 @@
         </div>
         <div class="dl">
           <span>التكلفة التقديرية</span>
-          <b>{{ selectedService?.estimatedCost || '—' }}</b>
+          <b>{{ selectedService?.priceFormatted || '—' }}</b>
         </div>
 
         <div v-if="bookingError" class="submit-error">
@@ -326,7 +326,8 @@ const handleConfirmBooking = async () => {
       service: selectedService.value.name,
       date: `${selectedDay.value.name} ${selectedDay.value.num} ${selectedDay.value.month}`,
       time: selectedTime.value,
-      cost: selectedService.value.estimatedCost,
+      price: selectedService.value.price,
+      cost: selectedService.value.priceFormatted,
       status: 'مؤكد'
     }
 

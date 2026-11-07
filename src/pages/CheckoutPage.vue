@@ -183,7 +183,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useUserStore } from '@/stores/user.js'
@@ -195,6 +195,7 @@ import RadioCard from '@/components/common/RadioCard.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
+const route = useRoute()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 
@@ -245,7 +246,7 @@ const handleConfirmOrder = async () => {
   if (!userStore.isAuthenticated) {
     return router.push({
       path: '/login',
-      query: { redirect: '/checkout' }
+      query: { redirect: route.fullPath }
     })
   }
 

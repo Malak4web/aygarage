@@ -4,7 +4,7 @@
       <AppIcon :name="icon" :size="48" :stroke-width="1.4" />
     </div>
     <h3 class="empty-title">{{ title }}</h3>
-    <p v-if="description" class="empty-desc">{{ description }}</p>
+    <p v-if="description || desc" class="empty-desc">{{ description || desc }}</p>
     <div v-if="$slots.action || actionLabel" class="empty-action">
       <slot name="action">
         <RouterLink v-if="actionTo" :to="actionTo" class="btn sm">
@@ -32,6 +32,10 @@ defineProps({
     required: true
   },
   description: {
+    type: String,
+    default: ''
+  },
+  desc: {
     type: String,
     default: ''
   },

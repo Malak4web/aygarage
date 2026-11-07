@@ -51,7 +51,12 @@ const icons = {
   cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   pin: '<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
-  star: '<path fill="currentColor" stroke="none" d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z"/>'
+  star: '<path fill="currentColor" stroke="none" d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z"/>',
+  right: '<path d="M9 18l6-6-6-6"/>',
+  left: '<path d="M15 18l-6-6 6-6"/>',
+  'chevron-right': '<path d="M9 18l6-6-6-6"/>',
+  'chevron-left': '<path d="M15 18l-6-6 6-6"/>',
+  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'
 }
 
 const pathD = computed(() => icons[props.name] || '')
