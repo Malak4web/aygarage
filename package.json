@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "node scripts/verify_section_a.mjs",
+    "test:a11y": "node scripts/verify_section_e.mjs"
   },
   "dependencies": {
     "pinia": "^2.2.8",
