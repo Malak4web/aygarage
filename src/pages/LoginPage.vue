@@ -54,10 +54,9 @@
       <form v-else @submit.prevent="handleRegister" class="auth-form">
         <FormField
           id="reg-name"
-          label="الاسم بالكامل"
+          label="الاسم بالكامل (اختياري)"
           v-model="name"
-          placeholder="مثال: أحمد محمد"
-          required
+          placeholder="مثال: أحمد محمود"
         />
 
         <FormField

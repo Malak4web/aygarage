@@ -1,6 +1,25 @@
 import { defineStore } from 'pinia'
 import { defaultUser } from '../data/user.js'
 
+const cleanPhone = (p) => String(p || '').replace(/\D+/g, '')
+
+export const isDemoPhone = (phone) => {
+  const entered = cleanPhone(phone)
+  const demo = cleanPhone(defaultUser.phone)
+  return Boolean(entered && entered === demo)
+}
+
+const createNewUser = (name = '', phone = '') => ({
+  id: 'u_' + Date.now(),
+  name: name ? name.trim() : '',
+  phone: phone || '',
+  email: '',
+  address: null,
+  savedBikes: [],
+  orders: [],
+  bookings: []
+})
+
 export const useUserStore = defineStore('user', {
   state: () => {
     let savedBike = 'ZT350-T'
@@ -73,17 +92,14 @@ export const useUserStore = defineStore('user', {
 
     login(phone, password) {
       this.isAuthenticated = true
-      const existingUser = this.user
-      if (!this.user) {
+      if (isDemoPhone(phone)) {
         this.user = structuredClone(defaultUser)
-      }
-      this.user.phone = phone
-      const cleanEntered = String(phone || '').replace(/\s+/g, '')
-      const cleanDefault = String(defaultUser.phone || '').replace(/\s+/g, '')
-      if (cleanEntered === cleanDefault) {
-        this.user.name = defaultUser.name
-      } else if (!existingUser?.name || existingUser.name === defaultUser.name) {
-        this.user.name = `عميل ${phone}`
+        this.user.phone = phone
+      } else {
+        const existingPhone = this.user?.phone ? cleanPhone(this.user.phone) : ''
+        if (!this.user || existingPhone !== cleanPhone(phone)) {
+          this.user = createNewUser('', phone)
+        }
       }
       try {
         localStorage.setItem('ayg_auth', 'true')
@@ -95,9 +111,16 @@ export const useUserStore = defineStore('user', {
 
     register(name, phone, bikeModel = '') {
       this.isAuthenticated = true
-      this.user = structuredClone(defaultUser)
-      this.user.name = name || (phone ? `عميل ${phone}` : 'عميل جديد')
-      this.user.phone = phone
+      if (isDemoPhone(phone)) {
+        this.user = structuredClone(defaultUser)
+        if (name && name.trim()) {
+          this.user.name = name.trim()
+        }
+        this.user.phone = phone
+      } else {
+        this.user = createNewUser(name, phone)
+      }
+
       if (bikeModel) {
         this.selectedBike = bikeModel
         if (!this.user.savedBikes) this.user.savedBikes = []
@@ -128,6 +151,7 @@ export const useUserStore = defineStore('user', {
       try {
         localStorage.setItem('ayg_auth', 'false')
         localStorage.removeItem('ayg_user')
+        sessionStorage.removeItem('ayg_pending_booking')
       } catch (e) {
         console.warn('Failed to save auth state:', e)
       }
@@ -135,7 +159,7 @@ export const useUserStore = defineStore('user', {
 
     addBike(bike) {
       if (!this.user) {
-        this.user = structuredClone(defaultUser)
+        this.user = createNewUser()
       }
       if (!this.user.savedBikes) this.user.savedBikes = []
       this.user.savedBikes.push(bike)
@@ -149,7 +173,7 @@ export const useUserStore = defineStore('user', {
 
     addOrder(order) {
       if (!this.user) {
-        this.user = structuredClone(defaultUser)
+        this.user = createNewUser()
       }
       if (!this.user.orders) this.user.orders = []
       this.user.orders.unshift(order)

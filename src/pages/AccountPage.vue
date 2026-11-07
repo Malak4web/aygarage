@@ -142,7 +142,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="r in (userStore.user?.serviceHistory || serviceHistoryList)" :key="r.date">
+                    <tr v-for="r in serviceHistoryList" :key="r.date">
                       <td>{{ r.date }}</td>
                       <td>{{ r.odo }}</td>
                       <td>{{ r.service }}</td>
@@ -224,7 +224,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in (userStore.user?.serviceHistory || serviceHistoryList)" :key="r.date">
+                  <tr v-for="r in serviceHistoryList" :key="r.date">
                     <td>{{ r.date }}</td>
                     <td>{{ r.odo }}</td>
                     <td>{{ r.service }}</td>
@@ -303,9 +303,18 @@
           <div class="sec-head">
             <h1>عناويني المسجلة</h1>
           </div>
-          <div class="box">
+          <div v-if="!userStore.user?.address?.street">
+            <EmptyState
+              icon="pin"
+              title="لم يتم تسجيل عناوين بعد"
+              description="يمكنك إضافة وتحديث عنوان التوصيل من خلال إعدادات الحساب."
+              action-label="الذهاب للإعدادات"
+              @action="activeTab = 'settings'"
+            />
+          </div>
+          <div v-else class="box">
             <b>عنوان المنزل الرئيسي</b>
-            <p>{{ userStore.user?.address?.street || 'لم يتم تسجيل العنوان' }}، {{ userStore.user?.address?.area || '' }}، {{ userStore.user?.address?.governorate || '' }}</p>
+            <p>{{ userStore.user.address.street }}، {{ userStore.user.address.area || '' }}، {{ userStore.user.address.governorate || '' }}</p>
           </div>
         </div>
 

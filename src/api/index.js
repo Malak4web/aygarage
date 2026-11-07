@@ -114,6 +114,23 @@ export const api = {
       const o = localStorage.getItem('ayg_orders')
       if (o) storedOrders = JSON.parse(o)
     } catch (e) {}
+
+    let currentUser = null
+    try {
+      const u = localStorage.getItem('ayg_user')
+      if (u) currentUser = JSON.parse(u)
+    } catch (e) {}
+
+    const cleanDefault = String(defaultUser.phone || '').replace(/\D+/g, '')
+    const isDemo = currentUser && String(currentUser.phone || '').replace(/\D+/g, '') === cleanDefault
+
+    if (currentUser && !isDemo) {
+      const cleanPhone = String(currentUser.phone || '').replace(/\D+/g, '')
+      return storedOrders.filter(
+        (ord) => ord.customer?.phone && String(ord.customer.phone).replace(/\D+/g, '') === cleanPhone
+      )
+    }
+
     if (storedOrders.length === 0 && defaultUser.orders?.length > 0) {
       return [...defaultUser.orders]
     }
@@ -127,6 +144,23 @@ export const api = {
       const b = localStorage.getItem('ayg_bookings')
       if (b) storedBookings = JSON.parse(b)
     } catch (e) {}
+
+    let currentUser = null
+    try {
+      const u = localStorage.getItem('ayg_user')
+      if (u) currentUser = JSON.parse(u)
+    } catch (e) {}
+
+    const cleanDefault = String(defaultUser.phone || '').replace(/\D+/g, '')
+    const isDemo = currentUser && String(currentUser.phone || '').replace(/\D+/g, '') === cleanDefault
+
+    if (currentUser && !isDemo) {
+      const cleanPhone = String(currentUser.phone || '').replace(/\D+/g, '')
+      return storedBookings.filter(
+        (b) => b.phone && String(b.phone).replace(/\D+/g, '') === cleanPhone
+      )
+    }
+
     if (storedBookings.length === 0 && defaultUser.bookings?.length > 0) {
       return [...defaultUser.bookings]
     }

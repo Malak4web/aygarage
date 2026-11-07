@@ -27,6 +27,7 @@
           <div class="box-head">
             <h3>بيانات التوصيل</h3>
             <button
+              v-if="userStore.user?.address"
               type="button"
               class="saved-addr-link"
               @click="populateSavedAddress"
@@ -208,7 +209,11 @@ onMounted(() => {
   }
 })
 
-const customerName = ref(userStore.user?.name || '')
+const customerName = ref(
+  (userStore.user?.name && !userStore.user.name.startsWith('عميل'))
+    ? userStore.user.name
+    : ''
+)
 const customerPhone = ref(userStore.user?.phone || '')
 const governorate = ref(userStore.user?.address?.governorate || 'القاهرة')
 const area = ref(userStore.user?.address?.area || 'مدينة نصر')
