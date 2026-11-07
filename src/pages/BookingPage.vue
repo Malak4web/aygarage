@@ -182,7 +182,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { services } from '@/data/services.js'
 import { useUserStore } from '@/stores/user.js'
@@ -190,6 +190,7 @@ import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 const breadcrumbItems = [
@@ -240,6 +241,13 @@ const selectedBikeTitle = computed(() => {
 })
 
 const handleConfirmBooking = async () => {
+  if (!userStore.isAuthenticated) {
+    return router.push({
+      path: '/login',
+      query: { redirect: '/booking' }
+    })
+  }
+
   const result = await api.createBooking({
     bike: selectedBikeTitle.value,
     service: selectedService.value.name,

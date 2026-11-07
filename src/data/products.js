@@ -21,9 +21,9 @@ export const products = [
     fits: ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK', 'ZT350-D', 'ZT703'],
     fitNote: 'محتاج 3 لتر لكل تغيير زيت',
     options: [
-      { id: '1l', label: '1 لتر', price: 1450 },
-      { id: '4l', label: '4 لتر · 5,400', price: 5400 },
-      { id: 'kit', label: 'طقم 3 لتر + فلتر · 4,450', price: 4450 }
+      { id: '1l', label: '1 لتر', price: 1450, oldPrice: 1650 },
+      { id: '4l', label: '4 لتر · 5,400', price: 5400, oldPrice: 6000 },
+      { id: 'kit', label: 'طقم 3 لتر + فلتر · 4,450', price: 4450, oldPrice: 4950 }
     ],
     description: 'زيت تخليقي 100% بتقنية Ester من موتول، معمول لمحركات الموتوسيكلات الرباعية اللي فيها كلاتش مبلول. بيحمي المحرك في درجات الحرارة العالية، وبيحافظ على نعومة نقل السرعات. أبو يوسف بيرشحه لموتوسيكلات ZT310 وZT350 مع تغيير كل 3,000 كم.',
     specs: {
@@ -180,7 +180,7 @@ export const products = [
     price: 2850,
     rating: 4.7,
     reviewCount: 19,
-    stock: 6,
+    stock: 0,
     isWeeklyOffer: true,
     fits: ['ZT350-T', 'ZT350-GK', 'ZT350-D'],
     description: 'بطارية جل محكمة الغلق لا تحتاج لأي صيانة، تمنح أمبير تشغيل عالي جداً حتى في أبرد أيام الشتاء.',

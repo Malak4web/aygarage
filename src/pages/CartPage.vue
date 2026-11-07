@@ -32,7 +32,7 @@
         <div class="lines-list">
           <div
             v-for="item in cartStore.items"
-            :key="item.productId"
+            :key="item.lineId"
             class="line"
           >
             <div class="im">
@@ -48,14 +48,22 @@
               <b>{{ item.product.name }}</b>
               <small>
                 {{ item.product.brand }} ·
-                <span class="line-fit">يركب على {{ userStore.selectedBike }}</span>
+                <span v-if="doesFit(item.product, userStore.selectedBike) === true" class="line-fit">
+                  يركب على {{ userStore.selectedBike }}
+                </span>
+                <span v-else-if="doesFit(item.product, userStore.selectedBike) === null" style="color: var(--mu)">
+                  مقاسات متعددة
+                </span>
+                <span v-else style="color: var(--mu)">
+                  مش متأكدين إنه يركب على موتوسيكلك
+                </span>
               </small>
             </div>
 
             <div class="line-qty">
               <QtyStepper
                 :model-value="item.qty"
-                @update:model-value="cartStore.updateQty(item.productId, $event)"
+                @update:model-value="cartStore.updateQty(item.lineId, $event)"
                 height="40px"
               />
             </div>
@@ -67,7 +75,7 @@
             <button
               type="button"
               class="line-remove"
-              @click="cartStore.removeItem(item.productId)"
+              @click="cartStore.removeItem(item.lineId)"
               aria-label="حذف المنتج من السلة"
             >
               <AppIcon name="x" :size="18" />
@@ -120,6 +128,12 @@
             تطبيق
           </button>
         </div>
+        <div v-if="cartStore.couponError" class="coupon-msg err">
+          {{ cartStore.couponError }}
+        </div>
+        <div v-else-if="cartStore.couponCode" class="coupon-msg ok">
+          تم تطبيق كود الخصم {{ cartStore.couponCode }} (10%)
+        </div>
 
         <div class="dl tot">
           <span>الإجمالي</span>
@@ -137,18 +151,7 @@
     </div>
 
     <!-- Companion Products Row: ممكن تحتاج كمان -->
-    <section class="in sec">
-      <div class="sh">
-        <h2>ممكن تحتاج كمان</h2>
-      </div>
-      <div class="grid">
-        <ProductCard
-          v-for="p in companionProducts"
-          :key="p.id"
-          :product="p"
-        />
-      </div>
-    </section>
+    <ProductRow title="ممكن تحتاج كمان" :products="companionProducts" />
   </div>
 </template>
 
@@ -162,8 +165,10 @@ import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import QtyStepper from '@/components/common/QtyStepper.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
+import ProductRow from '@/components/common/ProductRow.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
+import { doesFit } from '@/utils/fit.js'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
@@ -227,6 +232,7 @@ const companionProducts = computed(() => {
   align-items: center;
   padding: 18px 0;
   border-bottom: 1px solid var(--ln);
+  position: relative;
 }
 
 .line .im {
@@ -359,6 +365,20 @@ const companionProducts = computed(() => {
 
 .coupon-btn {
   height: 44px;
+}
+
+.coupon-msg {
+  font-size: 13px;
+  margin-top: -6px;
+  margin-bottom: 8px;
+}
+
+.coupon-msg.err {
+  color: var(--sale);
+}
+
+.coupon-msg.ok {
+  color: var(--ok);
 }
 
 .checkout-btn {

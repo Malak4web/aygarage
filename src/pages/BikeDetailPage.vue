@@ -1,5 +1,14 @@
 <template>
-  <div class="bike-detail-page" v-if="bike">
+  <div v-if="!bike" class="not-found-page in">
+    <EmptyState
+      icon="bike"
+      title="الموتوسيكل غير موجود"
+      description="لم نتمكن من العثور على هذا الموتوسيكل. ربما تم بيعه أو حذفه من القائمة."
+      action-label="تصفح الموتوسيكلات المعروضة"
+      action-to="/bikes"
+    />
+  </div>
+  <div class="bike-detail-page" v-else>
     <Breadcrumbs :items="breadcrumbItems" />
 
     <div class="bdp in">
@@ -34,10 +43,10 @@
         </div>
 
         <div class="bike-actions">
-          <RouterLink to="/booking" class="btn">
+          <RouterLink :to="`/booking?bike=${encodeURIComponent(bike.model)}`" class="btn">
             احجز معاينة في الجراج
           </RouterLink>
-          <a :href="`https://wa.me/${storeConfig.whatsapp}`" target="_blank" class="btn o">
+          <a :href="`https://wa.me/${storeConfig.whatsapp}`" target="_blank" rel="noopener" class="btn o">
             كلّمنا واتساب
           </a>
         </div>
@@ -134,18 +143,13 @@
     </div>
 
     <!-- Similar Bikes -->
-    <section class="in sec">
-      <div class="sh">
-        <h2>موتوسيكلات مشابهة</h2>
-      </div>
-      <div class="grid g3">
-        <BikeCard
-          v-for="b in similarBikes"
-          :key="b.id"
-          :bike="b"
-        />
-      </div>
-    </section>
+    <ProductRow title="موتوسيكلات مشابهة" columns="3">
+      <BikeCard
+        v-for="b in similarBikes"
+        :key="b.id"
+        :bike="b"
+      />
+    </ProductRow>
   </div>
 </template>
 
@@ -157,17 +161,20 @@ import { bikes } from '@/data/bikes.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import BikeCard from '@/components/common/BikeCard.vue'
+import ProductRow from '@/components/common/ProductRow.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const route = useRoute()
 
 const bike = computed(() => {
-  return bikes.find((b) => b.slug === route.params.slug) || bikes[0]
+  return bikes.find((b) => b.slug === route.params.slug) || null
 })
 
 const activeThumb = ref(0)
 const activeTab = ref('inspection')
 
 const formattedPrice = computed(() => {
+  if (!bike.value) return ''
   return typeof bike.value.price === 'number'
     ? bike.value.price.toLocaleString('en')
     : bike.value.price

@@ -7,6 +7,12 @@ import { defaultUser } from '../data/user.js'
 // Helper to simulate network latency if needed, default fast for crisp UI
 const delay = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms))
 
+let storedOrders = []
+try {
+  const o = localStorage.getItem('ayg_orders')
+  if (o) storedOrders = JSON.parse(o)
+} catch (e) {}
+
 export const api = {
   async getCategories() {
     await delay()
@@ -60,18 +66,40 @@ export const api = {
   async createOrder(orderData) {
     await delay(120)
     const orderId = String(Math.floor(1000 + Math.random() * 9000))
+    const totalNum = typeof orderData.totalNum === 'number' ? orderData.totalNum : 0
     const order = {
       id: orderId,
       date: 'اليوم',
       status: 'قيد التجهيز',
       statusClass: 'ok',
-      total: orderData.total,
+      totalNum,
+      subtotalNum: orderData.subtotalNum || 0,
+      discountNum: orderData.discountNum || 0,
+      deliveryFeeNum: orderData.deliveryFeeNum || 0,
+      total: `${totalNum.toLocaleString('en')} ج.م`,
       items: orderData.items,
       customer: orderData.customer,
       deliveryMethod: orderData.deliveryMethod,
       paymentMethod: orderData.paymentMethod
     }
+    storedOrders.unshift(order)
+    try {
+      localStorage.setItem('ayg_orders', JSON.stringify(storedOrders))
+    } catch (e) {}
     return order
+  },
+
+  async getOrder(id) {
+    await delay(50)
+    try {
+      const o = localStorage.getItem('ayg_orders')
+      if (o) storedOrders = JSON.parse(o)
+    } catch (e) {}
+    const found = storedOrders.find((ord) => String(ord.id) === String(id))
+    if (!found) {
+      throw new Error(`الطلب #${id} غير موجود`)
+    }
+    return { ...found }
   },
 
   async createBooking(bookingData) {

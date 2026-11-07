@@ -1,6 +1,6 @@
 <template>
   <div class="fit" :class="statusClass">
-    <AppIcon v-if="status === 'fits'" name="check" :size="13" :stroke-width="2.4" />
+    <AppIcon v-if="fitResult === true" name="check" :size="13" :stroke-width="2.4" />
     <span>{{ message }}</span>
   </div>
 </template>
@@ -8,36 +8,31 @@
 <script setup>
 import { computed } from 'vue'
 import { useUserStore } from '@/stores/user.js'
+import { doesFit } from '@/utils/fit.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const props = defineProps({
+  product: {
+    type: Object,
+    default: null
+  },
   fits: {
     type: Array,
     default: () => []
-  },
-  note: {
-    type: String,
-    default: ''
   }
 })
 
 const userStore = useUserStore()
 
-const status = computed(() => {
-  if (!props.fits || props.fits.length === 0) {
-    return 'universal'
-  }
-  const currentBike = userStore.selectedBike
-  if (props.fits.some((model) => currentBike.includes(model) || model.includes(currentBike))) {
-    return 'fits'
-  }
-  return 'unconfirmed'
+const fitResult = computed(() => {
+  const p = props.product || { fits: props.fits }
+  return doesFit(p, userStore.selectedBike)
 })
 
 const message = computed(() => {
-  if (status.value === 'fits') {
+  if (fitResult.value === true) {
     return `يركب على ${userStore.selectedBike}`
-  } else if (status.value === 'universal') {
+  } else if (fitResult.value === null) {
     return 'مقاسات متعددة'
   } else {
     return 'مش متأكدين إنه يركب على موتوسيكلك، اسألنا'
@@ -45,9 +40,9 @@ const message = computed(() => {
 })
 
 const statusClass = computed(() => ({
-  'fit-ok': status.value === 'fits',
-  'fit-mu': status.value === 'universal',
-  'fit-warn': status.value === 'unconfirmed'
+  'fit-ok': fitResult.value === true,
+  'fit-mu': fitResult.value === null,
+  'fit-warn': fitResult.value === false
 }))
 </script>
 

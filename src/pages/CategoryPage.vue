@@ -90,7 +90,7 @@
               class="model-select"
             >
               <option v-for="m in storeConfig.models" :key="m" :value="m">
-                {{ m }} · 2023
+                {{ m }} · {{ userBikeYear }}
               </option>
             </select>
             <AppIcon name="down" :size="14" class="sel-icon" />
@@ -98,7 +98,7 @@
         </div>
 
         <!-- Viscosity filter -->
-        <div class="g">
+        <div class="g" v-if="viscosities.length > 0">
           <h5>اللزوجة <AppIcon name="down" :size="14" /></h5>
           <label v-for="v in viscosities" :key="v.name" class="filter-label">
             <input
@@ -115,7 +115,7 @@
         </div>
 
         <!-- Brand filter -->
-        <div class="g">
+        <div class="g" v-if="brands.length > 0">
           <h5>الماركة <AppIcon name="down" :size="14" /></h5>
           <label v-for="b in brands" :key="b.name" class="filter-label">
             <input
@@ -132,7 +132,7 @@
         </div>
 
         <!-- Oil Type filter -->
-        <div class="g">
+        <div class="g" v-if="oilTypes.length > 0">
           <h5>النوع <AppIcon name="down" :size="14" /></h5>
           <label v-for="t in oilTypes" :key="t.name" class="filter-label">
             <input
@@ -224,12 +224,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { categories } from '@/data/categories.js'
 import { products } from '@/data/products.js'
 import { useUserStore } from '@/stores/user.js'
+import { doesFit } from '@/utils/fit.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
 import Pagination from '@/components/common/Pagination.vue'
@@ -239,52 +240,77 @@ import AppIcon from '@/components/common/AppIcon.vue'
 const route = useRoute()
 const userStore = useUserStore()
 
-// Breadcrumbs
-const breadcrumbItems = computed(() => [
-  { label: 'الرئيسية', to: '/' },
-  { label: 'زيوت', to: '/c/oils' },
-  { label: 'زيوت المحرك' }
-])
-
-const categoryName = computed(() => {
-  const cat = categories.find((c) => c.slug === route.params.category)
-  return cat ? cat.name : 'زيوت المحرك'
+onMounted(() => {
+  if (route.query.model) {
+    userStore.setSelectedBike(route.query.model)
+  }
 })
 
-// Filter states
+// Breadcrumbs
+const categoryName = computed(() => {
+  const cat = categories.find((c) => c.slug === route.params.category)
+  return cat ? cat.name : 'جميع المنتجات'
+})
+
+const breadcrumbItems = computed(() => [
+  { label: 'الرئيسية', to: '/' },
+  { label: categoryName.value }
+])
+
+const userBikeYear = computed(() => userStore.user?.savedBikes?.[0]?.year || 2023)
+
+// Filter states - empty defaults per Item 8
 const filterOnlyFitting = ref(true)
-const selectedViscosity = ref('10W-40')
-const selectedBrand = ref('Motul')
+const selectedViscosity = ref('')
+const selectedBrand = ref('')
 const selectedOilType = ref('')
 const minPrice = ref(500)
 const maxPrice = ref(2500)
-const inStockOnly = ref(true)
+const inStockOnly = ref(false)
 const onSaleOnly = ref(false)
 const sortBy = ref('bestseller')
 const currentPage = ref(1)
 const itemsPerPage = 12
 const mobileFilterOpen = ref(false)
 
-const viscosities = [
-  { name: '10W-40', count: 18 },
-  { name: '15W-50', count: 9 },
-  { name: '10W-50', count: 7 },
-  { name: '20W-50', count: 14 }
-]
+// Products strictly in this category
+const categoryProducts = computed(() => {
+  if (route.params.category && route.params.category !== 'all') {
+    return products.filter((p) => p.category === route.params.category)
+  }
+  return [...products]
+})
 
-const brands = [
-  { name: 'Motul', count: 16 },
-  { name: 'Castrol', count: 11 },
-  { name: 'Liqui Moly', count: 8 },
-  { name: 'Shell', count: 13 },
-  { name: 'Repsol', count: 6 }
-]
+// Dynamically derived filter options
+const viscosities = computed(() => {
+  const map = {}
+  categoryProducts.value.forEach((p) => {
+    if (p.viscosity) {
+      map[p.viscosity] = (map[p.viscosity] || 0) + 1
+    }
+  })
+  return Object.entries(map).map(([name, count]) => ({ name, count }))
+})
 
-const oilTypes = [
-  { name: 'تخليقي 100%', count: 12 },
-  { name: 'نص تخليقي', count: 21 },
-  { name: 'معدني', count: 15 }
-]
+const brands = computed(() => {
+  const map = {}
+  categoryProducts.value.forEach((p) => {
+    if (p.brand) {
+      map[p.brand] = (map[p.brand] || 0) + 1
+    }
+  })
+  return Object.entries(map).map(([name, count]) => ({ name, count }))
+})
+
+const oilTypes = computed(() => {
+  const map = {}
+  categoryProducts.value.forEach((p) => {
+    if (p.oilType) {
+      map[p.oilType] = (map[p.oilType] || 0) + 1
+    }
+  })
+  return Object.entries(map).map(([name, count]) => ({ name, count }))
+})
 
 const hasActiveFilters = computed(() => {
   return (
@@ -292,6 +318,7 @@ const hasActiveFilters = computed(() => {
     Boolean(selectedViscosity.value) ||
     Boolean(selectedBrand.value) ||
     Boolean(selectedOilType.value) ||
+    inStockOnly.value ||
     onSaleOnly.value
   )
 })
@@ -302,6 +329,7 @@ const activeFiltersCount = computed(() => {
   if (selectedViscosity.value) count++
   if (selectedBrand.value) count++
   if (selectedOilType.value) count++
+  if (inStockOnly.value) count++
   if (onSaleOnly.value) count++
   return count
 })
@@ -315,14 +343,26 @@ const resetFilters = () => {
   onSaleOnly.value = false
 }
 
+// Reset filters on category route change
+watch(
+  () => route.params.category,
+  () => {
+    resetFilters()
+    currentPage.value = 1
+  }
+)
+
+// Reset page on filter changes
+watch(
+  [filterOnlyFitting, selectedViscosity, selectedBrand, selectedOilType, inStockOnly, onSaleOnly, sortBy],
+  () => {
+    currentPage.value = 1
+  }
+)
+
 // Filtered and sorted products
 const filteredProducts = computed(() => {
-  let list = [...products]
-
-  // Filter category if not oils/all
-  if (route.params.category && route.params.category !== 'oils') {
-    list = list.filter((p) => p.category === route.params.category)
-  }
+  let list = [...categoryProducts.value]
 
   // Filter query
   if (route.query.q) {
@@ -335,10 +375,10 @@ const filteredProducts = computed(() => {
     )
   }
 
-  // Filter model compatibility
+  // Filter model compatibility with doesFit
   if (filterOnlyFitting.value) {
     const currentBike = userStore.selectedBike
-    list = list.filter((p) => !p.fits || p.fits.length === 0 || p.fits.includes(currentBike))
+    list = list.filter((p) => doesFit(p, currentBike) !== false)
   }
 
   // Filter viscosity
@@ -378,7 +418,7 @@ const filteredProducts = computed(() => {
   return list
 })
 
-const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage))
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage) || 1)
 
 const paginatedProducts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage

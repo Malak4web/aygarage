@@ -224,7 +224,7 @@
               action-to="/c/oils"
             />
           </div>
-          <div v-else class="grid g3">
+          <div v-else class="fav-grid">
             <ProductCard
               v-for="p in favProducts"
               :key="p.id"
@@ -633,9 +633,18 @@ td {
   margin-top: 20px;
 }
 
+.fav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
 @media (max-width: 900px) {
   .acc {
     grid-template-columns: 1fr;
+  }
+  .fav-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   .veh {
     grid-template-columns: 1fr;
@@ -644,6 +653,12 @@ td {
   .kv {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .fav-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -12,6 +12,11 @@ const routes = [
     component: () => import('@/pages/CategoryPage.vue')
   },
   {
+    path: '/search',
+    name: 'search',
+    component: () => import('@/pages/SearchPage.vue')
+  },
+  {
     path: '/p/:slug',
     name: 'product',
     component: () => import('@/pages/ProductPage.vue')
@@ -49,7 +54,8 @@ const routes = [
   {
     path: '/account',
     name: 'account',
-    component: () => import('@/pages/AccountPage.vue')
+    component: () => import('@/pages/AccountPage.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
@@ -72,4 +78,14 @@ export const router = createRouter({
       return { top: 0 }
     }
   }
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAuth) {
+    const isAuthed = localStorage.getItem('ayg_auth') === 'true'
+    if (!isAuthed) {
+      return next({ path: '/login', query: { redirect: to.fullPath } })
+    }
+  }
+  next()
 })

@@ -4,17 +4,17 @@
       type="button"
       class="qty-btn"
       @click="decrement"
-      :disabled="modelValue <= min"
+      :disabled="modelValue <= min || max === 0"
       aria-label="تقليل الكمية"
     >
       −
     </button>
-    <span class="qty-val">{{ modelValue }}</span>
+    <span class="qty-val">{{ max === 0 ? 0 : modelValue }}</span>
     <button
       type="button"
       class="qty-btn"
       @click="increment"
-      :disabled="max !== undefined && modelValue >= max"
+      :disabled="max === 0 || (max !== undefined && modelValue >= max)"
       aria-label="زيادة الكمية"
     >
       +

@@ -11,6 +11,46 @@
         شكراً لثقتك في جراج أبو يوسف. هيوصلك رسالة تأكيد بتفاصيل الشحن وميعاد التوصيل على الواتساب.
       </p>
 
+      <!-- Order Details if loaded -->
+      <div v-if="order" class="order-details-box">
+        <h3>تفاصيل الطلب</h3>
+        <div class="order-items-list">
+          <div v-for="item in order.items" :key="item.lineId || item.productId" class="order-item-row">
+            <div class="order-item-info">
+              <b>{{ item.product.name }}</b>
+              <small>{{ item.qty }} × {{ (item.selectedOption?.price || item.product.price).toLocaleString('en') }} ج.م</small>
+            </div>
+            <span class="order-item-total">
+              {{ ((item.selectedOption?.price || item.product.price) * item.qty).toLocaleString('en') }} ج.م
+            </span>
+          </div>
+        </div>
+
+        <div class="order-summary-breakdown">
+          <div class="row">
+            <span>المنتجات</span>
+            <b>{{ order.subtotalNum?.toLocaleString('en') || 0 }} ج.م</b>
+          </div>
+          <div v-if="order.discountNum" class="row">
+            <span>الخصم</span>
+            <b class="disc">− {{ order.discountNum.toLocaleString('en') }} ج.م</b>
+          </div>
+          <div class="row">
+            <span>التوصيل</span>
+            <b>{{ order.deliveryFeeNum === 0 ? 'مجاناً' : `${order.deliveryFeeNum} ج.م` }}</b>
+          </div>
+          <div class="row total-row">
+            <span>الإجمالي</span>
+            <b>{{ order.total }}</b>
+          </div>
+        </div>
+
+        <div class="delivery-info">
+          <div>طريقة الاستلام: <b>{{ order.deliveryMethod === 'pickup' ? 'استلام من الجراج' : 'توصيل للبيت' }}</b></div>
+          <div v-if="order.customer?.address">العنوان: <b>{{ order.customer.address }}، {{ order.customer.area }}</b></div>
+        </div>
+      </div>
+
       <div class="order-perks-box">
         <div class="perk-row">
           <AppIcon name="truck" :size="20" />
@@ -23,7 +63,7 @@
       </div>
 
       <div class="success-actions">
-        <RouterLink to="/account" class="btn">
+        <RouterLink to="/account?tab=orders" class="btn">
           تابع طلبك في حسابي
         </RouterLink>
         <RouterLink to="/" class="btn o">
@@ -35,8 +75,21 @@
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, RouterLink } from 'vue-router'
+import { api } from '@/api/index.js'
 import AppIcon from '@/components/common/AppIcon.vue'
+
+const route = useRoute()
+const order = ref(null)
+
+onMounted(async () => {
+  try {
+    order.value = await api.getOrder(route.params.id)
+  } catch (e) {
+    console.warn('Could not fetch order:', e)
+  }
+})
 </script>
 
 <style scoped>
@@ -48,7 +101,7 @@ import AppIcon from '@/components/common/AppIcon.vue'
 }
 
 .success-card {
-  max-width: 560px;
+  max-width: 580px;
   width: 100%;
   background: #ffffff;
   border: 1px solid var(--ln);
@@ -90,6 +143,90 @@ import AppIcon from '@/components/common/AppIcon.vue'
   color: var(--mu);
   line-height: 1.7;
   margin: 0 0 24px;
+}
+
+.order-details-box {
+  background: var(--sf);
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: right;
+}
+
+.order-details-box h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  border-bottom: 1px solid var(--ln);
+  padding-bottom: 8px;
+}
+
+.order-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--ln);
+}
+
+.order-item-info b {
+  display: block;
+}
+
+.order-item-info small {
+  color: var(--mu);
+}
+
+.order-item-total {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.order-summary-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--ln);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.order-summary-breakdown .row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.order-summary-breakdown .disc {
+  color: var(--sale);
+}
+
+.total-row {
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ln);
+}
+
+.delivery-info {
+  font-size: 13px;
+  color: var(--mu);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delivery-info b {
+  color: var(--ink);
 }
 
 .order-perks-box {

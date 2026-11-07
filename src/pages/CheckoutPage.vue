@@ -169,7 +169,7 @@
         <div class="mini-list">
           <div
             v-for="item in cartStore.items"
-            :key="item.productId"
+            :key="item.lineId"
             class="mini"
           >
             <div class="im">
@@ -209,6 +209,10 @@
           <b>{{ finalTotal.toLocaleString('en') }} ج.م</b>
         </div>
 
+        <div v-if="submitError" class="submit-error">
+          {{ submitError }}
+        </div>
+
         <button
           type="submit"
           class="btn full confirm-btn"
@@ -227,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { useCartStore } from '@/stores/cart.js'
@@ -240,15 +244,22 @@ const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 
-const customerName = ref(userStore.user?.name || 'كريم محمود')
-const customerPhone = ref(userStore.user?.phone || '010 1234 5678')
+onMounted(() => {
+  if (cartStore.items.length === 0) {
+    router.replace('/cart')
+  }
+})
+
+const customerName = ref(userStore.user?.name || '')
+const customerPhone = ref(userStore.user?.phone || '')
 const governorate = ref(userStore.user?.address?.governorate || 'القاهرة')
 const area = ref(userStore.user?.address?.area || 'مدينة نصر')
-const addressDetails = ref(userStore.user?.address?.street || '12 شارع عباس العقاد، الدور 3، شقة 7')
+const addressDetails = ref(userStore.user?.address?.street || '')
 
 const deliveryMethod = ref('home')
 const paymentMethod = ref('cod')
 const isSubmitting = ref(false)
+const submitError = ref('')
 
 const actualDeliveryFee = computed(() => {
   if (deliveryMethod.value === 'pickup') return 0
@@ -261,22 +272,38 @@ const finalTotal = computed(() => {
 
 const populateSavedAddress = () => {
   if (userStore.user?.address) {
-    customerName.value = userStore.user.name
-    customerPhone.value = userStore.user.phone
-    governorate.value = userStore.user.address.governorate
-    area.value = userStore.user.address.area
-    addressDetails.value = userStore.user.address.street
+    customerName.value = userStore.user.name || ''
+    customerPhone.value = userStore.user.phone || ''
+    governorate.value = userStore.user.address.governorate || 'القاهرة'
+    area.value = userStore.user.address.area || 'مدينة نصر'
+    addressDetails.value = userStore.user.address.street || ''
   }
 }
 
 const handleConfirmOrder = async () => {
+  if (cartStore.items.length === 0) {
+    return router.replace('/cart')
+  }
+
+  // Check login requirement per Item 3
+  if (!userStore.isAuthenticated) {
+    return router.push({
+      path: '/login',
+      query: { redirect: '/checkout' }
+    })
+  }
+
   if (isSubmitting.value) return
   isSubmitting.value = true
+  submitError.value = ''
 
   try {
     const orderData = {
       items: [...cartStore.items],
-      total: `${finalTotal.value.toLocaleString('en')} ج.م`,
+      totalNum: finalTotal.value,
+      subtotalNum: cartStore.subtotal,
+      discountNum: cartStore.discount,
+      deliveryFeeNum: actualDeliveryFee.value,
       customer: {
         name: customerName.value,
         phone: customerPhone.value,
@@ -289,10 +316,11 @@ const handleConfirmOrder = async () => {
     }
 
     const createdOrder = await api.createOrder(orderData)
+    userStore.addOrder(createdOrder)
     cartStore.clearCart()
     router.push(`/order/${createdOrder.id}`)
   } catch (error) {
-    console.error('Failed to place order:', error)
+    submitError.value = error?.message || 'حدث خطأ أثناء تأكيد الطلب، يرجى المحاولة مرة أخرى.'
   } finally {
     isSubmitting.value = false
   }
@@ -596,6 +624,13 @@ const handleConfirmOrder = async () => {
 .confirm-btn {
   height: 52px;
   margin-top: 14px;
+}
+
+.submit-error {
+  color: var(--sale);
+  font-size: 13.5px;
+  margin-top: 10px;
+  text-align: center;
 }
 
 .agree-text {

@@ -1,5 +1,14 @@
 <template>
-  <div class="product-page" v-if="product">
+  <div v-if="!product" class="not-found-page in">
+    <EmptyState
+      icon="box"
+      title="المنتج غير موجود"
+      description="لم نتمكن من العثور على هذا المنتج. ربما تم نقله أو حذفه من المتجر."
+      action-label="تصفح المتجر"
+      action-to="/c/oils"
+    />
+  </div>
+  <div class="product-page" v-else>
     <Breadcrumbs :items="breadcrumbItems" />
 
     <div class="pdp in">
@@ -56,13 +65,15 @@
         </div>
 
         <!-- Fit Box -->
-        <div class="fitbox" :class="{ ok: isFitting }">
-          <AppIcon v-if="isFitting" name="check" :size="22" :stroke-width="2.2" />
+        <div class="fitbox" :class="{ ok: fitResult === true }">
+          <AppIcon v-if="fitResult === true" name="check" :size="22" :stroke-width="2.2" />
           <AppIcon v-else name="shield" :size="22" :stroke-width="1.5" />
           <div>
-            <b v-if="isFitting">يركب على موتوسيكلك {{ userStore.selectedBike }} · 2023</b>
-            <b v-else>مش متأكدين إنه يركب على {{ userStore.selectedBike }}</b>
-            <small>{{ product.fitNote || (isFitting ? 'محتاج 3 لتر لكل تغيير زيت' : 'اسأل الدعم أو راجع كتالوج الصيانة') }}</small>
+            <b v-if="fitResult === true">يركب على موتوسيكلك {{ userStore.selectedBike }} · {{ userBikeYear }}</b>
+            <b v-else-if="fitResult === null">مقاسات متعددة</b>
+            <b v-else>مش متأكدين إنه يركب على موتوسيكلك، اسألنا</b>
+            <small v-if="fitResult === true && product.fitNote">{{ product.fitNote }}</small>
+            <small v-else-if="fitResult === false">اسأل الدعم أو راجع كتالوج الصيانة</small>
           </div>
           <button type="button" class="change-bike-btn" @click="showBikePicker = true">
             غيّر
@@ -88,19 +99,33 @@
 
         <!-- Buy Actions -->
         <div class="buy">
-          <QtyStepper v-model="quantity" />
-          <button type="button" class="btn" @click="handleAddToCart">
+          <QtyStepper
+            v-model="quantity"
+            :max="product.stock"
+            :min="product.stock > 0 ? 1 : 0"
+          />
+          <button
+            type="button"
+            class="btn"
+            @click="handleAddToCart"
+            :disabled="product.stock === 0"
+          >
             <AppIcon name="cart" :size="18" />
-            <span>أضف للسلة</span>
+            <span>{{ product.stock === 0 ? 'غير متوفر' : 'أضف للسلة' }}</span>
           </button>
-          <button type="button" class="btn o" @click="handleBuyNow">
+          <button
+            type="button"
+            class="btn o"
+            @click="handleBuyNow"
+            :disabled="product.stock === 0"
+          >
             اشتري دلوقتي
           </button>
         </div>
 
         <!-- Stock Notice -->
         <div class="stock-line" :class="{ out: product.stock === 0 }">
-          {{ product.stock > 0 ? `متوفر · ${product.stock} قطعة في المخزن` : 'غير متوفر حالياً' }}
+          {{ product.stock > 0 ? `متوفر · ${product.stock} قطعة في المخزن` : 'غير متوفر' }}
         </div>
 
         <!-- Delivery & Service Perks -->
@@ -136,11 +161,21 @@
         <span class="mobile-sticky-price">{{ (currentPrice * quantity).toLocaleString('en') }} ج.م</span>
         <small>{{ quantity }} قطع</small>
       </div>
-      <button type="button" class="btn sm" @click="handleAddToCart">
+      <button
+        type="button"
+        class="btn sm"
+        @click="handleAddToCart"
+        :disabled="product.stock === 0"
+      >
         <AppIcon name="cart" :size="16" />
-        <span>أضف للسلة</span>
+        <span>{{ product.stock === 0 ? 'غير متوفر' : 'أضف للسلة' }}</span>
       </button>
-      <button type="button" class="btn o sm" @click="handleBuyNow">
+      <button
+        type="button"
+        class="btn o sm"
+        @click="handleBuyNow"
+        :disabled="product.stock === 0"
+      >
         شراء
       </button>
     </div>
@@ -242,18 +277,7 @@
     </div>
 
     <!-- Frequently Bought Together Row -->
-    <section class="in sec">
-      <div class="sh">
-        <h2>بيتشترى معاه</h2>
-      </div>
-      <div class="grid">
-        <ProductCard
-          v-for="p in companionProducts"
-          :key="p.id"
-          :product="p"
-        />
-      </div>
-    </section>
+    <ProductRow title="بيتشترى معاه" :products="companionProducts" />
 
     <!-- Bike Selector Modal -->
     <div v-if="showBikePicker" class="modal-backdrop" @click="showBikePicker = false">
@@ -278,18 +302,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { products } from '@/data/products.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
+import { doesFit } from '@/utils/fit.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import RatingStars from '@/components/common/RatingStars.vue'
 import PriceTag from '@/components/common/PriceTag.vue'
 import QtyStepper from '@/components/common/QtyStepper.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
+import ProductRow from '@/components/common/ProductRow.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
@@ -298,54 +325,54 @@ const userStore = useUserStore()
 const cartStore = useCartStore()
 
 const product = computed(() => {
-  return products.find((p) => p.slug === route.params.slug) || products[0]
+  return products.find((p) => p.slug === route.params.slug) || null
 })
 
 const activeThumb = ref(0)
 const activeTab = ref('desc')
-const quantity = ref(3)
+const quantity = ref(1)
 const showBikePicker = ref(false)
 const selectedOption = ref(null)
 
-onMounted(() => {
-  if (product.value.options && product.value.options.length) {
-    selectedOption.value = product.value.options[0]
-  }
-})
-
 watch(
-  () => product.value,
-  (newP) => {
-    if (newP?.options?.length) {
-      selectedOption.value = newP.options[0]
-    }
-    quantity.value = 3
-  }
+  () => route.params.slug,
+  () => {
+    activeTab.value = 'desc'
+    activeThumb.value = 0
+    quantity.value = 1
+    selectedOption.value = product.value?.options?.[0] ?? null
+  },
+  { immediate: true }
 )
 
 const currentPrice = computed(() => {
-  return selectedOption.value?.price || product.value.price
+  return selectedOption.value?.price || product.value?.price || 0
 })
 
 const currentOldPrice = computed(() => {
-  return selectedOption.value ? 0 : product.value.oldPrice
+  return selectedOption.value?.oldPrice || (!selectedOption.value ? product.value?.oldPrice : 0) || 0
 })
 
-const isFitting = computed(() => {
-  if (!product.value.fits || product.value.fits.length === 0) return true
-  return product.value.fits.some(
-    (m) => userStore.selectedBike.includes(m) || m.includes(userStore.selectedBike)
-  )
+const fitResult = computed(() => {
+  return doesFit(product.value, userStore.selectedBike)
 })
 
-const breadcrumbItems = computed(() => [
-  { label: 'الرئيسية', to: '/' },
-  { label: 'زيوت', to: '/c/oils' },
-  { label: 'زيوت المحرك', to: '/c/oils' },
-  { label: product.value.name }
-])
+const userBikeYear = computed(() => {
+  return userStore.user?.savedBikes?.[0]?.year || 2023
+})
+
+const breadcrumbItems = computed(() => {
+  if (!product.value) return [{ label: 'الرئيسية', to: '/' }, { label: 'المنتج' }]
+  return [
+    { label: 'الرئيسية', to: '/' },
+    { label: 'زيوت', to: '/c/oils' },
+    { label: 'زيوت المحرك', to: '/c/oils' },
+    { label: product.value.name }
+  ]
+})
 
 const companionProducts = computed(() => {
+  if (!product.value) return []
   return products.filter((p) => p.id !== product.value.id).slice(0, 5)
 })
 
@@ -355,10 +382,12 @@ const selectBike = (model) => {
 }
 
 const handleAddToCart = () => {
+  if (!product.value || product.value.stock === 0) return
   cartStore.addItem(product.value, quantity.value, selectedOption.value)
 }
 
 const handleBuyNow = () => {
+  if (!product.value || product.value.stock === 0) return
   cartStore.addItem(product.value, quantity.value, selectedOption.value)
   router.push('/checkout')
 }

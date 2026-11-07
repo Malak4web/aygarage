@@ -138,8 +138,8 @@ const isActiveCategory = (slug) => {
 }
 
 @media (max-width: 992px) {
-  .catnav-inner {
-    padding: 0 16px;
+  .catnav-wrap {
+    display: none;
   }
 }
 </style>

@@ -4,21 +4,18 @@ import { defaultUser } from '../data/user.js'
 export const useUserStore = defineStore('user', {
   state: () => {
     let savedBike = 'ZT350-T'
-    let isAuthed = true
-    let currentUser = { ...defaultUser }
+    let isAuthed = false
+    let currentUser = null
 
     try {
       const storedBike = localStorage.getItem('ayg_selected_bike')
       if (storedBike) savedBike = storedBike
 
-      const storedUser = localStorage.getItem('ayg_user')
-      if (storedUser) {
-        currentUser = JSON.parse(storedUser)
-      }
-
       const storedAuth = localStorage.getItem('ayg_auth')
-      if (storedAuth !== null) {
-        isAuthed = storedAuth === 'true'
+      if (storedAuth === 'true') {
+        isAuthed = true
+        const storedUser = localStorage.getItem('ayg_user')
+        currentUser = storedUser ? JSON.parse(storedUser) : structuredClone(defaultUser)
       }
     } catch (e) {
       console.warn('Failed to read user data from storage:', e)
@@ -27,14 +24,13 @@ export const useUserStore = defineStore('user', {
     return {
       user: currentUser,
       isAuthenticated: isAuthed,
-      selectedBike: savedBike,
-      returnUrl: '/'
+      selectedBike: savedBike
     }
   },
 
   getters: {
     userName: (state) => (state.isAuthenticated && state.user ? state.user.name : ''),
-    userBikes: (state) => (state.user?.savedBikes ? state.user.savedBikes : [])
+    userBikes: (state) => (state.isAuthenticated && state.user?.savedBikes ? state.user.savedBikes : [])
   },
 
   actions: {
@@ -49,6 +45,9 @@ export const useUserStore = defineStore('user', {
 
     login(phone, password) {
       this.isAuthenticated = true
+      if (!this.user) {
+        this.user = structuredClone(defaultUser)
+      }
       this.user.phone = phone
       try {
         localStorage.setItem('ayg_auth', 'true')
@@ -60,10 +59,12 @@ export const useUserStore = defineStore('user', {
 
     register(name, phone, bikeModel = '') {
       this.isAuthenticated = true
+      this.user = structuredClone(defaultUser)
       this.user.name = name
       this.user.phone = phone
       if (bikeModel) {
         this.selectedBike = bikeModel
+        if (!this.user.savedBikes) this.user.savedBikes = []
         this.user.savedBikes.push({
           id: 'ub_' + Date.now(),
           model: 'Zontes ' + bikeModel,
@@ -87,14 +88,19 @@ export const useUserStore = defineStore('user', {
 
     logout() {
       this.isAuthenticated = false
+      this.user = null
       try {
         localStorage.setItem('ayg_auth', 'false')
+        localStorage.removeItem('ayg_user')
       } catch (e) {
         console.warn('Failed to save auth state:', e)
       }
     },
 
     addBike(bike) {
+      if (!this.user) {
+        this.user = structuredClone(defaultUser)
+      }
       if (!this.user.savedBikes) this.user.savedBikes = []
       this.user.savedBikes.push(bike)
       this.setSelectedBike(bike.model.replace('Zontes ', ''))
@@ -102,6 +108,19 @@ export const useUserStore = defineStore('user', {
         localStorage.setItem('ayg_user', JSON.stringify(this.user))
       } catch (e) {
         console.warn('Failed to save user:', e)
+      }
+    },
+
+    addOrder(order) {
+      if (!this.user) {
+        this.user = structuredClone(defaultUser)
+      }
+      if (!this.user.orders) this.user.orders = []
+      this.user.orders.unshift(order)
+      try {
+        localStorage.setItem('ayg_user', JSON.stringify(this.user))
+      } catch (e) {
+        console.warn('Failed to save order to user:', e)
       }
     }
   }

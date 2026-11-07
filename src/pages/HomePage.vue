@@ -247,7 +247,7 @@ const currentSlide = computed(() => heroSlides[activeSlideIndex.value])
 const handleHeroAction = () => {
   if (activeSlideIndex.value === 0) {
     const p1 = products.find((p) => p.id === 'p1')
-    if (p1) cartStore.addItem(p1, 3)
+    if (p1) cartStore.addItem(p1, 1)
     router.push('/cart')
   } else if (activeSlideIndex.value === 1) {
     router.push('/c/oils')

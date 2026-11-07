@@ -35,11 +35,17 @@ const query = ref('')
 const selectedCategory = ref('')
 
 const handleSearch = () => {
-  const targetCategory = selectedCategory.value || 'oils'
-  router.push({
-    path: `/c/${targetCategory}`,
-    query: query.value ? { q: query.value } : {}
-  })
+  if (selectedCategory.value) {
+    router.push({
+      path: `/c/${selectedCategory.value}`,
+      query: query.value ? { q: query.value } : {}
+    })
+  } else {
+    router.push({
+      path: '/search',
+      query: query.value ? { q: query.value } : {}
+    })
+  }
 }
 </script>
 

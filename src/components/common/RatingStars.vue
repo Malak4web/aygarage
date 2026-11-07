@@ -1,5 +1,5 @@
 <template>
-  <div class="rate">
+  <div class="rate" :aria-label="`التقييم ${rating} من 5`">
     <span class="st" aria-hidden="true">
       <AppIcon
         v-for="i in 5"
@@ -9,7 +9,7 @@
       />
     </span>
     <span class="rate-val">{{ rating }}</span>
-    <span v-if="count !== undefined" class="rate-count">({{ count }})</span>
+    <span v-if="count !== null && count !== undefined && count !== ''" class="rate-count">({{ count }})</span>
   </div>
 </template>
 
