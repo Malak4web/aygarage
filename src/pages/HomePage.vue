@@ -346,8 +346,8 @@ const featuredBikes = computed(() => {
 
 .ban.main .art {
   position: absolute;
-  inset-inline-start: 20px;
-  bottom: 20px;
+  inset-inline-end: 30px;
+  bottom: 30px;
   pointer-events: none;
   z-index: 1;
 }
@@ -420,7 +420,7 @@ const featuredBikes = computed(() => {
 
 .ban.s .art {
   position: absolute;
-  inset-inline-start: 14px;
+  inset-inline-end: 14px;
   bottom: 14px;
 }
 

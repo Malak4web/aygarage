@@ -558,7 +558,7 @@ const handleConfirmOrder = async () => {
 .mini-qty {
   position: absolute;
   top: -6px;
-  inset-inline-start: -6px;
+  inset-inline-end: -6px;
   background: var(--mu);
   color: #ffffff;
   border-radius: 50%;

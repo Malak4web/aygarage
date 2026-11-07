@@ -115,7 +115,7 @@ defineExpose({
 .dots {
   position: absolute;
   bottom: 22px;
-  inset-inline-end: 56px;
+  inset-inline-start: 56px;
   display: flex;
   gap: 6px;
   z-index: 10;

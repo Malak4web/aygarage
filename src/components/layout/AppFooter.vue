@@ -1,5 +1,5 @@
 <template>
-  <footer class="app-footer">
+  <footer class="app-footer" :class="{ 'has-sticky-bar': isProductPage }">
     <div class="footer-inner">
       <div class="cols">
         <!-- Col 1: About -->
@@ -80,11 +80,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRoute, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 
+const route = useRoute()
 const subscribed = ref(false)
+const isProductPage = computed(() => route?.name === 'product')
 </script>
 
 <style scoped>
@@ -232,6 +234,12 @@ const subscribed = ref(false)
 
   .col-newsletter {
     grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-footer.has-sticky-bar {
+    padding-bottom: 90px;
   }
 }
 
