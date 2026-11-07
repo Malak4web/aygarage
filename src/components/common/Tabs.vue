@@ -40,6 +40,12 @@ defineEmits(['update:modelValue'])
   margin-bottom: 24px;
   overflow-x: auto;
   white-space: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {

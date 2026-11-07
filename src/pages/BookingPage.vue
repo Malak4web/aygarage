@@ -255,7 +255,7 @@ const generateNext7Days = () => {
       dateString: d.toISOString().slice(0, 10),
       name: dayNames[dayOfWeek],
       num: d.getDate(),
-      month: d.toLocaleDateString('ar-EG', { month: 'short' }),
+      month: d.toLocaleDateString('ar-EG-u-nu-latn', { month: 'short' }),
       off: dayOfWeek === 5 // Friday off
     })
   }
@@ -267,7 +267,7 @@ const selectedDay = ref(days.value.find((d) => !d.off) || days.value[0])
 
 const currentMonthLabel = computed(() => {
   const now = new Date()
-  return now.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })
+  return now.toLocaleDateString('ar-EG-u-nu-latn', { month: 'long', year: 'numeric' })
 })
 
 const timeSlots = [

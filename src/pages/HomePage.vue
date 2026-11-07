@@ -702,6 +702,21 @@ const featuredBikes = computed(() => {
   .side2 {
     grid-template-columns: 1fr;
   }
+  .ban.s {
+    padding: 20px;
+    overflow: hidden;
+  }
+  .ban.s .tx {
+    padding-inline-end: 120px;
+  }
+  .ban.s .art {
+    inset-inline-end: 10px;
+    bottom: 12px;
+  }
+  .ban.s .art :deep(svg) {
+    width: 110px !important;
+    height: auto;
+  }
   .ban.main {
     padding: 30px 20px;
   }
