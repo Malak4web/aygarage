@@ -7,6 +7,7 @@ export const storeConfig = {
   announcement: 'توصيل لكل المحافظات · استلام مجاني من الجراج · كلّمنا: 010 0000 0000',
   deliveryFee: 60,
   freeDeliveryThreshold: 3000,
+  deliveryDaysCount: 3,
   deliveryEstimateDays: '2-4 أيام عمل',
   returnDays: 14,
   returnPolicyNote: 'لو العبوة ما اتفتحتش أو القطعة ما ركبتش',
@@ -55,19 +56,21 @@ export const storeConfig = {
     { title: 'فحص قبل الشراء', price: '600 ج.م' },
     { title: 'ضبط بلوف', price: '900 ج.م' }
   ],
-  trustItems: [
-    { icon: 'truck', title: 'توصيل لكل المحافظات', desc: 'خلال 2-4 أيام عمل' },
-    { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
-    { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
-    { icon: 'ret', title: 'استرجاع خلال 14 يوم', desc: 'لو القطعة ما ركبتش' }
-  ],
+  get trustItems() {
+    return [
+      { icon: 'truck', title: 'توصيل لكل المحافظات', desc: `خلال ${this.deliveryEstimateDays}` },
+      { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
+      { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
+      { icon: 'ret', title: `استرجاع خلال ${this.returnDays} يوم`, desc: 'لو القطعة ما ركبتش' }
+    ]
+  },
   pickupTimes: 'جاهز النهارده بعد 3 العصر',
   get deliveryEstimate() {
     const d = new Date()
-    d.setDate(d.getDate() + 3)
-    const dayName = d.toLocaleDateString('ar-EG', { weekday: 'long' })
+    d.setDate(d.getDate() + (this.deliveryDaysCount || 3))
+    const dayName = d.toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' })
     const dayNum = d.getDate()
-    const monthName = d.toLocaleDateString('ar-EG', { month: 'long' })
+    const monthName = d.toLocaleDateString('ar-EG-u-nu-latn', { month: 'long' })
     return `يوصلك ${dayName} ${dayNum} ${monthName}`
   }
 }

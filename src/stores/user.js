@@ -73,10 +73,18 @@ export const useUserStore = defineStore('user', {
 
     login(phone, password) {
       this.isAuthenticated = true
+      const existingUser = this.user
       if (!this.user) {
         this.user = structuredClone(defaultUser)
       }
       this.user.phone = phone
+      const cleanEntered = String(phone || '').replace(/\s+/g, '')
+      const cleanDefault = String(defaultUser.phone || '').replace(/\s+/g, '')
+      if (cleanEntered === cleanDefault) {
+        this.user.name = defaultUser.name
+      } else if (!existingUser?.name || existingUser.name === defaultUser.name) {
+        this.user.name = `عميل ${phone}`
+      }
       try {
         localStorage.setItem('ayg_auth', 'true')
         localStorage.setItem('ayg_user', JSON.stringify(this.user))
@@ -88,7 +96,7 @@ export const useUserStore = defineStore('user', {
     register(name, phone, bikeModel = '') {
       this.isAuthenticated = true
       this.user = structuredClone(defaultUser)
-      this.user.name = name
+      this.user.name = name || (phone ? `عميل ${phone}` : 'عميل جديد')
       this.user.phone = phone
       if (bikeModel) {
         this.selectedBike = bikeModel

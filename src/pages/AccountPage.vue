@@ -142,7 +142,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="r in (userStore.user?.serviceHistory || defaultHistory)" :key="r.date">
+                    <tr v-for="r in (userStore.user?.serviceHistory || serviceHistoryList)" :key="r.date">
                       <td>{{ r.date }}</td>
                       <td>{{ r.odo }}</td>
                       <td>{{ r.service }}</td>
@@ -224,7 +224,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in (userStore.user?.serviceHistory || defaultHistory)" :key="r.date">
+                  <tr v-for="r in (userStore.user?.serviceHistory || serviceHistoryList)" :key="r.date">
                     <td>{{ r.date }}</td>
                     <td>{{ r.odo }}</td>
                     <td>{{ r.service }}</td>
@@ -419,19 +419,22 @@ const accountError = ref('')
 const userBookings = ref([])
 const userOrders = ref([])
 const allProducts = ref([])
+const serviceHistoryList = ref([])
 
 const loadAccountData = async () => {
   loading.value = true
   accountError.value = ''
   try {
-    const [bks, ords, prods] = await Promise.all([
+    const [bks, ords, prods, hist] = await Promise.all([
       api.getUserBookings(),
       api.getUserOrders(),
-      api.getProducts()
+      api.getProducts(),
+      api.getServiceHistory()
     ])
     userBookings.value = bks
     userOrders.value = ords
     allProducts.value = prods
+    serviceHistoryList.value = hist
   } catch (e) {
     accountError.value = 'تعذر تحميل بيانات الحساب'
   } finally {
@@ -468,12 +471,6 @@ const favProducts = computed(() => {
 const compatibleProducts = computed(() => {
   return allProducts.value.slice(0, 5)
 })
-
-const defaultHistory = [
-  { date: '12 أكتوبر 2026', odo: '12,000 كم', service: 'تغيير زيت + فلتر', tech: 'أبو يوسف', cost: '1,770' },
-  { date: '5 يوليو 2026', odo: '9,300 كم', service: 'تيل فرامل أمامي وخلفي', tech: 'محمد', cost: '1,240' },
-  { date: '20 مارس 2026', odo: '6,000 كم', service: 'صيانة شاملة', tech: 'أبو يوسف', cost: '2,450' }
-]
 
 const showAddBikeModal = ref(false)
 const addBikeModalRef = ref(null)

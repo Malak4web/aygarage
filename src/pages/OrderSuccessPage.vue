@@ -68,7 +68,7 @@
       <div class="order-perks-box">
         <div class="perk-row">
           <AppIcon name="truck" :size="20" />
-          <span>التوصيل المتوقع: <b>خلال {{ storeConfig.deliveryEstimateDays }}</b></span>
+          <span>التوصيل المتوقع: <b>{{ storeConfig.deliveryEstimate }}</b></span>
         </div>
         <div class="perk-row">
           <AppIcon name="shield" :size="20" />

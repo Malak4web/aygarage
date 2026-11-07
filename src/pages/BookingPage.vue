@@ -200,7 +200,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { services } from '@/data/services.js'
 import { useUserStore } from '@/stores/user.js'
 import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
@@ -222,9 +221,9 @@ const bikeChoice = ref(userStore.userBikes && userStore.userBikes.length > 0 ? u
 const customModel = ref('ZT350-T')
 const customOdo = ref('')
 
-const serviceList = ref(services ? [...services] : [])
-const selectedService = ref(services?.[0] || null)
-const loadingServices = ref(false)
+const serviceList = ref([])
+const selectedService = ref(null)
+const loadingServices = ref(true)
 const serviceError = ref('')
 
 const loadServices = async () => {
@@ -355,7 +354,7 @@ const handleConfirmBooking = async () => {
 const resetBooking = () => {
   bookingConfirmed.value = false
   bookingRef.value = ''
-  selectedService.value = services[0]
+  selectedService.value = serviceList.value[0] || null
 }
 </script>
 
