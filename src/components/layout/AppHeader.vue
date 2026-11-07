@@ -26,7 +26,7 @@
         >
           <AppIcon name="user" :size="24" />
           <span>
-            <small>{{ userStore.isAuthenticated ? (userStore.user?.name && !userStore.user.name.startsWith('عميل') ? ('أهلاً ' + userStore.user.name.trim().split(' ')[0]) : 'حسابي') : 'تسجيل الدخول' }}</small>
+            <small>{{ userStore.isAuthenticated ? (userStore.user?.name && !userStore.user.name.startsWith('عميل') ? ('أهلاً ' + userStore.user.name.trim().split(' ')[0]) : 'أهلاً') : 'تسجيل الدخول' }}</small>
             <b>حسابي</b>
           </span>
         </RouterLink>

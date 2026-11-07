@@ -216,6 +216,7 @@ import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
+import { useToastStore } from '@/stores/toast.js'
 import ProductCard from '@/components/common/ProductCard.vue'
 import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
 import BikeCard from '@/components/common/BikeCard.vue'
@@ -229,6 +230,7 @@ import AppIcon from '@/components/common/AppIcon.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
+const toastStore = useToastStore()
 
 const loading = ref(true)
 const error = ref('')
@@ -292,9 +294,17 @@ const handleHeroAction = (slide) => {
     router.push('/booking')
   } else {
     const p1 = allProducts.value.find((p) => p.id === 'p1')
-    if (p1 && (p1.stock === undefined || p1.stock > 0)) {
+    if (p1 && p1.stock <= 0) {
+      toastStore.show('طقم الصيانة غير متوفر حالياً في المخزن', 'warning')
+      return
+    }
+    if (p1) {
       const opt = p1.options && p1.options.length > 0 ? p1.options[0] : null
-      cartStore.addItem(p1, 1, opt)
+      const status = cartStore.addItem(p1, 1, opt)
+      if (status === 'out') {
+        toastStore.show('طقم الصيانة غير متوفر حالياً في المخزن', 'warning')
+        return
+      }
     }
     router.push('/cart')
   }

@@ -407,16 +407,16 @@ const selectBike = (model) => {
 
 const handleAddToCart = () => {
   if (!product.value || product.value.stock === 0) return
-  const added = cartStore.addItem(product.value, quantity.value, selectedOption.value)
-  if (added) {
+  const status = cartStore.addItem(product.value, quantity.value, selectedOption.value)
+  if (status === 'added') {
     toastStore.show(`تمت إضافة ${product.value.name} إلى السلة بنجاح`, 'success')
   }
 }
 
 const handleBuyNow = () => {
   if (!product.value || product.value.stock === 0) return
-  const added = cartStore.addItem(product.value, quantity.value, selectedOption.value)
-  if (added) {
+  const status = cartStore.addItem(product.value, quantity.value, selectedOption.value)
+  if (status === 'added' || status === 'clamped') {
     router.push('/checkout')
   }
 }

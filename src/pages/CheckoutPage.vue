@@ -86,7 +86,7 @@
                 id="co-addr"
                 label="العنوان بالتفصيل"
                 v-model="addressDetails"
-                required
+                :required="deliveryMethod !== 'pickup'"
               />
             </div>
           </div>
@@ -281,7 +281,7 @@ const handleConfirmOrder = async () => {
         phone: customerPhone.value,
         governorate: governorate.value,
         area: area.value,
-        address: addressDetails.value
+        address: deliveryMethod.value === 'pickup' ? (addressDetails.value || 'استلام من مقر الجراج') : addressDetails.value
       },
       deliveryMethod: deliveryMethod.value,
       paymentMethod: paymentMethod.value,

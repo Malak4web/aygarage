@@ -67,14 +67,14 @@ async function main() {
   await page.waitForFunction(() => window.location.pathname === '/account', { timeout: 5000 });
   await page.waitForSelector('.acc', { timeout: 5000 });
 
-  // Check header text: should say "حسابي" and NOT "أهلاً عميل"
+  // Check header text: should say "أهلاً" (over "حسابي") and NOT "أهلاً عميل"
   const headerUserSmall = await page.$eval('.hi-link.desktop-only small', el => el.textContent.trim());
   console.log('Header greeting for new user:', headerUserSmall);
   if (headerUserSmall.includes('أهلاً عميل')) {
     throw new Error('FAIL: Header greeting should not say "أهلاً عميل"');
   }
-  if (headerUserSmall !== 'حسابي') {
-    throw new Error(`FAIL: Expected header to show "حسابي", got "${headerUserSmall}"`);
+  if (headerUserSmall !== 'أهلاً') {
+    throw new Error(`FAIL: Expected header to show "أهلاً", got "${headerUserSmall}"`);
   }
 
   // Check Account Page tabs
@@ -253,13 +253,44 @@ async function main() {
     throw new Error(`FAIL: Pickup order should say "جاهز للاستلام من الجراج", got: ${pickupText}`);
   }
 
+  const pickupMsg = await page.$eval('.order-msg', el => el.textContent.trim());
+  console.log('Order success pickup thank-you message:', pickupMsg);
+  if (!pickupMsg.includes('هنبعتلك رسالة على الواتساب لما الطلب يجهز')) {
+    throw new Error(`FAIL: Pickup order message should say "هنبعتلك رسالة على الواتساب لما الطلب يجهز", got: ${pickupMsg}`);
+  }
+
+  const pickupLocation = await page.$eval('.delivery-info', el => el.textContent.trim());
+  console.log('Order success pickup location text:', pickupLocation);
+  if (!pickupLocation.includes('جراج أبو يوسف، فرع مصر القديمة')) {
+    throw new Error(`FAIL: Pickup order should show garage address, got: ${pickupLocation}`);
+  }
+
+  // 6.3 Test Item 10: Blank street in settings saves null address
+  console.log('--- 7. Testing Item 10: Settings blank street saves null address ---');
+  await page.goto('http://localhost:5173/account?tab=settings', { waitUntil: 'networkidle0' });
+  await page.evaluate(() => {
+    const input = document.querySelector('#acc-street');
+    if (input) {
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+    }
+  });
+  await page.click('button.btn.sm'); // Save settings
+  await new Promise(r => setTimeout(r, 400));
+
+  await page.goto('http://localhost:5173/checkout', { waitUntil: 'networkidle0' });
+  const savedBtnAfterBlank = await page.$('.saved-addr-link');
+  if (savedBtnAfterBlank) {
+    throw new Error('FAIL: "عنوان محفوظ" button should not appear when street was saved blank in settings');
+  }
+
   console.log('Total console errors across all tests:', consoleErrors.length);
   if (consoleErrors.length > 0) {
     throw new Error(`FAIL: ${consoleErrors.length} console errors detected!`);
   }
 
   await browser.close();
-  console.log('=== ALL SECTIONS A, B & C VERIFICATION CHECKS PASSED SUCCESSFULLY ===');
+  console.log('=== ALL ROUND 5 SECTIONS B & C VERIFICATION CHECKS PASSED SUCCESSFULLY ===');
 }
 
 main().catch(err => {

@@ -22,7 +22,9 @@
       <h1>تم استلام طلبك بنجاح!</h1>
       <p class="order-num">رقم الطلب: <b>#{{ order.id }}</b></p>
       <p class="order-msg">
-        شكراً لثقتك في جراج أبو يوسف. هيوصلك رسالة تأكيد بتفاصيل الشحن وميعاد التوصيل على الواتساب.
+        {{ order.deliveryMethod === 'pickup'
+          ? 'شكراً لثقتك في جراج أبو يوسف. هنبعتلك رسالة على الواتساب لما الطلب يجهز.'
+          : 'شكراً لثقتك في جراج أبو يوسف. هيوصلك رسالة تأكيد بتفاصيل الشحن وميعاد التوصيل على الواتساب.' }}
       </p>
 
       <!-- Order Details if loaded -->
@@ -61,7 +63,12 @@
 
         <div class="delivery-info">
           <div>طريقة الاستلام: <b>{{ order.deliveryMethod === 'pickup' ? 'استلام من الجراج' : 'توصيل للبيت' }}</b></div>
-          <div v-if="order.customer?.address">العنوان: <b>{{ order.customer.address }}، {{ order.customer.area }}</b></div>
+          <div v-if="order.deliveryMethod === 'pickup'">
+            مقر الاستلام: <b>جراج أبو يوسف، فرع مصر القديمة</b>
+          </div>
+          <div v-else-if="order.customer?.address">
+            العنوان: <b>{{ order.customer.address }}، {{ order.customer.area }}</b>
+          </div>
         </div>
       </div>
 

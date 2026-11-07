@@ -519,10 +519,15 @@ const handleSaveSettings = () => {
   if (!userStore.user) return
   userStore.user.name = settingsName.value
   userStore.user.phone = settingsPhone.value
-  if (!userStore.user.address) userStore.user.address = {}
-  userStore.user.address.governorate = settingsGovernorate.value
-  userStore.user.address.area = settingsArea.value
-  userStore.user.address.street = settingsStreet.value
+  if (!settingsStreet.value.trim()) {
+    userStore.user.address = null
+  } else {
+    userStore.user.address = {
+      governorate: settingsGovernorate.value,
+      area: settingsArea.value,
+      street: settingsStreet.value.trim()
+    }
+  }
 
   try {
     localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
