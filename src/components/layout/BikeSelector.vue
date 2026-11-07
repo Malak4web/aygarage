@@ -79,7 +79,7 @@ onUnmounted(() => {
   line-height: 1.3;
   white-space: nowrap;
   color: var(--ink);
-  text-align: right;
+  text-align: start;
   padding: 4px 6px;
   border-radius: 8px;
   transition: background 0.15s ease;
@@ -146,7 +146,7 @@ onUnmounted(() => {
   font-weight: 500;
   color: var(--ink);
   width: 100%;
-  text-align: right;
+  text-align: start;
   transition: background 0.15s ease;
 }
 

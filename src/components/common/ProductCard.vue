@@ -26,6 +26,7 @@
           :type="product.type"
           :color="product.color"
           :image="product.image"
+          :alt="product.name"
           :width="120"
         />
       </RouterLink>
@@ -143,7 +144,7 @@ const handleAddToCart = () => {
 .pc .badge {
   position: absolute;
   top: 8px;
-  right: 8px;
+  inset-inline-end: 8px;
   background: var(--sale);
   color: #ffffff;
   font-size: 12px;
@@ -160,7 +161,7 @@ const handleAddToCart = () => {
 .pc .fav {
   position: absolute;
   top: 8px;
-  left: 8px;
+  inset-inline-start: 8px;
   width: 32px;
   height: 32px;
   border-radius: 50%;

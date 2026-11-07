@@ -460,7 +460,7 @@ const handleConfirmOrder = async () => {
 
 .ltr-input {
   direction: ltr;
-  text-align: right;
+  text-align: end;
 }
 
 .sel-input-wrap {
@@ -477,12 +477,12 @@ const handleConfirmOrder = async () => {
   color: var(--ink);
   outline: none;
   cursor: pointer;
-  padding-left: 20px;
+  padding-inline-end: 20px;
 }
 
 .sel-arr {
   position: absolute;
-  left: 12px;
+  inset-inline-end: 12px;
   pointer-events: none;
   color: var(--mu);
 }
@@ -580,7 +580,7 @@ const handleConfirmOrder = async () => {
 .mini-qty {
   position: absolute;
   top: -6px;
-  left: -6px;
+  inset-inline-start: -6px;
   background: var(--mu);
   color: #ffffff;
   border-radius: 50%;

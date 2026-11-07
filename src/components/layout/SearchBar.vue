@@ -65,7 +65,7 @@ const handleSearch = () => {
   display: flex;
   align-items: center;
   background: var(--sf);
-  border-left: 1px solid var(--ln);
+  border-inline-end: 1px solid var(--ln);
   padding: 0 16px;
 }
 
@@ -76,14 +76,14 @@ const handleSearch = () => {
   font-size: 14px;
   font-weight: 500;
   color: var(--ink);
-  padding-left: 20px;
+  padding-inline-end: 20px;
   cursor: pointer;
   outline: none;
 }
 
 .down-icon {
   position: absolute;
-  left: 12px;
+  inset-inline-end: 12px;
   pointer-events: none;
   color: var(--mu);
 }

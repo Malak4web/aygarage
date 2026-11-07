@@ -151,7 +151,7 @@ onMounted(async () => {
   border-radius: var(--radius-card);
   padding: 20px;
   margin-bottom: 24px;
-  text-align: right;
+  text-align: start;
 }
 
 .order-details-box h3 {
@@ -237,7 +237,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  text-align: right;
+  text-align: start;
 }
 
 .perk-row {

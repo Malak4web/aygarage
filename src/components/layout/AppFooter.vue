@@ -46,7 +46,9 @@
           <h5>العروض على إيميلك</h5>
           <p class="nl-desc">خصومات وتذكير بمواعيد الصيانة.</p>
           <form class="nl-form" @submit.prevent="subscribed = true">
+            <label for="footer-newsletter-email" class="visually-hidden">البريد الإلكتروني للعروض</label>
             <input
+              id="footer-newsletter-email"
               type="email"
               placeholder="بريدك الإلكتروني"
               class="nl-input"
@@ -57,7 +59,9 @@
             </button>
           </form>
           <div class="contact-info">
-            واتساب: {{ storeConfig.phone }}
+            <a :href="`https://wa.me/${storeConfig.whatsapp}`" target="_blank" rel="noopener">
+              واتساب: {{ storeConfig.phone }}
+            </a>
           </div>
         </div>
       </div>
@@ -66,11 +70,9 @@
       <div class="footer-bottom">
         <span>© 2026 {{ storeConfig.name }}</span>
         <div class="pay-methods">
-          <span>كاش عند الاستلام</span>
-          <span>Visa</span>
-          <span>Mastercard</span>
-          <span>فودافون كاش</span>
-          <span>InstaPay</span>
+          <span v-for="pm in storeConfig.paymentMethods" :key="pm.id">
+            {{ pm.title }}
+          </span>
         </div>
       </div>
     </div>

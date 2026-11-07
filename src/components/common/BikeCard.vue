@@ -9,6 +9,7 @@
         <BikeIllustration
           :color="bike.col"
           :image="bike.image"
+          :alt="bike.model"
           :width="260"
         />
       </RouterLink>
@@ -88,7 +89,7 @@ const formattedPrice = computed(() => {
 .bike .ins {
   position: absolute;
   top: 12px;
-  right: 12px;
+  inset-inline-end: 12px;
   background: #ffffff;
   border-radius: 8px;
   padding: 4px 10px;

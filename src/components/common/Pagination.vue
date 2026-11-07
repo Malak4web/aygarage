@@ -1,5 +1,5 @@
 <template>
-  <div class="pager" v-if="totalPages > 1">
+  <div class="pager" v-if="totalPages > 1" role="navigation" aria-label="أرقام الصفحات">
     <button
       type="button"
       class="page-btn"
@@ -15,6 +15,7 @@
       type="button"
       class="page-btn"
       :class="{ on: p === currentPage }"
+      :aria-current="p === currentPage ? 'page' : undefined"
       @click="$emit('update:currentPage', p)"
     >
       {{ p }}
@@ -58,12 +59,13 @@ defineEmits(['update:currentPage'])
   width: 38px;
   height: 38px;
   border: 1px solid var(--ln);
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
+  border-radius: var(--radius-btn);
   background: #ffffff;
   color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -76,11 +78,15 @@ defineEmits(['update:currentPage'])
   background: var(--ink);
   color: #ffffff;
   border-color: var(--ink);
-  font-weight: 700;
 }
 
 .page-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.4;
   cursor: not-allowed;
+}
+
+.page-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 </style>
