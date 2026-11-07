@@ -1,0 +1,416 @@
+<title>Abu Yousef Garage Store</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+/* Shell: neutral review board around a conventional, clean store. */
+:root{--bg:#f2f2f2;--surface:#fff;--fg:#141414;--muted:#6a6a6a;--line:#dedede;--accent:#141414;--chip:#e6e6e6;--f-ui:"Tajawal","Segoe UI",Tahoma,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--surface:#1b1b1b;--fg:#efefef;--muted:#a0a0a0;--line:#2e2e2e;--accent:#efefef;--chip:#262626;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121212;--surface:#1b1b1b;--fg:#efefef;--muted:#a0a0a0;--line:#2e2e2e;--accent:#efefef;--chip:#262626;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.6}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+h1.t{margin:0;font-size:clamp(22px,3.6vw,30px);font-weight:800;line-height:1.3}
+p.lead{margin:6px 0 18px;color:var(--muted);max-width:74ch}
+.pages{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pg{all:unset;cursor:pointer;padding:8px 14px;border-radius:999px;background:var(--chip);font-size:15px;font-weight:500}
+.pg:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pg[aria-selected="true"]{background:var(--fg);color:var(--bg);font-weight:700}
+.frame{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 18px 40px -24px rgba(0,0,0,.35)}
+.bar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--chip);direction:ltr}
+.bar i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.bar span{flex:1;margin-inline-start:10px;background:var(--surface);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewport{position:relative;overflow:hidden}
+.mock{width:1280px;transform-origin:top right;position:absolute;top:0;right:0}
+.note{color:var(--muted);font-size:14px;margin-top:12px}
+
+/* ================= The store ================= */
+.S{--bg:#ffffff;--sf:#f6f6f6;--sf2:#eeeeee;--ink:#121212;--mu:#6b6b6b;--ln:#e7e7e7;--sale:#c62828;--salesoft:#fdecec;--ok:#1b7f4b;--oksoft:#e8f4ee;--star:#f2a516;
+  background:var(--bg);color:var(--ink);font-family:"Almarai",sans-serif;font-size:15px;line-height:1.6;font-variant-numeric:tabular-nums}
+.S *{box-sizing:border-box}
+.S svg{display:block}
+.S .in{padding:0 48px}
+.S .ann{background:var(--ink);color:#fff;font-size:13px;text-align:center;padding:8px}
+.S header{display:flex;align-items:center;gap:28px;padding:18px 48px}
+.S .logo{font-weight:800;font-size:24px;line-height:1;white-space:nowrap}
+.S .logo small{display:block;font-weight:400;font-size:11px;color:var(--mu);letter-spacing:.25em;margin-top:5px}
+.S .search{flex:1;display:flex;height:48px;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden}
+.S .search .cat{display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--sf);border-left:1px solid var(--ln);font-size:14px;white-space:nowrap}
+.S .search .q{flex:1;display:flex;align-items:center;padding:0 16px;color:var(--mu);font-size:14px}
+.S .search .go{width:56px;background:var(--ink);color:#fff;display:grid;place-items:center}
+.S .hi{display:flex;align-items:center;gap:8px;font-size:13px;line-height:1.3;white-space:nowrap}
+.S .hi b{display:block;font-size:14px}
+.S .hi .ct{position:relative}
+.S .hi .ct span{position:absolute;top:-6px;left:-8px;background:var(--sale);color:#fff;font-size:11px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center}
+.S .catnav{display:flex;gap:4px;align-items:center;padding:0 48px;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);height:50px;font-size:14.5px}
+.S .catnav a{padding:0 14px;height:100%;display:flex;align-items:center;color:var(--ink);text-decoration:none}
+.S .catnav a.all{background:var(--ink);color:#fff;gap:8px;font-weight:700;margin-inline-end:8px}
+.S .catnav a.on{box-shadow:inset 0 -2px 0 var(--ink);font-weight:700}
+.S .catnav .sp{flex:1}
+.S .catnav .hl{color:var(--sale);font-weight:700}
+.S .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:10px;background:var(--ink);color:#fff;font-weight:700;font-size:15px;white-space:nowrap}
+.S .btn.o{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.S .btn.w{background:#fff;color:var(--ink)}
+.S .btn.sm{height:38px;padding:0 16px;font-size:14px}
+.S .btn.full{width:100%}
+.S .crumb{font-size:13px;color:var(--mu);padding:18px 48px 0}
+.S .crumb b{color:var(--ink);font-weight:400}
+/* home */
+.S .heroG{display:grid;grid-template-columns:2fr 1fr;gap:16px;padding:20px 48px 0}
+.S .ban{border-radius:16px;overflow:hidden;position:relative;display:flex;align-items:center}
+.S .ban.main{height:400px;background:#161616;color:#fff;padding:0 56px}
+.S .ban.main .art{position:absolute;left:30px;bottom:30px}
+.S .ban.main h2{font-size:44px;font-weight:800;line-height:1.25;margin:0 0 12px;max-width:12ch}
+.S .ban.main p{color:#c9c9c9;font-size:17px;margin:0 0 26px;max-width:36ch}
+.S .ban .tx{position:relative}
+.S .dots{position:absolute;bottom:22px;right:56px;display:flex;gap:6px}
+.S .dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35)}
+.S .dots i.on{background:#fff;width:22px;border-radius:4px}
+.S .side2{display:grid;grid-template-rows:1fr 1fr;gap:16px}
+.S .ban.s{padding:0 26px;background:var(--sf)}
+.S .ban.s h3{font-size:22px;font-weight:800;margin:0 0 6px;line-height:1.3}
+.S .ban.s p{margin:0 0 12px;color:var(--mu);font-size:14px}
+.S .ban.s a{font-weight:700;font-size:14px;color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+.S .ban.s .art{position:absolute;left:14px;bottom:14px}
+.S .finder{margin:20px 48px 0;border:1px solid var(--ln);border-radius:16px;padding:18px 22px;display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:12px;align-items:center}
+.S .finder b{font-size:17px;margin-inline-end:10px}
+.S .finder b small{display:block;font-weight:400;font-size:13px;color:var(--mu)}
+.S .sel{height:46px;border:1px solid var(--ln);border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:14px;background:#fff}
+.S .sel span{color:var(--mu)}
+.S section{padding:44px 48px 0}
+.S .sh{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.S .sh h2{margin:0;font-size:24px;font-weight:800}
+.S .sh a{font-size:14px;color:var(--ink);font-weight:700;text-decoration:none}
+.S .cats{display:grid;grid-template-columns:repeat(8,1fr);gap:14px}
+.S .cat{text-align:center;font-size:14px;font-weight:700}
+.S .cat .im{aspect-ratio:1;border-radius:50%;background:var(--sf);display:grid;place-items:center;margin-bottom:10px}
+.S .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.S .grid.g4{grid-template-columns:repeat(4,1fr)}
+.S .grid.g3{grid-template-columns:repeat(3,1fr)}
+.S .pc{border:1px solid var(--ln);border-radius:14px;padding:12px;display:flex;flex-direction:column;position:relative;background:#fff}
+.S .pc .im{aspect-ratio:1;border-radius:10px;background:var(--sf);display:grid;place-items:center;margin-bottom:12px;position:relative}
+.S .pc .badge{position:absolute;top:8px;right:8px;background:var(--sale);color:#fff;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px}
+.S .pc .badge.n{background:var(--ink)}
+.S .pc .fav{position:absolute;top:8px;left:8px;width:32px;height:32px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--ink)}
+.S .pc .br{font-size:12px;color:var(--mu)}
+.S .pc h4{margin:2px 0 6px;font-size:14.5px;font-weight:700;line-height:1.5;min-height:44px}
+.S .rate{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mu)}
+.S .rate .st{display:flex;gap:1px;color:var(--star)}
+.S .fit{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:4px;margin-top:6px}
+.S .price{display:flex;align-items:baseline;gap:8px;margin:8px 0 12px}
+.S .price b{font-size:18px;font-weight:800}
+.S .price b small{font-size:12px;font-weight:400}
+.S .price s{color:var(--mu);font-size:13px}
+.S .price .off{color:var(--sale);font-size:12.5px;font-weight:700}
+.S .pc .btn{margin-top:auto}
+.S .bike{border:1px solid var(--ln);border-radius:14px;overflow:hidden;background:#fff}
+.S .bike .im{aspect-ratio:16/10;background:var(--sf);display:grid;place-items:center;position:relative}
+.S .bike .ins{position:absolute;top:12px;right:12px;background:#fff;border-radius:8px;padding:4px 10px;font-size:12.5px;font-weight:700;display:flex;gap:6px;align-items:center}
+.S .bike .ins b{background:var(--ok);color:#fff;border-radius:5px;padding:0 6px}
+.S .bike .bd{padding:14px 16px 16px}
+.S .bike h4{margin:0;font-size:17px;font-weight:800}
+.S .bike .meta{display:flex;gap:14px;color:var(--mu);font-size:13px;margin:4px 0 10px}
+.S .bike .row{display:flex;justify-content:space-between;align-items:center}
+.S .bike .row b{font-size:19px;font-weight:800}
+.S .svc{margin:44px 48px 0;border-radius:16px;background:var(--sf);display:grid;grid-template-columns:1.1fr 1fr;overflow:hidden}
+.S .svc .tx{padding:40px 44px}
+.S .svc h2{font-size:30px;font-weight:800;margin:0 0 10px;line-height:1.3}
+.S .svc p{color:var(--mu);margin:0 0 20px;max-width:44ch}
+.S .svc ul{list-style:none;padding:0;margin:0 0 24px;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:14.5px}
+.S .svc li{display:flex;justify-content:space-between;border-bottom:1px solid var(--ln);padding-bottom:8px}
+.S .svc li span{color:var(--mu)}
+.S .svc .art{background:#161616;display:grid;place-items:center}
+.S .trust{margin:44px 48px 0;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--ln);border-radius:16px}
+.S .trust div{display:flex;gap:14px;align-items:center;padding:20px 22px}
+.S .trust div + div{border-right:1px solid var(--ln)}
+.S .trust b{display:block;font-size:15px}
+.S .trust small{color:var(--mu);font-size:13px}
+.S footer{margin-top:56px;background:#121212;color:#cfcfcf;padding:44px 48px 24px;font-size:14px}
+.S footer .cols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1.3fr;gap:30px}
+.S footer h5{color:#fff;font-size:15px;margin:0 0 12px}
+.S footer span{display:block;margin-bottom:8px}
+.S footer .nl{display:flex;height:44px;border-radius:10px;overflow:hidden;margin-top:6px}
+.S footer .nl i{flex:1;background:#262626;display:flex;align-items:center;padding:0 12px;color:#8a8a8a;font-style:normal;font-size:13px}
+.S footer .nl b{background:#fff;color:#121212;display:grid;place-items:center;padding:0 16px;font-size:13px}
+.S footer .bt{display:flex;justify-content:space-between;border-top:1px solid #2a2a2a;margin-top:30px;padding-top:18px;font-size:13px;color:#8a8a8a}
+.S footer .pay{display:flex;gap:8px}
+.S footer .pay span{border:1px solid #3a3a3a;border-radius:6px;padding:2px 10px;margin:0;font-size:12px;color:#cfcfcf}
+/* listing */
+.S .lhd{padding:10px 48px 0;display:flex;justify-content:space-between;align-items:end}
+.S .lhd h1{font-size:30px;font-weight:800;margin:0}
+.S .lhd p{margin:2px 0 0;color:var(--mu);font-size:14px}
+.S .chips{display:flex;gap:8px;padding:16px 48px 0;flex-wrap:wrap}
+.S .chip{height:36px;padding:0 14px;border:1px solid var(--ln);border-radius:999px;display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.S .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.S .lay{display:grid;grid-template-columns:260px 1fr;gap:28px;padding:20px 48px 0}
+.S .flt{border:1px solid var(--ln);border-radius:14px;align-self:start}
+.S .flt .g{padding:16px 18px;border-bottom:1px solid var(--ln)}
+.S .flt .g:last-child{border:0}
+.S .flt h5{margin:0 0 10px;font-size:14.5px;display:flex;justify-content:space-between}
+.S .flt label{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:14px}
+.S .flt label small{margin-inline-start:auto;color:var(--mu);font-size:12px}
+.S .cb{width:18px;height:18px;border-radius:5px;border:1.5px solid #bdbdbd;flex:none;position:relative}
+.S .cb.on{background:var(--ink);border-color:var(--ink)}
+.S .cb.on::after{content:"";position:absolute;inset:2px 5px 5px 5px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.S .range{height:4px;background:var(--sf2);border-radius:4px;position:relative;margin:14px 6px 12px}
+.S .range i{position:absolute;right:10%;left:45%;top:0;bottom:0;background:var(--ink)}
+.S .range i::before,.S .range i::after{content:"";position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--ink)}
+.S .range i::before{right:-8px}.S .range i::after{left:-8px}
+.S .rin{display:flex;gap:8px}
+.S .rin div{flex:1;height:38px;border:1px solid var(--ln);border-radius:8px;display:flex;align-items:center;padding:0 10px;font-size:13px}
+.S .tb{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:14px;color:var(--mu)}
+.S .pager{display:flex;gap:6px;justify-content:center;margin-top:26px}
+.S .pager span{width:38px;height:38px;border:1px solid var(--ln);border-radius:8px;display:grid;place-items:center;font-size:14px}
+.S .pager span.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* product */
+.S .pdp{display:grid;grid-template-columns:1.1fr 1fr;gap:44px;padding:18px 48px 0}
+.S .gal{display:grid;grid-template-columns:84px 1fr;gap:12px}
+.S .gal .th{display:flex;flex-direction:column;gap:10px}
+.S .gal .th div{aspect-ratio:1;border-radius:10px;background:var(--sf);display:grid;place-items:center}
+.S .gal .th div.on{box-shadow:0 0 0 2px var(--ink)}
+.S .gal .big{aspect-ratio:1;border-radius:16px;background:var(--sf);display:grid;place-items:center}
+.S .pdp h1{font-size:28px;font-weight:800;margin:4px 0 8px;line-height:1.4}
+.S .pdp .price b{font-size:30px}
+.S .fitbox{border:1px solid var(--ln);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;margin:16px 0}
+.S .fitbox.ok{background:var(--oksoft);border-color:#cfe6d9}
+.S .fitbox b{display:block;font-size:14.5px}
+.S .fitbox small{color:var(--mu);font-size:13px}
+.S .opt h5{margin:0 0 8px;font-size:14px}
+.S .opt .os{display:flex;gap:8px;margin-bottom:16px}
+.S .opt .os span{height:40px;padding:0 16px;border:1px solid var(--ln);border-radius:10px;display:grid;place-items:center;font-size:14px}
+.S .opt .os span.on{border:2px solid var(--ink);font-weight:700}
+.S .buy{display:grid;grid-template-columns:130px 1fr 1fr;gap:10px}
+.S .qty{height:46px;border:1px solid var(--ln);border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:16px}
+.S .perks{border-top:1px solid var(--ln);margin-top:20px;padding-top:16px;display:grid;gap:10px;font-size:14px}
+.S .perks div{display:flex;gap:10px;align-items:center}
+.S .perks small{color:var(--mu)}
+.S .tabs{display:flex;gap:26px;border-bottom:1px solid var(--ln);margin:44px 48px 0}
+.S .tabs span{padding:12px 0;font-size:15px;color:var(--mu)}
+.S .tabs span.on{color:var(--ink);font-weight:700;box-shadow:inset 0 -2px 0 var(--ink)}
+.S .tabc{display:grid;grid-template-columns:1.3fr 1fr;gap:44px;padding:22px 48px 0}
+.S table{width:100%;border-collapse:collapse;font-size:14px}
+.S th{text-align:right;font-weight:400;color:var(--mu);padding:10px 0;border-bottom:1px solid var(--ln)}
+.S td{padding:11px 0;border-bottom:1px solid var(--ln)}
+.S .spec td:first-child{color:var(--mu);width:40%}
+/* cart & checkout */
+.S .cart{display:grid;grid-template-columns:1fr 380px;gap:28px;padding:18px 48px 0}
+.S .line{display:grid;grid-template-columns:100px 1fr 130px 110px 30px;gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid var(--ln)}
+.S .line .im{aspect-ratio:1;border-radius:10px;background:var(--sf);display:grid;place-items:center}
+.S .line b{display:block;font-size:15px;line-height:1.45}
+.S .line small{color:var(--mu);font-size:13px}
+.S .sum{border:1px solid var(--ln);border-radius:16px;padding:22px;align-self:start}
+.S .sum h3{margin:0 0 14px;font-size:18px}
+.S .dl{display:flex;justify-content:space-between;padding:8px 0;font-size:14.5px}
+.S .dl span{color:var(--mu)}
+.S .dl.tot{border-top:1px solid var(--ln);margin-top:8px;padding-top:14px;font-size:17px}
+.S .dl.tot b{font-size:22px}
+.S .coupon{display:flex;gap:8px;margin:14px 0}
+.S .coupon div{flex:1;height:44px;border:1px solid var(--ln);border-radius:10px;display:flex;align-items:center;padding:0 12px;color:var(--mu);font-size:14px}
+.S .steps{display:flex;gap:10px;align-items:center;padding:18px 48px 0;font-size:14px;color:var(--mu)}
+.S .steps i{width:26px;height:26px;border-radius:50%;border:1.5px solid #c8c8c8;display:grid;place-items:center;font-style:normal;font-size:12px}
+.S .steps .done i{background:var(--ink);border-color:var(--ink);color:#fff}
+.S .steps .on{color:var(--ink);font-weight:700}
+.S .steps .on i{border-color:var(--ink)}
+.S .steps hr{flex:0 0 60px;border:0;border-top:1px solid var(--ln)}
+.S .box{border:1px solid var(--ln);border-radius:16px;padding:22px;margin-bottom:16px}
+.S .box h3{margin:0 0 14px;font-size:17px;display:flex;justify-content:space-between}
+.S .box h3 a{font-size:14px;font-weight:400;text-decoration:underline;color:var(--ink)}
+.S .fl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.S .fld label{display:block;font-size:13px;color:var(--mu);margin-bottom:4px}
+.S .fld div{height:46px;border:1px solid var(--ln);border-radius:10px;display:flex;align-items:center;padding:0 12px;font-size:14.5px}
+.S .rad{display:flex;gap:12px;align-items:center;border:1px solid var(--ln);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.S .rad.on{border:2px solid var(--ink)}
+.S .rad i{width:18px;height:18px;border-radius:50%;border:1.5px solid #bdbdbd;flex:none}
+.S .rad.on i{border:6px solid var(--ink)}
+.S .rad b{display:block;font-size:14.5px}
+.S .rad small{color:var(--mu);font-size:13px}
+.S .rad .r{margin-inline-start:auto;font-weight:700}
+.S .mini{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ln);font-size:13.5px}
+.S .mini .im{aspect-ratio:1;border-radius:8px;background:var(--sf);display:grid;place-items:center;position:relative}
+.S .mini .im span{position:absolute;top:-6px;left:-6px;background:var(--mu);color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:grid;place-items:center}
+/* bike, booking, account */
+.S .bdp{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;padding:18px 48px 0}
+.S .bdp .big{aspect-ratio:16/10;border-radius:16px;background:var(--sf);display:grid;place-items:center}
+.S .thr{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px}
+.S .thr div{aspect-ratio:4/3;border-radius:10px;background:var(--sf)}
+.S .thr div.on{box-shadow:0 0 0 2px var(--ink)}
+.S .rep .r{display:grid;grid-template-columns:140px 1fr 70px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ln);font-size:14px}
+.S .pb{height:6px;border-radius:6px;background:var(--sf2);overflow:hidden}
+.S .pb i{display:block;height:100%;background:var(--ok)}
+.S .pb i.w{background:#d88a12}
+.S .tg{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;background:var(--oksoft);color:var(--ok)}
+.S .tg.w{background:#fbf0de;color:#9a5f08}
+.S .book{display:grid;grid-template-columns:1fr 380px;gap:28px;padding:18px 48px 0}
+.S .svs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.S .svs div{border:1px solid var(--ln);border-radius:12px;padding:14px}
+.S .svs div.on{border:2px solid var(--ink)}
+.S .svs b{display:block;font-size:14.5px}
+.S .svs small{color:var(--mu);font-size:13px}
+.S .days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.S .days div{border:1px solid var(--ln);border-radius:10px;text-align:center;padding:8px 0;font-size:12px;color:var(--mu)}
+.S .days div b{display:block;font-size:19px;color:var(--ink)}
+.S .days div.on{background:var(--ink);border-color:var(--ink);color:#bbb}
+.S .days div.on b{color:#fff}
+.S .days div.off{opacity:.4}
+.S .times{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.S .times span{height:40px;border:1px solid var(--ln);border-radius:10px;display:grid;place-items:center;font-size:14px}
+.S .times span.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.S .times span.off{color:#b5b5b5;text-decoration:line-through}
+.S .acc{display:grid;grid-template-columns:240px 1fr;gap:28px;padding:18px 48px 0}
+.S .side{border:1px solid var(--ln);border-radius:14px;padding:8px;align-self:start}
+.S .side .u{padding:12px;border-bottom:1px solid var(--ln);margin-bottom:6px}
+.S .side .u b{display:block}
+.S .side .u small{color:var(--mu)}
+.S .side a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--ink);text-decoration:none;font-size:14.5px}
+.S .side a.on{background:var(--sf);font-weight:700}
+.S .veh{display:grid;grid-template-columns:220px 1fr auto;gap:22px;align-items:center;border:1px solid var(--ln);border-radius:16px;padding:16px;margin-bottom:16px}
+.S .veh .im{aspect-ratio:16/10;border-radius:10px;background:var(--sf);display:grid;place-items:center}
+.S .kv{display:grid;grid-template-columns:repeat(4,auto);gap:22px;margin-top:10px}
+.S .kv small{display:block;color:var(--mu);font-size:12px}
+.S .kv b{font-size:16px}
+.S .meter{height:6px;border-radius:6px;background:var(--sf2);margin-top:12px;overflow:hidden}
+.S .meter i{display:block;height:100%;background:var(--ink)}
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <h1 class="t">جراج أبو يوسف: المتجر</h1>
+  <p class="lead">متجر إلكتروني بالشكل اللي الناس متعودة تشتري منه: بحث كبير، وأقسام، وعروض، وصفحة منتج واضحة، وسلة، ودفع. أبيض وأسود ونضيف، والأحمر للخصومات بس. قلّب بين الصفحات تحت.</p>
+  <div class="pages" role="tablist" aria-label="الصفحات" id="pages"></div>
+  <div class="frame">
+    <div class="bar"><i></i><i></i><i></i><span id="url">aygarage.com</span></div>
+    <div class="viewport" id="vp"><div class="mock" id="mock"></div></div>
+  </div>
+  <p class="note">مقاس ديسكتوب (1280px) متصغّر. الصور رسومات مؤقتة، والأسعار والتقييمات وسياسة الاسترجاع والتوصيل كلها أمثلة لحد ما تبعتلي البيانات الحقيقية.</p>
+</div>
+
+<script>
+(function(){
+const PAGES=[["home","الرئيسية","/"],["cat","قسم الزيوت","/c/oils"],["pdp","صفحة منتج","/p/motul-7100-10w40"],["cart","السلة","/cart"],["checkout","الدفع","/checkout"],["bikes","موتوسيكلات للبيع","/bikes"],["bike","صفحة موتوسيكل","/bikes/zt350t-2023"],["book","حجز صيانة","/booking"],["account","حسابي","/account"]];
+const pi={search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',cart:'<path d="M3 4h2l2.4 11h10.2L20 7H7"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',down:'<path d="M6 9l6 6 6-6"/>',check:'<path d="M5 12l5 5 9-10"/>',truck:'<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',cash:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',ret:'<path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',wrench:'<path d="M14 6a4 4 0 0 0 5 5l-9 9a2 2 0 0 1-3-3l9-9a4 4 0 0 0-2-2z"/>',bike:'<circle cx="5" cy="16" r="3.5"/><circle cx="19" cy="16" r="3.5"/><path d="M5 16l4-6h6l4 6M12 10l-2 6"/>',box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',pin:'<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>'};
+const ic=(k,w,sw)=>`<svg width="${w||20}" height="${w||20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw||1.7}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pi[k]}</svg>`;
+const star=`<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z"/></svg>`;
+function prod(t,w,c){c=c||"#1d1d1d";const s={
+ oil:`<rect x="32" y="20" width="36" height="64" rx="6" fill="${c}"/><rect x="41" y="9" width="18" height="13" rx="2" fill="#555"/><rect x="36" y="40" width="28" height="22" rx="2" fill="#fff"/><rect x="40" y="46" width="20" height="3" fill="${c}"/><rect x="40" y="52" width="14" height="2" fill="#bbb"/>`,
+ filter:`<rect x="26" y="28" width="48" height="54" rx="8" fill="${c}"/><rect x="26" y="42" width="48" height="3" fill="#666"/><rect x="26" y="64" width="48" height="3" fill="#666"/><circle cx="50" cy="24" r="9" fill="#8a8a8a"/><rect x="38" y="50" width="24" height="8" rx="1" fill="#fff"/>`,
+ brake:`<path d="M20 72 Q20 30 60 22 L80 22 L80 40 Q46 44 42 78 Z" fill="#8f8f8f"/><path d="M28 70 Q30 40 62 32 L74 32 L74 36 Q48 42 44 72 Z" fill="${c}"/>`,
+ helmet:`<path d="M16 66 Q16 22 54 20 Q86 20 86 56 L86 72 L28 76 Z" fill="${c}"/><path d="M40 44 Q60 38 84 46 L84 60 L44 62 Z" fill="#6b6b6b"/>`,
+ chain:`<g fill="none" stroke="${c}" stroke-width="6"><rect x="12" y="40" width="22" height="16" rx="8"/><rect x="30" y="40" width="22" height="16" rx="8"/><rect x="48" y="40" width="22" height="16" rx="8"/><rect x="66" y="40" width="22" height="16" rx="8"/></g>`,
+ plug:`<rect x="44" y="8" width="12" height="20" fill="#eee" stroke="#999"/><rect x="38" y="28" width="24" height="18" fill="#8f8f8f"/><rect x="42" y="46" width="16" height="30" fill="#c4c4c4"/><rect x="48" y="76" width="4" height="12" fill="#777"/>`,
+ glove:`<path d="M30 86 L30 46 L34 20 L40 20 L42 42 L46 14 L52 14 L52 42 L58 16 L64 16 L62 44 L68 24 L74 26 L70 60 L66 86 Z" fill="${c}"/><rect x="30" y="74" width="36" height="12" fill="#8f8f8f"/>`,
+ light:`<circle cx="50" cy="50" r="30" fill="${c}"/><circle cx="50" cy="50" r="20" fill="#e9e9e9"/><circle cx="50" cy="50" r="8" fill="#fff"/>`,
+ tyre:`<circle cx="50" cy="50" r="36" fill="${c}"/><circle cx="50" cy="50" r="20" fill="#e9e9e9"/><circle cx="50" cy="50" r="36" fill="none" stroke="#3a3a3a" stroke-width="4" stroke-dasharray="4 4"/>`,
+ battery:`<rect x="20" y="30" width="60" height="44" rx="4" fill="${c}"/><rect x="28" y="24" width="10" height="6" fill="#888"/><rect x="62" y="24" width="10" height="6" fill="#888"/><rect x="30" y="44" width="40" height="14" rx="2" fill="#fff"/>`
+}[t];return `<svg width="${w}" viewBox="0 0 100 96" aria-hidden="true">${s}</svg>`}
+function bike(w,body,st){body=body||"#c9c9c9";st=st||"#3a3a3a";return `<svg width="${w}" viewBox="0 0 400 240" aria-hidden="true"><g fill="none" stroke="${st}" stroke-width="7"><circle cx="90" cy="170" r="50"/><circle cx="315" cy="170" r="50"/></g><g fill="${st}"><circle cx="90" cy="170" r="18"/><circle cx="315" cy="170" r="20"/></g><g fill="none" stroke="${st}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M90 170 L178 148"/><path d="M178 148 L202 96 L286 84"/><path d="M315 170 L286 70"/><path d="M280 60 L306 54"/><path d="M186 168 L118 158"/></g><path d="M160 122 L232 118 L240 160 L182 170 Z" fill="#555"/><path d="M195 80 Q232 54 282 68 L290 92 L206 100 Z" fill="${body}"/><path d="M106 94 Q150 79 197 83 L199 96 L112 102 Z" fill="#222"/><path d="M118 152 L64 141 L60 155 L116 164 Z" fill="#777"/><path d="M266 142 Q314 104 352 136" fill="none" stroke="${body}" stroke-width="8" stroke-linecap="round"/></svg>`}
+const P=[
+ {n:"زيت موتول 7100 4T 10W-40 تخليقي، لتر",b:"Motul",t:"oil",c:"#b3261e",p:1450,o:1650,r:4.8,rc:126,fit:1,bd:"الأكثر مبيعاً"},
+ {n:"فلتر زيت أصلي Zontes ZT350",b:"Zontes",t:"filter",p:320,r:4.9,rc:88,fit:1},
+ {n:"تيل فرامل أمامي Brembo سيراميك",b:"Brembo",t:"brake",p:680,o:790,r:4.7,rc:54,fit:1},
+ {n:"خوذة LS2 Rapid II، أسود مط",b:"LS2",t:"helmet",p:4200,r:4.6,rc:41,bd:"جديد"},
+ {n:"جنزير DID 520 VX3 بحلقات X",b:"DID",t:"chain",c:"#7d7d7d",p:2100,o:2400,r:4.8,rc:33,fit:1},
+ {n:"بوجيه NGK Iridium CR8EIX",b:"NGK",t:"plug",p:240,r:4.9,rc:97,fit:1},
+ {n:"جوانتي Alpinestars SMX-1 Air",b:"Alpinestars",t:"glove",p:1350,r:4.5,rc:22},
+ {n:"بطارية Yuasa YTZ10S جل",b:"Yuasa",t:"battery",p:2850,r:4.7,rc:19,fit:1},
+ {n:"زيت موتول 5100 15W-50 نص تخليقي",b:"Motul",t:"oil",c:"#1f6b46",p:980,r:4.6,rc:64,fit:1},
+ {n:"كاوتش Pirelli Angel ST خلفي 150/70",b:"Pirelli",t:"tyre",p:5400,o:5900,r:4.8,rc:12,fit:1}
+];
+const fmt=n=>n.toLocaleString("en");
+function stars(r){return `<span class="st">${star.repeat(5)}</span>${r}`}
+function pc(x){const off=x.o?Math.round((1-x.p/x.o)*100):0;return `<div class="pc"><div class="im">${x.o?`<span class="badge">-${off}%</span>`:x.bd?`<span class="badge n">${x.bd}</span>`:""}<span class="fav">${ic("heart",16)}</span>${prod(x.t,120,x.c)}</div><div class="br">${x.b}</div><h4>${x.n}</h4><div class="rate">${stars(x.r)} <span>(${x.rc})</span></div>${x.fit?`<div class="fit">${ic("check",13,2.4)}يركب على ZT350-T</div>`:`<div class="fit" style="color:var(--mu)">مقاسات متعددة</div>`}<div class="price"><b>${fmt(x.p)} <small>ج.م</small></b>${x.o?`<s>${fmt(x.o)}</s>`:""}</div><span class="btn sm">${ic("cart",16)} أضف للسلة</span></div>`}
+const B=[{m:"Zontes ZT350-T",y:2023,km:"12,400",p:"245,000",s:92,col:"#9e2b25"},{m:"Zontes ZT125-U",y:2024,km:"3,200",p:"98,000",s:97,col:"#2e2e2e"},{m:"Zontes ZT350-GK",y:2023,km:"7,800",p:"232,000",s:94,col:"#56634a"},{m:"Zontes ZT310-R",y:2022,km:"18,900",p:"189,000",s:86,col:"#d6d6d6"},{m:"Zontes ZT310-X",y:2021,km:"26,000",p:"162,000",s:81,col:"#2d4f80"},{m:"Zontes ZT350-D",y:2024,km:"1,900",p:"268,000",s:98,col:"#8a8a8a"}];
+function bc(x){return `<div class="bike"><div class="im"><span class="ins"><b>${x.s}</b>فحص أبو يوسف</span>${bike(260,x.col)}</div><div class="bd"><h4>${x.m}</h4><div class="meta"><span>${x.y}</span><span>${x.km} كم</span><span>أول مالك</span></div><div class="row"><b>${x.p} <small style="font-size:12px;font-weight:400">ج.م</small></b><span class="btn o sm">التفاصيل</span></div></div></div>`}
+
+const header=(on)=>`<div class="S"><div class="ann">توصيل لكل المحافظات · استلام مجاني من الجراج · كلّمنا: 010 0000 0000</div>
+ <header><div class="logo">جراج أبو يوسف<small>ZONTES SPECIALIST</small></div><div class="search"><span class="cat">كل الأقسام ${ic("down",14)}</span><span class="q">ابحث عن زيت، فلتر، قطعة غيار أو رقم القطعة…</span><span class="go">${ic("search",20,2)}</span></div>
+ <div class="hi">${ic("bike",24)}<span><small style="color:var(--mu)">موتوسيكلي</small><b>ZT350-T</b></span></div><div class="hi">${ic("user",24)}<span><small style="color:var(--mu)">أهلاً كريم</small><b>حسابي</b></span></div><div class="hi">${ic("heart",24)}</div><div class="hi"><span class="ct">${ic("cart",26)}<span>3</span></span><span><small style="color:var(--mu)">السلة</small><b>6,120 ج.م</b></span></div></header>
+ <nav class="catnav"><a class="all">${ic("menu",18)} كل الأقسام</a>${[["زيوت","oil"],["فلاتر"],["فرامل"],["كهرباء وبطاريات"],["إطارات"],["نقل حركة"],["خوذ وملابس"],["إكسسوارات"]].map(c=>`<a class="${on==c[1]?"on":""}">${c[0]}</a>`).join("")}<span class="sp"></span><a class="${on=="bikes"?"on":""}">موتوسيكلات للبيع</a><a class="${on=="book"?"on":""}">حجز صيانة</a><a class="hl">العروض</a></nav>`;
+const footer=`<footer><div class="cols"><div><div class="logo" style="color:#fff">جراج أبو يوسف<small style="color:#8a8a8a">ZONTES SPECIALIST</small></div><p style="margin:14px 0 0;max-width:34ch;line-height:1.7">قطع غيار وزيوت وإكسسوارات أصلية لموتوسيكلات Zontes، وصيانة وفحص في الجراج.</p></div>
+ <div><h5>تسوّق</h5><span>زيوت</span><span>فلاتر</span><span>فرامل</span><span>خوذ وملابس</span><span>العروض</span></div><div><h5>الجراج</h5><span>حجز صيانة</span><span>فحص قبل الشراء</span><span>موتوسيكلات للبيع</span><span>العنوان والمواعيد</span></div><div><h5>مساعدة</h5><span>الشحن والتوصيل</span><span>الاسترجاع والاستبدال</span><span>تتبع الطلب</span><span>الأسئلة الشائعة</span></div>
+ <div><h5>العروض على إيميلك</h5><span>خصومات وتذكير بمواعيد الصيانة.</span><div class="nl"><i>بريدك الإلكتروني</i><b>اشترك</b></div><div style="margin-top:16px">واتساب: 010 0000 0000</div></div></div>
+ <div class="bt"><span>© 2026 جراج أبو يوسف</span><div class="pay"><span>كاش عند الاستلام</span><span>Visa</span><span>Mastercard</span><span>فودافون كاش</span><span>InstaPay</span></div></div></footer></div>`;
+
+const V={
+ home:()=>`${header("")}
+  <div class="heroG"><div class="ban main"><div class="art">${bike(460,"#9e2b25","#4a4a4a")}</div><div class="tx"><h2>طقم صيانة الـ 15,000 كم بخصم 10%</h2><p>زيت موتول 7100 + فلتر أصلي + تيل Brembo. يوصلك البيت أو نركّبهولك في الجراج.</p><div style="display:flex;gap:10px"><span class="btn w">اطلب الطقم · 5,350 ج.م</span><span class="btn" style="background:transparent;box-shadow:inset 0 0 0 1.5px #fff">احجز التركيب</span></div></div><div class="dots"><i class="on"></i><i></i><i></i></div></div>
+   <div class="side2"><div class="ban s"><div class="tx"><h3>خوذ LS2 الجديدة</h3><p>موديلات 2026 وصلت</p><a>تسوّق الخوذ</a></div><div class="art">${prod("helmet",120)}</div></div><div class="ban s"><div class="tx"><h3>موتوسيكلات مفحوصة</h3><p>22 موتوسيكل بتقرير فحص</p><a>شوف المعروض</a></div><div class="art">${bike(150,"#56634a")}</div></div></div></div>
+  <div class="finder"><b>دوّر على قطع موتوسيكلك<small>هنعرضلك اللي يركب بس</small></b><div class="sel">ZT350-T <span>${ic("down",14)}</span></div><div class="sel">2023 <span>${ic("down",14)}</span></div><div class="sel"><span>كل الأقسام</span> <span>${ic("down",14)}</span></div><span class="btn">اعرض القطع</span></div>
+  <section><div class="sh"><h2>تسوّق حسب القسم</h2></div><div class="cats">${[["oil","زيوت"],["filter","فلاتر"],["brake","فرامل"],["battery","بطاريات"],["tyre","إطارات"],["chain","نقل حركة"],["helmet","خوذ"],["glove","ملابس وجوانتيات"]].map(c=>`<div class="cat"><div class="im">${prod(c[0],80)}</div>${c[1]}</div>`).join("")}</div></section>
+  <section><div class="sh"><h2>الأكثر مبيعاً</h2><a>عرض الكل</a></div><div class="grid">${P.slice(0,5).map(pc).join("")}</div></section>
+  <section><div class="sh"><h2>عروض الأسبوع</h2><a>كل العروض</a></div><div class="grid">${[P[0],P[2],P[4],P[9],P[7]].map(pc).join("")}</div></section>
+  <section><div class="sh"><h2>موتوسيكلات مستعملة مفحوصة</h2><a>كل الموتوسيكلات (22)</a></div><div class="grid g3">${B.slice(0,3).map(bc).join("")}</div></section>
+  <div class="svc"><div class="tx"><h2>احجز صيانة موتوسيكلك أونلاين</h2><p>اختار الخدمة والميعاد، ويوصلك تأكيد على الواتساب. الدفع في الجراج.</p><ul>${[["تغيير زيت وفلتر","1,770 ج.م"],["صيانة شاملة","2,450 ج.م"],["فحص قبل الشراء","600 ج.م"],["ضبط بلوف","900 ج.م"]].map(s=>`<li>${s[0]}<span>${s[1]}</span></li>`).join("")}</ul><span class="btn">احجز ميعاد</span></div><div class="art">${bike(400,"#d6d6d6","#5a5a5a")}</div></div>
+  <div class="trust">${[["truck","توصيل لكل المحافظات","خلال 2-4 أيام عمل"],["shield","قطع أصلية","من الوكيل أو الشركة المصنعة"],["cash","الدفع عند الاستلام","أو كارت وفودافون كاش"],["ret","استرجاع خلال 14 يوم","لو القطعة ما ركبتش"]].map(t=>`<div>${ic(t[0],30,1.4)}<span><b>${t[1]}</b><small>${t[2]}</small></span></div>`).join("")}</div>${footer}`,
+ cat:()=>`${header("oil")}<div class="crumb">الرئيسية / زيوت / <b>زيوت المحرك</b></div>
+  <div class="lhd"><div><h1>زيوت المحرك</h1><p>48 منتج</p></div></div>
+  <div class="chips"><span class="chip on">${ic("check",14,2.4)} يركب على ZT350-T ${ic("x",14)}</span><span class="chip">10W-40 ${ic("x",14)}</span><span class="chip">Motul ${ic("x",14)}</span><span class="chip" style="border:0;text-decoration:underline">مسح الكل</span></div>
+  <div class="lay"><div class="flt"><div class="g"><h5>موديل الموتوسيكل</h5><div class="sel">ZT350-T · 2023 <span>${ic("down",14)}</span></div></div>
+   <div class="g"><h5>اللزوجة ${ic("down",14)}</h5>${[["10W-40",18,1],["15W-50",9],["10W-50",7],["20W-50",14]].map(l=>`<label><span class="cb ${l[2]?"on":""}"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div>
+   <div class="g"><h5>الماركة ${ic("down",14)}</h5>${[["Motul",16,1],["Castrol",11],["Liqui Moly",8],["Shell",13],["Repsol",6]].map(l=>`<label><span class="cb ${l[2]?"on":""}"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div>
+   <div class="g"><h5>النوع ${ic("down",14)}</h5>${[["تخليقي 100%",12],["نص تخليقي",21],["معدني",15]].map(l=>`<label><span class="cb"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div>
+   <div class="g"><h5>السعر</h5><div class="range"><i></i></div><div class="rin"><div>500</div><div>2,000</div></div></div>
+   <div class="g"><label><span class="cb on"></span>متوفر بس</label><label><span class="cb"></span>عليه خصم</label></div></div>
+  <div><div class="tb"><span>عرض 1-12 من 18 منتج</span><span class="sel" style="height:40px;gap:24px">ترتيب: الأكثر مبيعاً <span>${ic("down",14)}</span></span></div><div class="grid g4">${[P[0],P[8],P[0],P[8],P[0],P[8],P[0],P[8]].map((x,i)=>pc(Object.assign({},x,{n:[x.n,x.n,"كاسترول Power1 Racing 4T 10W-40","ليكوي مولي Street Race 10W-40","شل Advance Ultra 10W-40","موبيل 1 Racing 4T 15W-50","موتول 300V Factory Line 10W-40","ريبسول Moto Racing 10W-40"][i],b:["Motul","Motul","Castrol","Liqui Moly","Shell","Mobil","Motul","Repsol"][i],p:[1450,980,1180,1390,1060,1290,2350,1240][i],o:[1650,0,1300,0,0,0,0,1400][i],bd:i==6?"جديد":""}))).join("")}</div>
+  <div class="pager"><span>‹</span><span class="on">1</span><span>2</span><span>›</span></div></div></div>${footer}`,
+ pdp:()=>{const x=P[0];return `${header("oil")}<div class="crumb">الرئيسية / زيوت / زيوت المحرك / <b>موتول 7100 10W-40</b></div>
+  <div class="pdp"><div class="gal"><div class="th">${[1,2,3,4].map((_,i)=>`<div class="${i==0?"on":""}">${prod(i==2?"oil":"oil",50,i==1?"#7d1a14":x.c)}</div>`).join("")}</div><div class="big">${prod("oil",360,x.c)}</div></div>
+   <div><div style="font-size:14px;color:var(--mu)">Motul · كود AYG-OIL-7100</div><h1>زيت موتول 7100 4T 10W-40 تخليقي 100%، لتر</h1><div class="rate" style="font-size:14px">${stars(4.8)} <span style="text-decoration:underline">126 تقييم</span></div>
+    <div class="price"><b>1,450 <small>ج.م</small></b><s>1,650</s><span class="off">وفّر 200 ج.م</span></div>
+    <div class="fitbox ok">${ic("check",22,2.2)}<span><b>يركب على موتوسيكلك ZT350-T · 2023</b><small>محتاج 3 لتر لكل تغيير زيت</small></span><a style="margin-inline-start:auto;font-size:13px;color:var(--ink);text-decoration:underline">غيّر</a></div>
+    <div class="opt"><h5>الحجم</h5><div class="os"><span class="on">1 لتر</span><span>4 لتر · 5,400</span><span>طقم 3 لتر + فلتر · 4,450</span></div></div>
+    <div class="buy"><div class="qty"><span>−</span>3<span>+</span></div><span class="btn">${ic("cart",18)} أضف للسلة</span><span class="btn o">اشتري دلوقتي</span></div>
+    <div style="font-size:14px;color:var(--ok);margin-top:10px">متوفر · 24 قطعة في المخزن</div>
+    <div class="perks"><div>${ic("truck",22,1.5)}<span>يوصلك الخميس 12 نوفمبر <small>· توصيل 60 ج.م، ومجاني فوق 3,000</small></span></div><div>${ic("pin",22,1.5)}<span>استلام من الجراج <small>· جاهز النهارده بعد 3 العصر</small></span></div><div>${ic("ret",22,1.5)}<span>استرجاع خلال 14 يوم <small>· لو العبوة ما اتفتحتش</small></span></div></div></div></div>
+  <div class="tabs"><span class="on">الوصف</span><span>المواصفات</span><span>التقييمات (126)</span><span>الموديلات المتوافقة</span></div>
+  <div class="tabc"><div><p style="margin-top:0;line-height:1.9">زيت تخليقي 100% بتقنية Ester من موتول، معمول لمحركات الموتوسيكلات الرباعية اللي فيها كلاتش مبلول. بيحمي المحرك في درجات الحرارة العالية، وبيحافظ على نعومة نقل السرعات. أبو يوسف بيرشحه لموتوسيكلات ZT310 وZT350 مع تغيير كل 3,000 كم.</p></div>
+   <table class="spec"><tr><td>اللزوجة</td><td>10W-40</td></tr><tr><td>النوع</td><td>تخليقي 100% (Ester)</td></tr><tr><td>المواصفات</td><td>API SN · JASO MA2</td></tr><tr><td>الحجم</td><td>1 لتر</td></tr><tr><td>بلد المنشأ</td><td>فرنسا</td></tr></table></div>
+  <section><div class="sh"><h2>بيتشترى معاه</h2></div><div class="grid">${[P[1],P[5],P[2],P[4],P[7]].map(pc).join("")}</div></section>${footer}`},
+ cart:()=>`${header("")}<div class="crumb">الرئيسية / <b>السلة</b></div>
+  <div class="cart"><div><h1 style="font-size:28px;margin:0 0 4px">السلة (3 منتجات)</h1><div style="background:var(--oksoft);color:var(--ok);border-radius:10px;padding:10px 14px;font-size:14px;margin:12px 0 6px">${"فاضل 0 ج.م على التوصيل المجاني، طلبك هيوصل مجاناً"}</div>
+   ${[[P[0],3],[P[1],1],[P[2],1]].map(l=>`<div class="line"><div class="im">${prod(l[0].t,70,l[0].c)}</div><div><b>${l[0].n}</b><small>${l[0].b} · <span style="color:var(--ok)">يركب على ZT350-T</span></small></div><div class="qty" style="height:40px"><span>−</span>${l[1]}<span>+</span></div><b style="text-align:left">${fmt(l[0].p*l[1])} ج.م</b><span style="color:var(--mu)">${ic("x",18)}</span></div>`).join("")}
+   <div style="display:flex;justify-content:space-between;margin-top:16px"><span class="btn o sm">كمّل تسوّق</span><span style="font-size:14px;color:var(--mu);display:flex;gap:8px;align-items:center">${ic("wrench",18)} عايز نركّبهم في الجراج؟ <a style="color:var(--ink);text-decoration:underline">احجز تركيب</a></span></div></div>
+  <div class="sum"><h3>ملخص الطلب</h3><div class="dl"><span>المنتجات (5 قطع)</span><b>5,350 ج.م</b></div><div class="dl"><span>الخصم</span><b style="color:var(--sale)">− 710 ج.م</b></div><div class="dl"><span>التوصيل</span><b>مجاناً</b></div><div class="coupon"><div>كود الخصم</div><span class="btn o sm" style="height:44px">تطبيق</span></div><div class="dl tot"><span>الإجمالي</span><b>4,640 ج.م</b></div><span class="btn full" style="height:52px;margin-top:10px">إتمام الشراء</span><div style="text-align:center;font-size:13px;color:var(--mu);margin-top:10px">كاش عند الاستلام · كارت · فودافون كاش · InstaPay</div></div></div>
+  <section><div class="sh"><h2>ممكن تحتاج كمان</h2></div><div class="grid">${[P[5],P[4],P[7],P[3],P[6]].map(pc).join("")}</div></section>${footer}`,
+ checkout:()=>`<div class="S"><header style="border-bottom:1px solid var(--ln)"><div class="logo">جراج أبو يوسف<small>ZONTES SPECIALIST</small></div><span style="flex:1"></span><span style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--mu)">${ic("shield",18)} دفع آمن</span></header>
+  <div class="steps"><span class="done" style="display:flex;gap:8px;align-items:center"><i>✓</i>السلة</span><hr><span class="on" style="display:flex;gap:8px;align-items:center"><i>2</i>التوصيل والدفع</span><hr><span style="display:flex;gap:8px;align-items:center"><i>3</i>تأكيد الطلب</span></div>
+  <div class="cart"><div><div class="box"><h3>بيانات التوصيل <a>عنوان محفوظ</a></h3><div class="fl"><div class="fld"><label>الاسم بالكامل</label><div>كريم محمود</div></div><div class="fld"><label>رقم الموبايل</label><div style="direction:ltr;justify-content:flex-end">010 1234 5678</div></div><div class="fld"><label>المحافظة</label><div style="justify-content:space-between">القاهرة ${ic("down",14)}</div></div><div class="fld"><label>المنطقة</label><div style="justify-content:space-between">مدينة نصر ${ic("down",14)}</div></div><div class="fld" style="grid-column:span 2"><label>العنوان بالتفصيل</label><div>12 شارع عباس العقاد، الدور 3، شقة 7</div></div></div></div>
+   <div class="box"><h3>طريقة الاستلام</h3><div class="rad on"><i></i><span><b>توصيل للبيت</b><small>يوصل الخميس 12 نوفمبر</small></span><span class="r">مجاناً</span></div><div class="rad"><i></i><span><b>استلام من الجراج</b><small>جاهز النهارده بعد 3 العصر</small></span><span class="r">مجاناً</span></div></div>
+   <div class="box"><h3>طريقة الدفع</h3>${[["كاش عند الاستلام","ادفع للمندوب لما الطلب يوصل",1],["كارت بنكي","Visa · Mastercard · Meeza"],["فودافون كاش","هيوصلك طلب دفع على رقمك"],["InstaPay","تحويل لحساب الجراج"]].map(r=>`<div class="rad ${r[2]?"on":""}"><i></i><span><b>${r[0]}</b><small>${r[1]}</small></span></div>`).join("")}</div></div>
+  <div class="sum"><h3>طلبك</h3>${[[P[0],3],[P[1],1],[P[2],1]].map(l=>`<div class="mini"><div class="im">${prod(l[0].t,40,l[0].c)}<span>${l[1]}</span></div><span>${l[0].n}</span><b>${fmt(l[0].p*l[1])}</b></div>`).join("")}<div class="dl" style="margin-top:8px"><span>المنتجات</span><b>5,350 ج.م</b></div><div class="dl"><span>الخصم</span><b style="color:var(--sale)">− 710 ج.م</b></div><div class="dl"><span>التوصيل</span><b>مجاناً</b></div><div class="dl tot"><span>الإجمالي</span><b>4,640 ج.م</b></div><span class="btn full" style="height:52px;margin-top:10px">تأكيد الطلب</span><div style="font-size:12.5px;color:var(--mu);margin-top:10px;text-align:center">بالضغط على تأكيد الطلب انت موافق على شروط البيع وسياسة الاسترجاع.</div></div></div><div style="height:48px"></div></div>`,
+ bikes:()=>`${header("bikes")}<div class="crumb">الرئيسية / <b>موتوسيكلات للبيع</b></div>
+  <div class="lhd"><div><h1>موتوسيكلات مستعملة مفحوصة</h1><p>22 موتوسيكل · كل واحد عليه تقرير فحص 120 نقطة من الجراج</p></div><span class="btn o sm">عندك موتوسيكل تبيعه؟</span></div>
+  <div class="lay"><div class="flt"><div class="g"><h5>الموديل</h5>${[["ZT125",4],["ZT310",7],["ZT350",9,1],["ZT703",2]].map(l=>`<label><span class="cb ${l[2]?"on":""}"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div><div class="g"><h5>السعر</h5><div class="range"><i></i></div><div class="rin"><div>90,000</div><div>270,000</div></div></div><div class="g"><h5>الكيلومترات</h5>${[["أقل من 5,000",4],["5,000 – 20,000",12],["أكتر من 20,000",6]].map(l=>`<label><span class="cb"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div><div class="g"><h5>درجة الفحص</h5>${[["90 وأكتر",8,1],["80 – 89",9]].map(l=>`<label><span class="cb ${l[2]?"on":""}"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div><div class="g"><h5>السنة</h5>${[["2024",5],["2023",9],["2022",5],["2021 وأقدم",3]].map(l=>`<label><span class="cb"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div></div>
+  <div><div class="tb"><span>22 موتوسيكل</span><span class="sel" style="height:40px;gap:24px">ترتيب: الأحدث <span>${ic("down",14)}</span></span></div><div class="grid g3">${B.map(bc).join("")}</div></div></div>${footer}`,
+ bike:()=>{const x=B[0];return `${header("bikes")}<div class="crumb">الرئيسية / موتوسيكلات للبيع / <b>${x.m} ${x.y}</b></div>
+  <div class="bdp"><div><div class="big">${bike(560,x.col)}</div><div class="thr"><div class="on"></div><div></div><div></div><div></div><div></div></div></div>
+   <div><span class="tg">${x.s}/100 · فحص أبو يوسف</span><h1 style="font-size:30px;font-weight:800;margin:10px 0 2px">${x.m} · ${x.y}</h1><div style="color:var(--mu)">${x.km} كم · أول مالك · رخصة سارية لحد مارس 2027</div>
+    <div class="price"><b style="font-size:32px">${x.p} <small>ج.م</small></b></div><div style="font-size:14px;color:var(--mu);margin-top:-6px">أو تقسيط من 10,200 ج.م في الشهر</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0"><span class="btn">احجز معاينة في الجراج</span><span class="btn o">كلّمنا واتساب</span></div>
+    <table class="spec"><tr><td>المحرك</td><td>348cc · سلندر واحد</td></tr><tr><td>القوة</td><td>38 حصان</td></tr><tr><td>ناقل الحركة</td><td>6 سرعات</td></tr><tr><td>الفرامل</td><td>ABS مزدوج</td></tr><tr><td>الضمان</td><td>3 شهور على المحرك</td></tr></table></div></div>
+  <div class="tabs"><span class="on">تقرير الفحص</span><span>الوصف</span><span>سجل الصيانة</span></div>
+  <div class="tabc"><div class="rep">${[["المحرك",100,"سليم"],["الفرامل وABS",100,"سليم"],["الكهرباء",94,"لمبة إشارة خلفي",1],["الشاسيه والرقم",100,"سليم"],["العفشة",100,"سليم"],["الكاوتش",75,"الخلفي 70%",1]].map(r=>`<div class="r"><span>${r[0]}</span><div class="pb"><i class="${r[3]?"w":""}" style="width:${r[1]}%"></i></div><span class="tg ${r[3]?"w":""}" style="text-align:center">${r[3]?"ملاحظة":"سليم"}</span></div>`).join("")}</div>
+   <div class="box" style="margin:0"><h3>ملاحظات أبو يوسف</h3><p style="margin:0;color:var(--mu);line-height:1.8">الموتوسيكل نضيف ومتصان عند الجراج من أول 6,000 كم. لمبة الإشارة الخلفية هتتغير مجاناً قبل التسليم. الكاوتش الخلفي 70% ومحتاج يتغير قبل 16,000 كم.</p><span class="btn o sm" style="margin-top:14px">تحميل التقرير PDF</span></div></div>
+  <section><div class="sh"><h2>موتوسيكلات مشابهة</h2></div><div class="grid g3">${B.slice(2,5).map(bc).join("")}</div></section>${footer}`},
+ book:()=>`${header("book")}<div class="crumb">الرئيسية / <b>حجز صيانة</b></div>
+  <div class="book"><div><h1 style="font-size:28px;margin:0 0 16px">حجز صيانة</h1>
+   <div class="box"><h3>1. الموتوسيكل</h3><div class="rad on"><i></i><span><b>Zontes ZT350-T · 2023</b><small>س ط ع 1234 · 12,400 كم</small></span></div><div class="rad"><i></i><span><b>موتوسيكل تاني</b><small>اكتب الموديل والعداد</small></span></div></div>
+   <div class="box"><h3>2. الخدمة</h3><div class="svs">${[["تغيير زيت وفلتر","45 دقيقة · 1,770 ج.م",1],["صيانة شاملة","3 ساعات · 2,450 ج.م"],["فحص قبل الشراء","90 دقيقة · 600 ج.م"],["فرامل","ساعة · حسب القطع"],["كهرباء","حسب العطل"],["ضبط بلوف","ساعتين · 900 ج.م"]].map(s=>`<div class="${s[2]?"on":""}"><b>${s[0]}</b><small>${s[1]}</small></div>`).join("")}</div></div>
+   <div class="box"><h3>3. اليوم والميعاد <span style="font-size:14px;font-weight:400;color:var(--mu)">نوفمبر 2026</span></h3><div class="days">${[["سبت",7],["أحد",8],["اثنين",9],["ثلاثاء",10],["أربعاء",11],["خميس",12],["جمعة",13]].map((d,i)=>`<div class="${i==2?"on":i==6?"off":""}">${d[0]}<b>${d[1]}</b></div>`).join("")}</div><div class="times">${["11:00 ص","12:00 م","1:00 م","2:00 م","3:00 م","4:00 م","5:00 م","6:00 م","7:00 م","8:00 م"].map((t,i)=>`<span class="${i==3?"on":i==1||i==6?"off":""}">${t}</span>`).join("")}</div></div></div>
+  <div class="sum" style="margin-top:52px"><h3>ملخص الحجز</h3><div class="dl"><span>الموتوسيكل</span><b>ZT350-T</b></div><div class="dl"><span>الخدمة</span><b>تغيير زيت وفلتر</b></div><div class="dl"><span>الميعاد</span><b>الاثنين 9/11 · 2:00 م</b></div><div class="dl"><span>المدة</span><b>45 دقيقة</b></div><div class="dl tot"><span>التكلفة التقديرية</span><b>1,770 ج.م</b></div><span class="btn full" style="height:52px;margin-top:10px">تأكيد الحجز</span><div style="font-size:13px;color:var(--mu);margin-top:10px;text-align:center">هيوصلك تأكيد على الواتساب. الدفع في الجراج.</div></div></div>${footer}`,
+ account:()=>`${header("")}<div class="crumb">الرئيسية / <b>حسابي</b></div>
+  <div class="acc"><div class="side"><div class="u"><b>كريم محمود</b><small>010 1234 5678</small></div>${[["bike","موتوسيكلاتي",1],["wrench","سجل الصيانة"],["cal","حجوزاتي"],["box","طلباتي"],["heart","المفضلة"],["pin","العناوين"],["gear","الإعدادات"]].map(s=>`<a class="${s[2]?"on":""}">${ic(s[0],18)}${s[1]}</a>`).join("")}</div>
+  <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h1 style="font-size:26px;margin:0">موتوسيكلاتي</h1><span class="btn o sm">+ أضف موتوسيكل</span></div>
+   <div class="veh"><div class="im">${bike(190,"#9e2b25")}</div><div><b style="font-size:18px">Zontes ZT350-T · 2023</b><div style="color:var(--mu);font-size:14px">لوحة س ط ع 1234</div><div class="kv"><div><small>العداد</small><b>12,400 كم</b></div><div><small>الصيانة الجاية</small><b>15,000 كم</b></div><div><small>آخر زيارة</small><b>12 أكتوبر</b></div><div><small>الرخصة</small><b>مارس 2027</b></div></div><div class="meter"><i style="width:82%"></i></div><small style="color:var(--mu)">فاضل 2,600 كم على الصيانة الجاية</small></div><div style="display:flex;flex-direction:column;gap:8px"><span class="btn sm">احجز صيانة</span><span class="btn o sm">اطلب طقم الصيانة</span></div></div>
+   <div class="box"><h3>سجل الصيانة <a>تحميل PDF</a></h3><table><tr><th>التاريخ</th><th>العداد</th><th>الشغل</th><th>الفني</th><th style="text-align:left">التكلفة</th></tr>${[["12 أكتوبر 2026","12,000 كم","تغيير زيت + فلتر","أبو يوسف","1,770"],["5 يوليو 2026","9,300 كم","تيل فرامل أمامي وخلفي","محمد","1,240"],["20 مارس 2026","6,000 كم","صيانة شاملة","أبو يوسف","2,450"],["2 يناير 2026","4,100 كم","فحص كهرباء وبطارية","محمد","350"]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="color:var(--mu)">${r[3]}</td><td style="text-align:left">${r[4]} ج.م</td></tr>`).join("")}</table></div>
+   <div class="box"><h3>آخر الطلبات <a>كل الطلبات</a></h3><table><tr><th>رقم الطلب</th><th>التاريخ</th><th>الحالة</th><th style="text-align:left">الإجمالي</th></tr><tr><td>#1042</td><td>3 نوفمبر</td><td><span class="tg">تم التوصيل</span></td><td style="text-align:left">3,220 ج.م</td></tr><tr><td>#0987</td><td>14 سبتمبر</td><td><span class="tg">تم الاستلام</span></td><td style="text-align:left">4,200 ج.م</td></tr></table></div></div></div>${footer}`
+};
+let page="home";
+try{const p=localStorage.getItem("ayg6-page");if(V[p])page=p}catch(e){}
+{const h=location.hash.slice(1);if(V[h])page=h}
+const $=s=>document.querySelector(s);
+$("#pages").innerHTML=PAGES.map(p=>`<button class="pg" role="tab" data-p="${p[0]}" aria-selected="false">${p[1]}</button>`).join("");
+function render(){document.querySelectorAll(".pg").forEach(b=>b.setAttribute("aria-selected",b.dataset.p==page));$("#url").textContent="aygarage.com"+PAGES.find(p=>p[0]==page)[2];$("#mock").innerHTML=V[page]();try{localStorage.setItem("ayg6-page",page)}catch(e){}fit()}
+function fit(){const vp=$("#vp"),m=$("#mock");const s=vp.clientWidth/1280;m.style.transform=`scale(${s})`;vp.style.height=(m.offsetHeight*s)+"px"}
+$("#pages").onclick=e=>{const b=e.target.closest(".pg");if(b){page=b.dataset.p;render()}};
+window.addEventListener("resize",fit);document.fonts&&document.fonts.ready.then(fit);render();
+})();
+</script>

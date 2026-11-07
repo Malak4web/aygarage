@@ -1,0 +1,492 @@
+<title>Abu Yousef Garage Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kufam:wght@400;500;600;700&family=Beiruti:wght@300;400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600&family=Zain:wght@300;400;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
+<!--
+THESIS: three structural directions for a Zontes specialist (shop-first, bike buyers equal), each refusing the category default of dark hero + big bike photo + red accent.
+OWN-WORLD: A route atlas (kilometres as the spine), B owner's-manual parts fiche (diagram + numbered list), C streaming shelf (rows, focused tile expands).
+STORY: visitor sees what their bike needs and buys it; buyer finds inspected bikes within one glance.
+FIRST VIEWPORT: A model+odometer → kit on a route line; B exploded bike with priced callouts; C billboard + focused row.
+FORM: grounded #7 route atlas (assigned), pick #1 manual, challenger streaming wall. Seed ff7185d3.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+<style>
+:root{--bg:#f2f2f1;--surface:#fff;--fg:#151517;--muted:#67676c;--line:#dededb;--accent:#151517;--chip:#e7e7e4;--f-ui:"Tajawal","Segoe UI",Tahoma,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121213;--surface:#1b1b1d;--fg:#efefec;--muted:#9e9ea3;--line:#2d2d30;--accent:#efefec;--chip:#262628;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121213;--surface:#1b1b1d;--fg:#efefec;--muted:#9e9ea3;--line:#2d2d30;--accent:#efefec;--chip:#262628;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.6}
+::selection{background:var(--fg);color:var(--bg)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+h1.t{margin:0;font-size:clamp(22px,3.6vw,30px);font-weight:800;line-height:1.3;text-wrap:balance}
+p.lead{margin:6px 0 22px;color:var(--muted);max-width:74ch}
+.dirs{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.dir{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.dir:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.dir[aria-selected="true"]{border-color:var(--fg)}
+.dir .k{font-size:12.5px;color:var(--muted);font-weight:700}
+.dir h3{margin:0;font-size:20px;font-weight:800;line-height:1.3}
+.dir p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:14px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:22px}
+.card > div{min-width:0}
+.card h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:700}
+.card p{margin:0 0 10px;font-size:15px}
+.card ul{margin:0;padding-inline-start:18px;font-size:14.5px}
+.card li{margin-bottom:4px}
+.pages{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pg{all:unset;cursor:pointer;padding:8px 14px;border-radius:999px;background:var(--chip);font-size:15px;font-weight:500}
+.pg:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pg[aria-selected="true"]{background:var(--fg);color:var(--bg);font-weight:700}
+.frame{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#111;box-shadow:0 18px 40px -24px rgba(0,0,0,.4)}
+.bar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--chip);direction:ltr}
+.bar i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.bar span{flex:1;margin-inline-start:10px;background:var(--surface);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewport{position:relative;overflow:hidden}
+.mock{width:1280px;transform-origin:top right;position:absolute;top:0;right:0}
+.note{color:var(--muted);font-size:14px;margin-top:12px}
+.more{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.more > div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:0}
+.more b{display:block;margin-bottom:4px}
+.more span{color:var(--muted);font-size:14px}
+.more ul{margin:6px 0 0;padding-inline-start:18px;color:var(--muted);font-size:14px}
+@media (max-width:900px){.dirs{grid-template-columns:1fr}.card{grid-template-columns:1fr}.more{grid-template-columns:1fr}}
+
+.mock *{box-sizing:border-box}
+.mock svg{display:block}
+
+/* ============ A — دفتر الطريق: route atlas, kilometres as the spine ============ */
+.A{--g:#edf0ec;--g2:#e2e7e1;--pa:#ffffff;--ink:#14201b;--mu:#58655f;--ln:#d2dad3;--cont:#d6ddd6;--route:#d4622a;--routesoft:#f5e2d6;--ok:#2c7650;
+  background:var(--g);color:var(--ink);font-family:"Beiruti",sans-serif;font-size:17px;line-height:1.6;font-variant-numeric:tabular-nums;position:relative}
+.A .d{font-family:"Kufam",sans-serif}
+.A nav{display:flex;align-items:center;gap:34px;height:84px;padding:0 64px;position:relative;z-index:2}
+.A .wm{font-family:"Kufam";font-weight:600;font-size:22px;line-height:1}
+.A .wm small{display:block;font-family:"Beiruti";font-weight:400;font-size:13px;color:var(--mu);margin-top:4px}
+.A nav a{color:var(--mu);text-decoration:none}
+.A nav a.on{color:var(--ink);font-weight:600}
+.A nav .sp{flex:1}
+.A .ico{width:42px;height:42px;display:grid;place-items:center;color:var(--ink)}
+.A .btn{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 24px;border-radius:25px;background:var(--ink);color:var(--g);font-weight:600;font-size:16px;white-space:nowrap}
+.A .btn.o{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.A .btn.r{background:var(--route);color:#fff}
+.A .btn.sm{height:40px;padding:0 18px;font-size:15px}
+.A .contour{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.A .z{position:relative;z-index:1}
+.A .hero{padding:40px 64px 30px;display:grid;grid-template-columns:1fr 420px;gap:56px;align-items:start}
+.A .hero h1{font-family:"Kufam";font-weight:600;font-size:54px;line-height:1.22;margin:0 0 14px;text-wrap:balance}
+.A .hero p{font-size:19px;color:var(--mu);margin:0 0 28px;max-width:40ch}
+.A .ask{display:flex;align-items:stretch;background:var(--pa);border-radius:32px;padding:6px;gap:6px;box-shadow:0 12px 30px -16px rgba(20,32,27,.35);max-width:620px}
+.A .ask .f{flex:1;padding:6px 18px;border-inline-start:1px solid var(--ln)}
+.A .ask .f:first-child{border:0}
+.A .ask label{display:block;font-size:13px;color:var(--mu)}
+.A .ask b{font-family:"Kufam";font-weight:500;font-size:18px}
+.A .route{position:relative;margin:34px 64px 0;height:150px}
+.A .route .line{position:absolute;top:58px;right:0;left:0;height:4px;border-radius:4px;background:var(--cont)}
+.A .route .done{position:absolute;top:58px;right:0;height:4px;border-radius:4px;background:var(--route)}
+.A .route .stop{position:absolute;top:40px;transform:translateX(50%);text-align:center;width:150px}
+.A .route .stop i{display:block;width:16px;height:16px;border-radius:50%;background:var(--g);box-shadow:inset 0 0 0 3px var(--ink);margin:10px auto 10px}
+.A .route .stop.past i{background:var(--route);box-shadow:none}
+.A .route .stop .km{font-family:"Kufam";font-size:15px;font-weight:600}
+.A .route .stop small{display:block;color:var(--mu);font-size:14px;line-height:1.35}
+.A .route .you{position:absolute;top:0;transform:translateX(50%);text-align:center}
+.A .route .you span{display:inline-block;background:var(--route);color:#fff;border-radius:14px;padding:3px 12px;font-size:14px;font-weight:600;font-family:"Kufam"}
+.A .route .you::after{content:"";display:block;width:2px;height:24px;background:var(--route);margin:2px auto 0}
+.A .kit{background:var(--pa);border-radius:24px;padding:24px;box-shadow:0 20px 40px -24px rgba(20,32,27,.35)}
+.A .kit h3{font-family:"Kufam";font-weight:600;font-size:21px;margin:0 0 4px;line-height:1.35}
+.A .kit .sub{color:var(--mu);font-size:15px;margin:0 0 14px}
+.A .kit .it{display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--ln)}
+.A .kit .it .im{width:56px;height:56px;border-radius:14px;background:var(--g);display:grid;place-items:center;color:var(--ink)}
+.A .kit .it b{font-weight:600;display:block;line-height:1.35}
+.A .kit .it small{color:var(--mu);font-size:14px}
+.A .kit .tot{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;border-top:1px solid var(--ln)}
+.A .kit .tot b{font-family:"Kufam";font-size:24px;font-weight:600}
+.A .two{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:56px 64px 0}
+.A .panel{background:var(--pa);border-radius:24px;padding:30px 32px}
+.A .panel h2{font-family:"Kufam";font-weight:600;font-size:28px;margin:0 0 6px;line-height:1.35}
+.A .panel p{color:var(--mu);margin:0 0 20px}
+.A .idx{display:grid;grid-template-columns:1fr 1fr;column-gap:30px}
+.A .idx a{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--ln);color:var(--ink);text-decoration:none;font-size:18px}
+.A .idx a small{color:var(--mu);font-size:15px}
+.A .bk{display:grid;grid-template-columns:120px 1fr auto;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid var(--ln)}
+.A .bk .im{height:76px;border-radius:14px;background:var(--g);display:grid;place-items:center}
+.A .bk b{font-weight:600;font-size:18px}
+.A .kmbar{height:4px;background:var(--cont);border-radius:4px;margin-top:8px;position:relative;width:220px}
+.A .kmbar i{position:absolute;top:0;right:0;bottom:0;background:var(--ink);border-radius:4px}
+.A .kmbar small{position:absolute;top:8px;font-size:13px;color:var(--mu)}
+.A .ok{color:var(--ok);font-weight:600}
+.A .pr{font-family:"Kufam";font-weight:600;font-size:20px}
+.A footer{margin-top:72px;padding:30px 64px 40px;border-top:1px solid var(--ln);display:flex;justify-content:space-between;color:var(--mu);font-size:15px}
+.A .phd{padding:30px 64px 26px;display:flex;justify-content:space-between;align-items:end;gap:30px}
+.A .phd h1{font-family:"Kufam";font-weight:600;font-size:40px;line-height:1.25;margin:0}
+.A .phd p{margin:6px 0 0;color:var(--mu)}
+.A .seg{display:flex;background:var(--pa);border-radius:24px;padding:4px}
+.A .seg span{padding:8px 18px;border-radius:20px;color:var(--mu);font-size:15px}
+.A .seg span.on{background:var(--ink);color:var(--g)}
+.A .band{margin:0 64px 26px;background:var(--pa);border-radius:22px;padding:20px 24px;display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center}
+.A .mini{position:relative;height:56px}
+.A .mini .line{position:absolute;top:26px;right:0;left:0;height:3px;background:var(--cont);border-radius:3px}
+.A .mini .done{position:absolute;top:26px;right:0;height:3px;background:var(--route);border-radius:3px}
+.A .mini .st{position:absolute;top:0;transform:translateX(50%);text-align:center;font-size:13px;color:var(--mu);width:90px}
+.A .mini .st i{display:block;width:12px;height:12px;border-radius:50%;margin:3px auto 6px;box-shadow:inset 0 0 0 2.5px var(--ink);background:var(--pa)}
+.A .mini .st.on{color:var(--ink);font-weight:600}
+.A .mini .st.on i{background:var(--route);box-shadow:none;width:16px;height:16px;margin:1px auto 4px}
+.A .grp{padding:0 64px 30px}
+.A .grp h3{font-family:"Kufam";font-weight:600;font-size:20px;margin:0 0 14px;display:flex;align-items:baseline;gap:12px}
+.A .grp h3 small{font-family:"Beiruti";font-weight:400;font-size:15px;color:var(--mu)}
+.A .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.A .pc{background:var(--pa);border-radius:22px;padding:16px}
+.A .pc .im{height:170px;border-radius:16px;background:var(--g);display:grid;place-items:center;margin-bottom:12px;color:var(--ink)}
+.A .pc b{display:block;font-weight:500;line-height:1.4;font-size:16.5px}
+.A .pc small{color:var(--mu);font-size:14px}
+.A .pc .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.A .plus{width:38px;height:38px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink);display:grid;place-items:center}
+.A .life{margin:10px 64px 0;background:var(--pa);border-radius:24px;padding:28px 32px}
+.A .life h2{font-family:"Kufam";font-weight:600;font-size:24px;margin:0 0 4px}
+.A .det{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;padding:10px 64px 0}
+.A .photo{border-radius:26px;background:radial-gradient(110% 80% at 50% 100%,#dfe5de,#cbd3cb);display:grid;place-items:center;height:440px;position:relative}
+.A .photo .ph{position:absolute;bottom:14px;left:16px;font-size:13px;color:var(--mu)}
+.A .spec{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:22px 0;border-top:1px solid var(--ln)}
+.A .spec div{padding:12px 0;border-bottom:1px solid var(--ln)}
+.A .spec small{display:block;color:var(--mu);font-size:14px}
+.A .log .r{display:grid;grid-template-columns:120px 110px 1fr auto;gap:18px;padding:15px 0;border-bottom:1px solid var(--ln);align-items:center}
+.A .log .r .km{font-family:"Kufam";font-weight:600}
+
+/* ============ B — كتيّب المالك: owner's manual / parts fiche ============ */
+.B{--pp:#ffffff;--ink:#121212;--mu:#5b5b5b;--ln:#dddddd;--sf:#f6f6f5;--spot:#2442c4;--spotsoft:#ebeefb;--ok:#1f7a4a;--warn:#9a6410;
+  background:var(--pp);color:var(--ink);font-family:"Noto Naskh Arabic",serif;font-size:17px;line-height:1.75;font-variant-numeric:tabular-nums}
+.B .k,.B h1,.B h2,.B h3,.B nav,.B .btn,.B th,.B .tag,.B .num{font-family:"Noto Kufi Arabic",sans-serif}
+.B nav{display:flex;align-items:center;gap:30px;height:76px;padding:0 56px;border-bottom:1px solid var(--ink);font-size:14.5px}
+.B .wm{font-weight:700;font-size:19px;line-height:1.1}
+.B .wm small{display:block;font-weight:400;font-size:11.5px;color:var(--mu)}
+.B nav a{color:var(--mu);text-decoration:none}
+.B nav a.on{color:var(--ink);font-weight:600}
+.B nav .sp{flex:1}
+.B .btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;background:var(--ink);color:#fff;font-size:14.5px;font-weight:500;white-space:nowrap}
+.B .btn.s{background:var(--spot)}
+.B .btn.o{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.B .btn.sm{height:36px;padding:0 14px;font-size:13.5px}
+.B .doc{display:grid;grid-template-columns:240px 1fr;min-height:700px}
+.B .toc{border-left:1px solid var(--ln);padding:30px 28px;font-family:"Noto Kufi Arabic";font-size:14px}
+.B .toc b{display:block;font-weight:600;margin:18px 0 6px;font-size:14.5px}
+.B .toc b:first-child{margin-top:0}
+.B .toc a{display:flex;justify-content:space-between;color:var(--mu);text-decoration:none;padding:4px 0}
+.B .toc a.on{color:var(--spot);font-weight:600}
+.B .toc a small{font-size:12px}
+.B .main{padding:36px 56px 0;min-width:0}
+.B h1{font-weight:600;font-size:40px;line-height:1.35;margin:0;text-wrap:balance}
+.B .intro{display:grid;grid-template-columns:1fr auto;gap:30px;align-items:end;border-bottom:1px solid var(--ln);padding-bottom:22px}
+.B .intro p{margin:8px 0 0;color:var(--mu);max-width:56ch}
+.B .fiche{display:grid;grid-template-columns:1fr 380px;gap:0;border-bottom:1px solid var(--ln)}
+.B .fig{position:relative;padding:20px 0 20px 30px;border-left:1px solid var(--ln);min-width:0}
+.B .fiche > *{min-width:0}
+.B .fig .cap{font-family:"Noto Kufi Arabic";font-size:12.5px;color:var(--mu);display:flex;justify-content:space-between}
+.B .call{position:absolute;width:30px;height:30px;border-radius:50%;background:var(--pp);box-shadow:inset 0 0 0 1.5px var(--ink);display:grid;place-items:center;font-family:"Noto Kufi Arabic";font-size:13px;font-weight:600}
+.B .call.on{background:var(--spot);color:#fff;box-shadow:none}
+.B .plist{padding:20px 0 20px 0;padding-right:30px}
+.B .plist .r{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--ln);font-size:16px;line-height:1.5}
+.B .plist .r:last-child{border:0}
+.B .plist .r .num{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink);display:grid;place-items:center;font-size:12px;font-weight:600}
+.B .plist .r.on{background:var(--spotsoft);margin:0 -12px;padding:11px 12px}
+.B .plist .r.on .num{background:var(--spot);color:#fff;box-shadow:none}
+.B .plist small{display:block;color:var(--mu);font-size:13px;font-family:"Noto Kufi Arabic"}
+.B .plist .p{font-family:"Noto Kufi Arabic";font-weight:600;font-size:15px;text-align:left}
+.B .plist .p small{color:var(--spot)}
+.B .doors{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--ln)}
+.B .doors > div{padding:30px 0 30px 30px}
+.B .doors > div + div{border-right:1px solid var(--ln);padding-right:30px}
+.B h2{font-weight:600;font-size:24px;line-height:1.4;margin:0 0 6px}
+.B .doors p{color:var(--mu);margin:0 0 16px}
+.B table{width:100%;border-collapse:collapse;font-size:15.5px}
+.B th{font-weight:500;font-size:12.5px;color:var(--mu);text-align:right;padding:9px 0;border-bottom:1px solid var(--ink)}
+.B td{padding:11px 0;border-bottom:1px solid var(--ln)}
+.B td.n{font-family:"Noto Kufi Arabic";font-size:14.5px}
+.B .tag{display:inline-block;font-size:12px;padding:1px 8px;border:1px solid currentColor}
+.B .tag.ok{color:var(--ok)}.B .tag.w{color:var(--warn)}.B .tag.s{color:var(--spot)}
+.B footer{padding:26px 56px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;font-family:"Noto Kufi Arabic";font-size:13px;color:var(--mu)}
+.B .crumb{font-family:"Noto Kufi Arabic";font-size:12.5px;color:var(--mu);margin-bottom:6px}
+.B .fitbar{display:flex;gap:16px;align-items:center;background:var(--sf);padding:12px 18px;margin:20px 0;font-family:"Noto Kufi Arabic";font-size:14px}
+.B .fitbar b{font-weight:600}
+.B .fitbar .ok{color:var(--ok)}
+.B .qty{display:inline-flex;align-items:center;gap:12px;box-shadow:inset 0 0 0 1px var(--ln);padding:3px 10px;font-family:"Noto Kufi Arabic";font-size:13px}
+.B .sheet{display:grid;grid-template-columns:1.15fr 1fr;gap:0;border-bottom:1px solid var(--ln)}
+.B .sheet .l{padding:24px 0 24px 30px;border-left:1px solid var(--ln)}
+.B .sheet .r{padding:24px 30px 24px 0}
+.B .ph{background:var(--sf);display:grid;place-items:center;height:360px;position:relative}
+.B .ph small{position:absolute;bottom:10px;left:12px;font-family:"Noto Kufi Arabic";font-size:11.5px;color:var(--mu)}
+.B .chk{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);margin-top:18px}
+.B .chk div{padding:12px 0 12px 12px;border-bottom:1px solid var(--ln)}
+.B .chk b{font-family:"Noto Kufi Arabic";font-size:20px;font-weight:600;display:block;line-height:1.3}
+.B .chk small{font-family:"Noto Kufi Arabic";font-size:12.5px;color:var(--mu)}
+.B .ticks{display:flex;gap:2px;margin-top:6px}
+.B .ticks i{width:6px;height:10px;background:var(--ink)}
+.B .ticks i.e{background:var(--ln)}
+.B .ticks i.w{background:var(--warn)}
+.B .stamp{display:inline-grid;place-items:center;width:66px;height:66px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--spot),inset 0 0 0 4px var(--pp),inset 0 0 0 5px var(--spot);color:var(--spot);font-family:"Noto Kufi Arabic";font-size:10.5px;line-height:1.25;text-align:center;transform:rotate(-8deg)}
+
+/* ============ C — رفوف العرض: streaming shelf ============ */
+.C{--bg:#0e0f11;--s1:#17181b;--s2:#212328;--ink:#f3f2ee;--mu:#9a9ca2;--ln:#2a2c31;--acc:#efc06a;--ok:#62c08e;
+  background:var(--bg);color:var(--ink);font-family:"Zain",sans-serif;font-size:18px;line-height:1.55;font-variant-numeric:tabular-nums;padding-bottom:50px}
+.C nav{display:flex;align-items:center;gap:30px;height:80px;padding:0 56px;position:relative;z-index:3}
+.C .wm{font-weight:800;font-size:26px;line-height:1}
+.C .wm small{display:block;font-weight:300;font-size:14px;color:var(--mu);margin-top:3px}
+.C nav a{color:var(--mu);text-decoration:none;font-size:18px}
+.C nav a.on{color:var(--ink);font-weight:700}
+.C nav .sp{flex:1}
+.C .ico{width:42px;height:42px;display:grid;place-items:center;color:var(--ink)}
+.C .btn{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 26px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700;font-size:18px;white-space:nowrap}
+.C .btn.g{background:rgba(255,255,255,.12);color:var(--ink)}
+.C .btn.sm{height:42px;padding:0 18px;font-size:17px}
+.C .bill{position:relative;height:500px;margin-top:-80px;display:flex;align-items:flex-end;padding:0 56px 56px;overflow:hidden}
+.C .bill .art{position:absolute;inset:0;background:radial-gradient(70% 90% at 30% 60%,#3a3428,#16161a 60%,#0e0f11)}
+.C .bill .art svg{position:absolute;left:80px;bottom:30px}
+.C .bill .shade{position:absolute;inset:0;background:linear-gradient(90deg,transparent 30%,rgba(14,15,17,.9) 75%),linear-gradient(0deg,var(--bg),transparent 40%)}
+.C .bill .tx{position:relative;max-width:520px}
+.C .bill h1{font-weight:800;font-size:60px;line-height:1.1;margin:0 0 10px;text-wrap:balance}
+.C .bill p{color:#c9c9c4;font-size:20px;margin:0 0 24px}
+.C .bill .meta{display:flex;gap:16px;color:var(--mu);font-size:17px;margin-bottom:10px}
+.C .bill .meta b{color:var(--acc);font-weight:700}
+.C .row{padding:0 56px;margin-top:34px;transition:opacity .3s}
+.C .row.dim{opacity:.5}
+.C .row h2{font-weight:700;font-size:24px;margin:0 0 12px;display:flex;align-items:baseline;gap:14px}
+.C .row h2 small{font-weight:300;font-size:17px;color:var(--mu)}
+.C .row h2 a{margin-inline-start:auto;font-size:16px;color:var(--mu);text-decoration:none;font-weight:400}
+.C .rail{display:flex;gap:14px;align-items:flex-start;overflow:hidden}
+.C .tile{flex:0 0 200px;border-radius:12px;overflow:hidden;background:var(--s1);position:relative}
+.C .tile .im{height:200px;display:grid;place-items:center;background:radial-gradient(90% 80% at 50% 70%,#2b2d33,#17181b);color:var(--ink)}
+.C .tile .lb{position:absolute;bottom:10px;right:12px;left:12px;font-weight:700;font-size:17px;line-height:1.25;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+.C .tile.wide{flex-basis:300px}
+.C .tile.wide .im{height:170px}
+.C .tile.focus{flex-basis:400px;box-shadow:0 0 0 2px var(--acc),0 24px 40px -18px rgba(0,0,0,.8);transform:translateY(-6px)}
+.C .tile.focus .im{height:200px}
+.C .tile.focus .info{padding:14px 16px 16px}
+.C .tile.focus .info b{display:block;font-size:21px;font-weight:700;line-height:1.3}
+.C .tile.focus .info small{display:block;color:var(--mu);font-size:16px}
+.C .tile.focus .info .act{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.C .tile.focus .info .pr{font-weight:800;font-size:24px}
+.C .fit{color:var(--ok);font-size:15px}
+.C .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(14,15,17,.75);border-radius:8px;padding:2px 10px;font-size:15px;position:absolute;top:10px;right:10px}
+.C .chip b{color:var(--ok)}
+.C .phd{padding:10px 56px 0}
+.C .phd h1{font-weight:800;font-size:48px;margin:0;line-height:1.2}
+.C .phd p{margin:4px 0 0;color:var(--mu)}
+.C .tabs{display:flex;gap:8px;margin-top:20px}
+.C .tabs span{padding:8px 18px;border-radius:10px;background:var(--s1);color:var(--mu);font-size:17px}
+.C .tabs span.on{background:var(--ink);color:var(--bg);font-weight:700}
+.C .hero2{position:relative;height:560px;margin-top:-80px;overflow:hidden}
+.C .hero2 .art{position:absolute;inset:0;background:radial-gradient(60% 80% at 35% 60%,#2c2f36,#121316 65%)}
+.C .hero2 .art svg{position:absolute;left:60px;bottom:50px}
+.C .hero2 .shade{position:absolute;inset:0;background:linear-gradient(90deg,transparent 35%,rgba(14,15,17,.95) 70%),linear-gradient(0deg,var(--bg),transparent 35%)}
+.C .hero2 .tx{position:absolute;right:56px;bottom:56px;width:460px}
+.C .hero2 h1{font-weight:800;font-size:54px;margin:0;line-height:1.15}
+.C .score{display:inline-flex;align-items:center;gap:10px;background:rgba(98,192,142,.14);color:var(--ok);border-radius:10px;padding:4px 12px;font-weight:700;font-size:17px}
+.C .grp{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.C .grp div{background:var(--s1);border-radius:12px;padding:14px}
+.C .grp b{display:block;font-size:30px;font-weight:800;line-height:1.1}
+.C .grp small{color:var(--mu);font-size:16px}
+.C .grp .bar{height:4px;border-radius:4px;background:var(--ln);margin-top:10px;overflow:hidden}
+.C .grp .bar i{display:block;height:100%;background:var(--ok)}
+.C .grp .bar i.w{background:var(--acc)}
+.C .ep{flex:0 0 280px;background:var(--s1);border-radius:12px;padding:16px;min-height:150px;display:flex;flex-direction:column;gap:4px}
+.C .ep .n{color:var(--acc);font-size:15px;font-weight:700}
+.C .ep b{font-size:19px;font-weight:700;line-height:1.3}
+.C .ep small{color:var(--mu);font-size:15.5px}
+.C .ep .c{margin-top:auto;font-weight:700}
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <h1 class="t">جراج أبو يوسف: ٣ اتجاهات مختلفة في التكوين</h1>
+  <p class="lead">المرة دي كل اتجاه له فكرة مختلفة في ترتيب الموقع وطريقة الشراء، مش مجرد ألوان مختلفة. التلاتة هاديين وشيك، والمتجر هو أول حاجة في كل واحد. وكل واحد بيوصّل اللي جاي يشتري موتوسيكل لطريقه من أول نظرة.</p>
+
+  <div class="dirs" role="tablist" aria-label="الاتجاهات">
+    <button class="dir" role="tab" data-d="A" aria-selected="true"><span class="k">الاتجاه الأساسي</span><h3>دفتر الطريق</h3><p>الكيلومتر هو اللي بيربط الموقع كله. تكتب موديلك وعدادك، فيظهرلك على خط الطريق إيه اللي موتوسيكلك محتاجه دلوقتي، وتشتريه كطقم.</p></button>
+    <button class="dir" role="tab" data-d="B" aria-selected="false"><span class="k">ترشيحي</span><h3>كتيّب المالك</h3><p>الموقع شبه كتالوج قطع الغيار الرسمي: رسمة فنية للموتوسيكل، وكل قطعة عليها رقم وسعر. تدوس على الرقم تشتري القطعة.</p></button>
+    <button class="dir" role="tab" data-d="C" aria-selected="false"><span class="k">بديل قوي</span><h3>رفوف العرض</h3><p>زي تطبيقات الأفلام: صفوف أفقية من المنتجات والموتوسيكلات، والعنصر اللي بتقف عليه بيكبر ويوريك تفاصيله. مريح جداً على الموبايل.</p></button>
+  </div>
+
+  <div class="card" id="card"></div>
+  <div class="pages" role="tablist" aria-label="الصفحات" id="pages"></div>
+  <div class="frame">
+    <div class="bar"><i></i><i></i><i></i><span id="url">aygarage.com</span></div>
+    <div class="viewport" id="vp"><div class="mock" id="mock"></div></div>
+  </div>
+  <p class="note">مقاس ديسكتوب (1280px) متصغّر. كل الصور رسومات مؤقتة، وكل الأسعار والأرقام أمثلة لحد ما توصلنا البيانات الحقيقية.</p>
+
+  <div class="more">
+    <div><b>الشكل المعتاد لو حبيت</b><span>لو عايز متجر عادي ونضيف زي المواقع الكبيرة، ده موجود في التصميم الهادي اللي عملته قبل كده، وأقدر أنفذه بمستوى عالي جداً. بس هو الشكل اللي أي متجر هيعمله.</span></div>
+    <div><b>أفكار اتجربت واتشالت</b><span>جربت أفكار تانية واستبعدتها عشان مش مناسبة لمتجر قطع غيار، لكن خدت من كل واحدة حاجة:</span>
+      <ul><li>بوستر بأشكال هندسية قليلة: خدت منه إن كل شاشة تتبني على عناصر قليلة جداً.</li><li>شاشة كمبيوتر قديمة: خدت منها إن الحالة تتكتب كلام عادي، زي "متوفر، يوصل الخميس"، بدل الشارات الملونة.</li><li>رفوف فخار وأشكال طبيعية: استبعدتها بالكامل.</li></ul></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const INFO={
+ A:{thesis:"بدل ما الزائر يدوّر في أقسام، الموقع بيسأله سؤال واحد: موديلك إيه وعدادك كام؟ ومن الإجابة دي بيبني كل حاجة. المتجر بيقترحلك طقم الصيانة الجاية، والموتوسيكلات المعروضة بتظهر بالكيلومترات على نفس الخط، وحسابك عبارة عن رحلة موتوسيكلك.",
+    first:"عنوان كبير، وتحته خانة \"الموديل + العداد\". تحتهم خط طريق عرضي عليه محطات الصيانة (1,000 / 6,000 / 12,000…) ونقطة برتقالي عند عدادك. وعلى الجنب كارت \"طقم الـ 15,000 كم\" بالسعر وزرار \"ضيفه للسلة\".",
+    feel:"خلفية لون خريطة مساحة، فيها خطوط كنتور خفيفة جداً، ولون واحد برتقالي زي لون الطرق السريعة على الخرايط. خط Kufam للعناوين (روحه روح لافتات الطرق) وBeiruti للنصوص.",
+    risk:"لازم نعرف مواعيد الصيانة لكل موديل زونتس عشان الطقم يطلع صح، ودي بيانات محتاجين نجمعها من أبو يوسف.",
+    raises:["من البوستر الهندسي: الشاشة الأولى فيها 3 عناصر بس (السؤال، الخط، الطقم) ومفيش أي حاجة زيادة.","من شاشة الكمبيوتر القديمة: حالة المنتج والفحص مكتوبة كلام عادي جوه السطر، ومفيش شارات ملونة."]},
+ B:{thesis:"زي كتالوج القطع الرسمي اللي بيستخدمه الميكانيكي. رسمة فنية دقيقة للموتوسيكل، وكل قطعة عليها رقم، وجنبها قايمة القطع بالأسعار. المشتري يلاقي القطعة بشكلها مش بإسمها، وده بيقلل الغلط. فهرس جانبي ثابت بيوديك لأي قسم.",
+    first:"فهرس على اليمين (المتجر، الموتوسيكلات، الصيانة، حسابي). في النص رسمة الموتوسيكل بخطوط رفيعة، وعليها أرقام 1 لـ 6، وجنبها قايمة القطع: الرقم والاسم والسعر وزرار إضافة. وتحت الرسمة بابين: \"اشتري قطع\" و\"اشتري موتوسيكل مفحوص\".",
+    feel:"ورق أبيض وحبر أسود ولون أزرق كوبالت واحد زي اللي بيتطبع في الكتالوجات. Noto Kufi للعناوين وNoto Naskh للنصوص، وده التوليف الكلاسيكي في الطباعة العربية.",
+    risk:"ده الاتجاه اللي أنا شايفه الأقوى، وهو كمان الأقرب للمألوف. محتاج رسومات فنية لكل مجموعة قطع، فممكن نبدأ برسمات للمجموعات الأساسية بس.",
+    raises:[]},
+ C:{thesis:"الموقع بيتصفح زي تطبيقات الأفلام اللي الناس متعودة عليها: لوحة كبيرة فوق، وتحتها صفوف أفقية. الصف الأول بيبقى مخصوص لموديلك، والعنصر اللي بتقف عليه بيكبر ويوريك السعر والتوافق وزرار الإضافة، والباقي بيخفت.",
+    first:"لوحة عريضة فيها عرض الشهر (طقم أو موتوسيكل) وزرارين. تحتها صف \"مناسب لـ ZT350 بتاعك\" وعنصر واحد مكبر عليه إطار ذهبي، وبعده صف \"موتوسيكلات مفحوصة\" وصف \"خدمات الورشة\".",
+    feel:"خلفية جرافيت غامقة، والصور هي مصدر اللون الوحيد، ولون ذهبي هادي للعنصر المختار بس. خط Zain للموقع كله.",
+    risk:"محتاج صور كويسة ومتناسقة لكل منتج وموتوسيكل، من غيرها الصفوف هتبان فاضية. وتصفح البحث والفلاتر محتاج تصميم إضافي جوه نفس الأسلوب.",
+    raises:[]}
+};
+const PAGES=[["home","الرئيسية","/"],["shop","المتجر","/shop"],["bike","موتوسيكل للبيع","/bikes/zt350t-2023"],["garage","حسابي","/account"]];
+
+/* ---------- drawings (line style, colour passed in) ---------- */
+function bikeL(w,st,acc,sw){sw=sw||1.6;acc=acc||"none";return `<svg width="${w}" viewBox="0 0 400 240" fill="none" stroke="${st}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="90" cy="170" r="55"/><circle cx="90" cy="170" r="44"/><circle cx="90" cy="170" r="20"/><circle cx="90" cy="170" r="5"/>
+<circle cx="315" cy="170" r="55"/><circle cx="315" cy="170" r="44"/><circle cx="315" cy="170" r="22"/><circle cx="315" cy="170" r="5"/>
+<path d="M90 170 L178 148"/><path d="M160 122 L232 118 L240 160 L182 170 Z"/><path d="M178 148 L202 96 L286 84"/><path d="M202 96 L168 82 L108 96"/>
+<path d="M195 80 Q232 54 282 68 L290 90 L206 99 Z" fill="${acc}"/><path d="M108 94 Q150 79 197 83 L199 94 L114 101 Z"/><path d="M92 100 L110 94 L114 104 Z"/>
+<path d="M315 170 L284 72"/><path d="M323 167 L292 70"/><path d="M280 62 L304 56"/><path d="M300 82 q15 4 12 20"/>
+<path d="M118 152 L64 141 L60 155 L116 164 Z"/><path d="M186 168 L118 158"/><path d="M266 142 Q314 104 352 136"/><path d="M196 140 h30 M200 130 h24"/></svg>`}
+const pi={
+ oil:`<path d="M9 7h6v2H9z"/><path d="M8 9h8l1 3v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-8z"/><path d="M9 14h6"/>`,
+ filter:`<rect x="6" y="6" width="12" height="14" rx="2"/><path d="M6 10h12M6 16h12M10 3h4v3h-4z"/>`,
+ plug:`<path d="M10 2h4v4h-4zM9 6h6v4H9zM10.5 10h3v7h-3zM12 17v4"/>`,
+ brake:`<path d="M5 17a8 8 0 0 1 9-11h4v4h-4a4 4 0 0 0-5 5v2z"/>`,
+ chain:`<rect x="2" y="9" width="10" height="6" rx="3"/><rect x="12" y="9" width="10" height="6" rx="3"/>`,
+ helmet:`<path d="M3 16a9 9 0 0 1 18-1v3H6z"/><path d="M11 10h10"/>`,
+ search:`<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>`,
+ cart:`<path d="M3 4h2l2.4 11h10.2L20 7H7"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/>`,
+ user:`<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>`,
+ plus:`<path d="M12 5v14M5 12h14"/>`,
+ arrow:`<path d="M19 12H5M11 6l-6 6 6 6"/>`
+};
+const ic=(k,w,sw)=>`<svg width="${w||22}" height="${w||22}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw||1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pi[k]}</svg>`;
+function contours(w,h,col){let s="";const cx=w*0.22,cy=h*0.35;for(let k=1;k<=14;k++){const r=k*46;let d="";for(let a=0;a<=360;a+=6){const t=a*Math.PI/180;const rr=r*(1+0.09*Math.sin(3*t+k*0.7)+0.05*Math.cos(5*t+k));const x=cx+rr*Math.cos(t)*1.5,y=cy+rr*Math.sin(t);d+=(a?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)}s+=`<path d="${d}Z" fill="none" stroke="${col}" stroke-width="1"/>`}
+ const cx2=w*0.85,cy2=h*0.8;for(let k=1;k<=8;k++){const r=k*40;let d="";for(let a=0;a<=360;a+=6){const t=a*Math.PI/180;const rr=r*(1+0.1*Math.sin(4*t+k));const x=cx2+rr*Math.cos(t)*1.3,y=cy2+rr*Math.sin(t);d+=(a?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)}s+=`<path d="${d}Z" fill="none" stroke="${col}" stroke-width="1"/>`}
+ return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">${s}</svg>`}
+
+/* ================= A ================= */
+function navA(on){const L=[["home","المتجر"],["bikes","موتوسيكلات للبيع"],["book","الصيانة"],["garage","رحلتي"]];return `<nav><div class="wm">جراج أبو يوسف<small>متخصصين في Zontes</small></div>${L.map(l=>`<a class="${l[0]==on?"on":""}">${l[1]}</a>`).join("")}<span class="sp"></span><span class="ico">${ic("search")}</span><span class="ico">${ic("cart")}</span><span class="btn sm o">دخول</span></nav>`}
+const STOPS=[[0,"تسليم"],[1000,"أول زيت"],[6000,"صيانة شاملة"],[12000,"زيت + فلتر + بوجيه"],[15000,"زيت + فرامل"],[18000,"شاملة + زيت الشوكة"],[24000,"شاملة + جنزير"]];
+const MAXK=26000;
+function routeA(km,stops){stops=stops||STOPS;const pct=k=>(k/MAXK*100);return `<div class="route z"><div class="line"></div><div class="done" style="width:${pct(km)}%"></div><div class="you" style="right:${pct(km)}%"><span>عدادك 12,400</span></div>${stops.map(s=>`<div class="stop ${s[0]<km?"past":""}" style="right:${pct(s[0])}%"><i></i><div class="km">${s[0].toLocaleString("en")}</div><small>${s[1]}</small></div>`).join("")}</div>`}
+const A={
+ home:()=>`<div class="A"><div class="contour">${contours(1280,1500,"#d6ddd6")}</div>${navA("home")}
+  <div class="hero z"><div><h1>اعرف موتوسيكلك محتاج إيه، واطلبه في دقيقة.</h1><p>اكتب الموديل والعداد، ونجهزلك طقم الصيانة الجاية بقطع أصلية من جراج أبو يوسف.</p>
+   <div class="ask"><div class="f"><label>الموديل</label><b>Zontes ZT350-T</b></div><div class="f"><label>العداد</label><b>12,400 كم</b></div><span class="btn r">اعرض الطقم ${ic("arrow",18,2)}</span></div></div>
+   <div class="kit"><h3>طقم صيانة الـ 15,000 كم</h3><p class="sub">ZT350-T · فاضل 2,600 كم</p>
+    ${[["oil","زيت موتول 7100 10W-40 × 3 لتر","يتغير كل 3,000 كم","4,350"],["filter","فلتر زيت أصلي ZT350","مع كل تغيير زيت","320"],["brake","تيل فرامل أمامي Brembo","التيل الحالي اتغير عند 9,300","680"]].map(x=>`<div class="it"><span class="im">${ic(x[0],26,1.4)}</span><div><b>${x[1]}</b><small>${x[2]}</small></div><span class="pr" style="font-size:17px">${x[3]}</span></div>`).join("")}
+    <div class="tot"><span class="muted" style="color:var(--mu)">الإجمالي</span><b>5,350 ج.م</b></div><span class="btn" style="width:100%;justify-content:center">ضيف الطقم للسلة</span><p class="sub" style="margin:10px 0 0;text-align:center">أو احجز ونركّبه في الجراج</p></div></div>
+  ${routeA(12400)}
+  <div class="two z"><div class="panel"><h2>تسوّق بالقسم</h2><p>كل القطع بتتفلتر على موديلك تلقائي.</p><div class="idx">${[["زيوت",48],["فلاتر",26],["فرامل",31],["كهرباء",44],["نقل حركة",19],["خوذ وملابس",37],["إكسسوارات",52],["إطارات",14]].map(c=>`<a>${c[0]}<small>${c[1]}</small></a>`).join("")}</div></div>
+   <div class="panel"><h2>موتوسيكلات للبيع</h2><p>مفحوصة عند أبو يوسف، ومكتوب جنب كل واحد مشي كام.</p>${[["Zontes ZT125-U · 2024",3200,"98,000","فحص 97 من 100"],["Zontes ZT350-GK · 2023",7800,"232,000","فحص 94 من 100"],["Zontes ZT350-T · 2023",12400,"245,000","فحص 92 من 100"]].map(b=>`<div class="bk"><span class="im">${bikeL(96,"#14201b")}</span><div><b>${b[0]}</b><div class="kmbar"><i style="width:${b[1]/MAXK*100}%"></i></div><div style="font-size:14px;color:var(--mu);margin-top:6px">${b[1].toLocaleString("en")} كم · <span class="ok">${b[3]}</span></div></div><span class="pr">${b[2]}</span></div>`).join("")}<div style="margin-top:18px"><span class="btn o sm">كل الموتوسيكلات (22)</span></div></div></div>
+  <footer class="z"><span>جراج أبو يوسف · القاهرة · السبت – الخميس، 11 ص – 9 م</span><span>010 0000 0000</span></footer></div>`,
+ shop:()=>`<div class="A"><div class="contour">${contours(1280,1300,"#d6ddd6")}</div>${navA("home")}
+  <div class="phd z"><div><h1>زيوت وفلاتر</h1><p>بيظهر اللي يركب على ZT350-T بس · 38 منتج</p></div><div class="seg"><span class="on">حسب الكيلومتر</span><span>حسب القسم</span></div></div>
+  <div class="band z"><b class="d" style="font-weight:600">عدادك 12,400</b><div class="mini"><div class="line"></div><div class="done" style="width:47%"></div>${[[0,"الكل"],[16,"كل 3,000"],[33,"كل 6,000"],[58,"15,000",1],[75,"كل 12,000"],[92,"24,000"]].map(s=>`<div class="st ${s[2]?"on":""}" style="right:${s[0]}%"><i></i>${s[1]}</div>`).join("")}</div><span class="btn sm o">غيّر الموديل</span></div>
+  ${[["مطلوب عند 15,000 كم","5 منتجات · قريب منك",[["oil","زيت موتول 7100 10W-40، لتر","Motul · تخليقي","1,450"],["filter","فلتر زيت أصلي ZT350","Zontes","320"],["brake","تيل فرامل أمامي Brembo","Brembo","680"],["oil","زيت شوكة 10W، نص لتر","Motul","540"]]],["كل 3,000 كم","زيوت المحرك",[["oil","كاسترول Power1 Racing 10W-40","Castrol","1,180"],["oil","ليكوي مولي Street Race 10W-40","Liqui Moly","1,390"],["oil","موتول 5100 15W-50","Motul · نص تخليقي","980"],["oil","شل Advance Ultra 10W-40","Shell","1,060"]]]].map(g=>`<div class="grp z"><h3>${g[0]}<small>${g[1]}</small></h3><div class="g4">${g[2].map(p=>`<div class="pc"><div class="im">${ic(p[0],64,1)}</div><b>${p[1]}</b><small>${p[2]} · يركب على موديلك</small><div class="row"><span class="pr">${p[3]} <small style="font-family:Beiruti;font-weight:400">ج.م</small></span><span class="plus">${ic("plus",18,1.8)}</span></div></div>`).join("")}</div></div>`).join("")}
+  <footer class="z"><span>جراج أبو يوسف</span><span>توصيل لكل المحافظات أو استلام من الجراج</span></footer></div>`,
+ bike:()=>`<div class="A"><div class="contour">${contours(1280,1300,"#d6ddd6")}</div>${navA("bikes")}
+  <div class="det z"><div class="photo">${bikeL(560,"#14201b","#d4622a",1.4)}<span class="ph">مكان صورة الموتوسيكل</span></div>
+   <div><h1 class="d" style="font-weight:600;font-size:40px;margin:6px 0 4px;line-height:1.25">Zontes ZT350-T · 2023</h1><div style="color:var(--mu)">12,400 كم · أول مالك · رخصة سارية لحد 2027</div><div class="d" style="font-size:38px;font-weight:600;margin:20px 0 2px">245,000 <span style="font-size:18px;font-family:Beiruti;font-weight:400;color:var(--mu)">ج.م</span></div><div style="color:var(--mu);font-size:15px">فحص أبو يوسف: <span class="ok">92 من 100</span>، ملاحظتين بسيطتين مكتوبين تحت</div>
+    <div class="spec">${[["المحرك","348 cc"],["القوة","38 حصان"],["الفتيس","6 سرعات"],["الفرامل","ABS مزدوج"],["الضمان","3 شهور محرك"],["التقسيط","من 10,200 / شهر"]].map(s=>`<div><small>${s[0]}</small>${s[1]}</div>`).join("")}</div>
+    <div style="display:flex;gap:10px"><span class="btn r">احجز معاينة</span><span class="btn o">اسأل على واتساب</span></div></div></div>
+  <div class="life z" style="margin-top:34px"><h2>رحلة الموتوسيكل ده</h2><p style="color:var(--mu);margin:0 0 6px">كل صيانة اتعملت له، والفحص الأخير، على نفس الخط.</p>${routeA(12400,[[0,"تسليم 2023"],[1000,"أول زيت · وكيل"],[6000,"شاملة · أبو يوسف"],[9300,"تيل فرامل"],[12000,"زيت + فلتر"],[15000,"الجاية"],[24000,""]]).replace('class="route z"','class="route z" style="margin:20px 0 0"').replace("عدادك 12,400","فحص 28 أكتوبر")}
+   <div class="log" style="margin-top:10px">${[["المحرك","سليم","كومبريشن سليم، مفيش تهريب"],["الفرامل وABS","سليم","تيل أمامي جديد"],["الكهرباء","ملاحظة","لمبة إشارة خلفي، هتتغير قبل التسليم"],["الكاوتش","ملاحظة","الخلفي 70%، الأمامي 85%"]].map(r=>`<div class="r"><b>${r[0]}</b><span class="${r[1]=="سليم"?"ok":""}" style="${r[1]!="سليم"?"color:#9a5a12;font-weight:600":""}">${r[1]}</span><span style="color:var(--mu)">${r[2]}</span><span></span></div>`).join("")}</div></div>
+  <footer class="z"><span>جراج أبو يوسف</span><span>تقرير الفحص الكامل PDF</span></footer></div>`,
+ garage:()=>`<div class="A"><div class="contour">${contours(1280,1200,"#d6ddd6")}</div>${navA("garage")}
+  <div class="phd z"><div><h1>رحلة الـ ZT350-T بتاعتك</h1><p>كريم محمود · لوحة س ط ع 1234 · مركبتين في حسابك</p></div><div style="display:flex;gap:10px"><span class="btn o sm">حدّث العداد</span><span class="btn r sm">احجز الـ 15,000</span></div></div>
+  <div class="life z" style="margin-top:0">${routeA(12400,[[0,"تسليم"],[1000,"أول زيت"],[4100,"كهرباء"],[6000,"شاملة"],[9300,"فرامل"],[12000,"زيت + فلتر"],[15000,"الجاية"],[24000,"شاملة"]]).replace('class="route z"','class="route z" style="margin:6px 0 0"')}
+   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:16px;padding-top:20px;border-top:1px solid var(--ln)"><div><small style="color:var(--mu)">فاضل على الصيانة الجاية</small><div class="d" style="font-size:30px;font-weight:600">2,600 كم</div></div><div><small style="color:var(--mu)">الطقم الجاي</small><div class="d" style="font-size:30px;font-weight:600">5,350 ج.م</div></div><div><small style="color:var(--mu)">ملاحظة أبو يوسف</small><div style="font-size:17px;line-height:1.45">الكاوتش الخلفي 70%، يتغير قبل 16,000 كم.</div></div></div></div>
+  <div class="life z" style="margin-top:24px"><h2>سجل الصيانة</h2><div class="log">${[["12 أكتوبر 2026","12,000","تغيير زيت + فلتر زيت · أبو يوسف","1,770"],["5 يوليو 2026","9,300","تيل فرامل أمامي وخلفي · محمد","1,240"],["20 مارس 2026","6,000","صيانة 6,000 كم الشاملة · أبو يوسف","2,450"],["2 يناير 2026","4,100","فحص كهرباء وبطارية · محمد","350"]].map(r=>`<div class="r"><span>${r[0]}</span><span class="km">${r[1]} كم</span><span>${r[2]}</span><b class="d" style="font-weight:600">${r[3]} ج.م</b></div>`).join("")}</div></div>
+  <footer class="z"><span>طلباتي · حجوزاتي · الإعدادات</span><span>خروج</span></footer></div>`
+};
+
+/* ================= B ================= */
+function navB(on){const L=[["home","المتجر"],["bikes","موتوسيكلات مفحوصة"],["book","الصيانة"],["garage","حسابي"]];return `<nav><div class="wm">جراج أبو يوسف<small>Zontes · قطع غيار وصيانة</small></div>${L.map(l=>`<a class="${l[0]==on?"on":""}">${l[1]}</a>`).join("")}<span class="sp"></span><span style="display:flex;gap:8px;align-items:center;color:var(--mu)">${ic("search",18)}بحث بالاسم أو رقم القطعة</span><span style="display:flex;gap:6px;align-items:center">${ic("cart",18)}السلة · 2</span></nav>`}
+function tocB(act){const T=[["المتجر",[["حسب الرسمة",0,1],["زيوت",48],["فلاتر",26],["فرامل",31],["كهرباء",44],["نقل حركة",19],["خوذ وملابس",37]]],["موتوسيكلات مفحوصة",[["المعروض الآن",22],["فحص قبل الشراء"]]],["الصيانة",[["جدول الصيانة"],["احجز ميعاد"]]],["حسابي",[["مركباتي"],["سجل الصيانة"],["طلباتي"]]]];
+ return `<aside class="toc">${T.map(g=>`<b>${g[0]}</b>${g[1].map(i=>`<a class="${i[0]==act?"on":""}">${i[0]}${i[1]?`<small>${i[1]}</small>`:""}</a>`).join("")}`).join("")}<div style="margin-top:26px;padding-top:16px;border-top:1px solid var(--ln);color:var(--mu);font-size:13px;line-height:1.7">موديلك<br><b style="color:var(--ink);margin:0;font-size:14px">ZT350-T · 2023</b><a style="color:var(--spot);padding:0">غيّر</a></div></aside>`}
+const CALLS=[[1,"زيت المحرك","موتول 7100 10W-40 · لتر","1,450",[198,138]],[2,"فلتر الزيت","أصلي · AYG-FLT-350","320",[226,160]],[3,"تيل أمامي","Brembo · AYG-BRK-F310","680",[330,190]],[4,"بوجيه","NGK Iridium · AYG-ELC-NGK","240",[214,112]],[5,"جنزير","DID 520 VX3 · AYG-CHN-520","2,100",[130,158]],[6,"فانوس أمامي LED","أصلي · AYG-LGT-F350","1,900",[308,90]]];
+const FW=500,FS=FW/400;
+const B={
+ home:()=>`<div class="B">${navB("home")}<div class="doc">${tocB("حسب الرسمة")}<div class="main">
+  <div class="intro"><div><h1>قطع غيار Zontes الأصلية، بالرسمة والرقم.</h1><p>دوس على أي رقم في الرسمة تشوف القطعة وسعرها وتضيفها للسلة. كله متفلتر على ZT350-T.</p></div><span class="btn o">اختار موديل تاني</span></div>
+  <div class="fiche"><div class="fig"><div class="cap"><span>شكل 1 · Zontes ZT350-T، منظر جانبي</span><span>6 قطع شائعة</span></div><div style="position:relative;margin-top:10px;width:${FW}px">${bikeL(FW,"#121212","none",1.3)}${CALLS.map(c=>`<span class="call ${c[0]==2?"on":""}" style="left:${(c[4][0]*FS-15).toFixed(0)}px;top:${(c[4][1]*FS-15).toFixed(0)}px">${c[0]}</span>`).join("")}</div></div>
+   <div class="plist">${CALLS.map(c=>`<div class="r ${c[0]==2?"on":""}"><span class="num">${c[0]}</span><div>${c[1]}<small>${c[2]}</small></div><div class="p">${c[3]} ج<br>${c[0]==2?`<span class="btn s sm" style="margin-top:4px">أضف</span>`:`<small>أضف +</small>`}</div></div>`).join("")}</div></div>
+  <div class="doors"><div><h2>بتدوّر على قطع؟</h2><p>اختار القسم أو ابحث برقم القطعة. لو مش متأكد، ابعت صورة القطعة لأبو يوسف على واتساب.</p><table><tr><th>القسم</th><th>منتجات</th><th>من</th></tr>${[["زيوت المحرك",48,"540"],["فلاتر",26,"180"],["فرامل",31,"420"],["كهرباء",44,"95"]].map(r=>`<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]} ج</td></tr>`).join("")}</table></div>
+   <div><h2>بتشتري موتوسيكل؟</h2><p>كل موتوسيكل معروض عدّى على فحص 120 نقطة، والتقرير مكتوب بالتفصيل.</p><table><tr><th>الموديل</th><th>كم</th><th>الفحص</th><th>السعر</th></tr>${[["ZT125-U · 2024","3,200",97,"98,000"],["ZT350-GK · 2023","7,800",94,"232,000"],["ZT350-T · 2023","12,400",92,"245,000"],["ZT310-R · 2022","18,900",86,"189,000"]].map(r=>`<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td><span class="tag ${r[2]>=90?"ok":"w"}">${r[2]}</span></td><td class="n">${r[3]}</td></tr>`).join("")}</table></div></div>
+  </div></div><footer><span>جراج أبو يوسف · القاهرة</span><span>السبت – الخميس، 11 ص – 9 م · 010 0000 0000</span></footer></div>`,
+ shop:()=>`<div class="B">${navB("home")}<div class="doc">${tocB("فلاتر")}<div class="main">
+  <div class="crumb">المتجر / حسب الرسمة / مجموعة التزييت</div><h1>مجموعة التزييت والفلتر</h1>
+  <div class="fitbar"><span>الموديل: <b>ZT350-T · 2023</b></span><span class="ok">● كل القطع دي تركب على موديلك</span><span style="margin-inline-start:auto;color:var(--mu)">آخر تحديث للأسعار: 1 نوفمبر</span></div>
+  <div class="fiche" style="grid-template-columns:420px 1fr;border-top:1px solid var(--ln)"><div class="fig" style="padding-left:30px"><div class="cap"><span>شكل 4 · فلتر الزيت وغطاه</span></div>
+   <svg width="380" viewBox="0 0 380 340" fill="none" stroke="#121212" stroke-width="1.3" stroke-linecap="round" aria-hidden="true" style="margin-top:14px"><rect x="140" y="40" width="100" height="40" rx="4"/><path d="M150 80v20M230 80v20"/><rect x="130" y="110" width="120" height="120" rx="12"/><path d="M130 140h120M130 200h120"/><ellipse cx="190" cy="262" rx="70" ry="14"/><ellipse cx="190" cy="300" rx="40" ry="8"/><path d="M190 230v18M60 60h70M60 170h60M60 262h60M60 300h90" stroke-dasharray="3 4"/><circle cx="48" cy="60" r="12"/><circle cx="48" cy="170" r="12" fill="#2442c4" stroke="#2442c4"/><circle cx="48" cy="262" r="12"/><circle cx="48" cy="300" r="12"/><g font-family="Noto Kufi Arabic" font-size="12" font-weight="600" fill="#121212" stroke="none" text-anchor="middle"><text x="48" y="64">1</text><text x="48" y="174" fill="#fff">2</text><text x="48" y="266">3</text><text x="48" y="304">4</text></g></svg></div>
+   <div style="padding:20px 30px 20px 0;min-width:0"><table><tr><th>رقم</th><th>القطعة</th><th>كود</th><th>الكمية</th><th>السعر</th><th></th></tr>${[["1","غطا الفلتر","AYG-FLC-350","1","260"],["2","فلتر زيت أصلي","AYG-FLT-350","1","320",1],["3","جوان الغطا","AYG-GSK-350","1","45"],["4","مسمار الصرف + وردة","AYG-DRN-350","1","85"],["—","زيت موتول 7100 10W-40","AYG-OIL-7100","3 لتر","4,350"],["—","زيت موتول 5100 15W-50","AYG-OIL-5100","3 لتر","2,940"]].map(r=>`<tr style="${r[5]?"background:var(--spotsoft)":""}"><td class="n">${r[0]}</td><td>${r[1]}</td><td class="n" style="color:var(--mu);font-size:13px">${r[2]}</td><td><span class="qty">− ${r[3]} +</span></td><td class="n">${r[4]} ج</td><td style="text-align:left">${r[5]?`<span class="btn s sm">في السلة ✓</span>`:`<span class="btn o sm">أضف</span>`}</td></tr>`).join("")}</table>
+   <p style="color:var(--mu);font-size:15px;margin:16px 0 0">نصيحة أبو يوسف: غيّر الجوان (3) مع كل فلتر، بـ 45 جنيه بيوفر عليك تهريب زيت.</p></div></div>
+  <div style="padding:26px 0"><h2>مجموعات تانية لنفس الموديل</h2><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink)">${["الفرامل الأمامية","نقل الحركة","الكهرباء والإضاءة","الشكمان"].map((g,i)=>`<div style="padding:14px 0 14px 14px;border-bottom:1px solid var(--ln)"><span class="k" style="font-size:12px;color:var(--mu)">شكل ${i+5}</span><div>${g}</div></div>`).join("")}</div></div>
+  </div></div><footer><span>جراج أبو يوسف</span><span>توصيل لكل المحافظات · استلام من الجراج</span></footer></div>`,
+ bike:()=>`<div class="B">${navB("bikes")}<div class="doc">${tocB("المعروض الآن")}<div class="main">
+  <div class="crumb">موتوسيكلات مفحوصة / رقم AYG-B-0231</div><div class="intro" style="border:0;padding-bottom:16px"><div><h1>Zontes ZT350-T · 2023</h1><p>12,400 كم · أول مالك · رخصة سارية لحد 2027</p></div><div style="text-align:left"><div class="k" style="font-size:30px;font-weight:600;line-height:1.2">245,000 ج.م</div><div style="color:var(--mu);font-size:14px">تقسيط من 10,200 في الشهر</div></div></div>
+  <div class="sheet" style="border-top:1px solid var(--ink)"><div class="l"><div class="ph">${bikeL(480,"#121212","none",1.3)}<small>مكان صورة الموتوسيكل · 8 صور</small></div><div style="display:flex;gap:10px;margin-top:16px"><span class="btn s">احجز معاينة في الجراج</span><span class="btn o">اسأل على واتساب</span><span class="btn o">التقرير PDF</span></div></div>
+   <div class="r"><h2 style="display:flex;justify-content:space-between;align-items:center">تقرير الفحص <span class="stamp">أبو يوسف<br>فحص<br>28/10</span></h2><p style="color:var(--mu);margin:0">120 نقطة. النتيجة 92 من 100.</p>
+    <div class="chk">${[["المحرك",24,24],["الفرامل وABS",12,12],["الكهرباء",17,18],["الشاسيه",10,10],["العفشة",14,14],["الكاوتش",6,8]].map(c=>`<div><small>${c[0]}</small><b>${c[1]}/${c[2]}</b><div class="ticks">${Array.from({length:12},(_,i)=>`<i class="${i>=Math.round(c[1]/c[2]*12)?(c[1]<c[2]?"w":"e"):""}"></i>`).join("")}</div></div>`).join("")}</div>
+    <table style="margin-top:14px"><tr><th>ملاحظة</th><th>الحل</th></tr><tr><td>لمبة إشارة خلفي</td><td style="color:var(--mu)">هتتغير مجاناً قبل التسليم</td></tr><tr><td>الكاوتش الخلفي 70%</td><td style="color:var(--mu)">يتغير قبل 16,000 كم</td></tr></table></div></div>
+  <div style="padding:22px 0"><h2>المواصفات</h2><table><tr><th>البند</th><th>القيمة</th><th>البند</th><th>القيمة</th></tr><tr><td>المحرك</td><td class="n">348cc · سلندر واحد</td><td>القوة</td><td class="n">38 حصان</td></tr><tr><td>ناقل الحركة</td><td class="n">6 سرعات · كلاتش انزلاقي</td><td>الفرامل</td><td class="n">ABS مزدوج</td></tr><tr><td>الضمان</td><td class="n">3 شهور محرك</td><td>الصيانات السابقة</td><td class="n">4 · كلها موثقة</td></tr></table></div>
+  </div></div><footer><span>جراج أبو يوسف</span><span>رقم الإعلان AYG-B-0231</span></footer></div>`,
+ garage:()=>`<div class="B">${navB("garage")}<div class="doc">${tocB("سجل الصيانة")}<div class="main">
+  <div class="intro"><div><div class="crumb">حسابي / كريم محمود</div><h1>سجل الصيانة · ZT350-T</h1><p>لوحة س ط ع 1234 · شاسيه LZSPCJLG3P1004418 · العداد 12,400 كم</p></div><span class="btn s">احجز صيانة الـ 15,000</span></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--ln)">${[["العداد","12,400 كم"],["الصيانة الجاية","15,000 كم"],["فاضل","2,600 كم"],["الرخصة","مارس 2027"]].map((k,i)=>`<div style="padding:18px 0 18px 18px;${i?"border-right:1px solid var(--ln);padding-right:18px":""}"><div class="k" style="font-size:12.5px;color:var(--mu)">${k[0]}</div><div class="k" style="font-size:24px;font-weight:600">${k[1]}</div></div>`).join("")}</div>
+  <div style="padding:24px 0"><h2>جدول الصيانة الدورية</h2><table><tr><th>العداد</th><th>الشغل</th><th>التاريخ</th><th>الفني</th><th>التكلفة</th><th>الختم</th></tr>${[["1,000","أول تغيير زيت + فحص","3 مايو 2025","الوكيل","950",1],["6,000","صيانة شاملة + ضبط بلوف","20 مارس 2026","أبو يوسف","2,450",1],["12,000","زيت + فلتر + بوجيه","12 أكتوبر 2026","أبو يوسف","1,770",1],["15,000","زيت + فرامل","—","—","5,350 تقديري",0],["18,000","شاملة + زيت الشوكة","—","—","—",0]].map(r=>`<tr style="${!r[5]&&r[0]=="15,000"?"background:var(--spotsoft)":""}"><td class="n">${r[0]}</td><td>${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td><td class="n">${r[4]}</td><td>${r[5]?`<span class="stamp" style="width:44px;height:44px;font-size:8.5px">تم<br>✓</span>`:(r[0]=="15,000"?`<span class="btn s sm">احجز</span>`:"")}</td></tr>`).join("")}</table></div>
+  <div style="padding:0 0 24px"><h2>زيارات خارج الجدول</h2><table><tr><th>التاريخ</th><th>العداد</th><th>الشغل</th><th>التكلفة</th></tr><tr><td class="n">5 يوليو 2026</td><td class="n">9,300</td><td>تيل فرامل أمامي وخلفي</td><td class="n">1,240</td></tr><tr><td class="n">2 يناير 2026</td><td class="n">4,100</td><td>فحص كهرباء وبطارية</td><td class="n">350</td></tr></table></div>
+  </div></div><footer><span>جراج أبو يوسف</span><span>تحميل السجل PDF</span></footer></div>`
+};
+
+/* ================= C ================= */
+function navC(on){const L=[["home","الرئيسية"],["shop","المتجر"],["bikes","موتوسيكلات"],["book","الصيانة"]];return `<nav><div class="wm">أبو يوسف<small>جراج Zontes</small></div>${L.map(l=>`<a class="${l[0]==on?"on":""}">${l[1]}</a>`).join("")}<span class="sp"></span><span class="ico">${ic("search")}</span><span class="ico">${ic("cart")}</span><span class="ico">${ic("user")}</span></nav>`}
+const tileP=(t,l)=>`<div class="tile"><div class="im">${ic(t,72,1)}</div><div class="lb">${l}</div></div>`;
+const tileB=(l,s)=>`<div class="tile wide"><span class="chip"><b>${s}</b> فحص</span><div class="im">${bikeL(230,"#cfcfc9")}</div><div class="lb">${l}</div></div>`;
+const C={
+ home:()=>`<div class="C">${navC("home")}
+  <div class="bill"><div class="art">${bikeL(620,"#8f887a","#efc06a",1.3)}</div><div class="shade"></div><div class="tx"><div class="meta"><b>طقم الشهر</b><span>ZT310 / ZT350</span><span>بدل 6,020</span></div><h1>طقم صيانة الـ 15,000 كم</h1><p>زيت موتول 7100، فلتر أصلي، وتيل Brembo. اطلبه يوصلك، أو احجز ونركّبه في الجراج.</p><div style="display:flex;gap:12px"><span class="btn">ضيف للسلة · 5,350 ج.م</span><span class="btn g">احجز التركيب</span></div></div></div>
+  <div class="row"><h2>مناسب لـ ZT350-T بتاعك<small>اخترناه على حسب عدادك</small><a>عرض الكل</a></h2><div class="rail">${tileP("oil","زيت موتول 7100")}<div class="tile focus"><div class="im">${ic("filter",90,0.9)}</div><div class="info"><b>فلتر زيت أصلي ZT350</b><small>Zontes · كود AYG-FLT-350</small><span class="fit">يركب على موديلك · متوفر، يوصل الخميس</span><div class="act"><span class="pr">320 ج.م</span><span class="btn sm">ضيف للسلة</span></div></div></div>${tileP("brake","تيل Brembo أمامي")}${tileP("plug","بوجيه NGK Iridium")}${tileP("chain","جنزير DID 520")}</div></div>
+  <div class="row dim"><h2>موتوسيكلات مفحوصة<small>22 معروض</small><a>المعرض</a></h2><div class="rail">${tileB("ZT125-U · 2024 · 98,000",97)}${tileB("ZT350-GK · 2023 · 232,000",94)}${tileB("ZT350-T · 2023 · 245,000",92)}${tileB("ZT310-R · 2022 · 189,000",86)}</div></div>
+  <div class="row dim"><h2>خدمات الورشة<small>احجز من هنا</small></h2><div class="rail">${[["تغيير زيت وفلتر","45 دقيقة · 1,770"],["صيانة شاملة","3 ساعات · 2,450"],["فحص قبل الشراء","90 دقيقة · 600"],["فرامل","حسب القطع"],["كهرباء","حسب العطل"]].map(s=>`<div class="ep" style="flex-basis:230px;min-height:120px"><b>${s[0]}</b><small>${s[1]} ج.م</small><span class="c" style="color:var(--acc);font-size:16px">احجز</span></div>`).join("")}</div></div></div>`,
+ shop:()=>`<div class="C">${navC("shop")}
+  <div class="phd"><h1>زيوت وفلاتر</h1><p>كله متفلتر على ZT350-T · 38 منتج</p><div class="tabs">${["الكل","زيوت","فلاتر","فرامل","كهرباء","نقل حركة","خوذ وملابس"].map((t,i)=>`<span class="${i==1?"on":""}">${t}</span>`).join("")}</div></div>
+  <div class="row"><h2>10W-40<small>الأنسب لـ ZT350</small></h2><div class="rail"><div class="tile focus"><div class="im">${ic("oil",90,0.9)}</div><div class="info"><b>موتول 7100 4T 10W-40</b><small>تخليقي 100% · لتر</small><span class="fit">الأكثر طلباً · متوفر</span><div class="act"><span class="pr">1,450 ج.م</span><span class="btn sm">ضيف للسلة</span></div></div></div>${tileP("oil","كاسترول Power1 Racing")}${tileP("oil","ليكوي مولي Street Race")}${tileP("oil","شل Advance Ultra")}${tileP("oil","موتول 300V")}</div></div>
+  <div class="row dim"><h2>15W-50<small>للجو الحار والمشاوير الطويلة</small></h2><div class="rail">${tileP("oil","موتول 5100 15W-50")}${tileP("oil","كاسترول Power1 15W-50")}${tileP("oil","ليكوي مولي 15W-50")}${tileP("oil","موبيل 1 Racing")}${tileP("oil","ريبسول Moto")}${tileP("oil","إيني i-Ride")}</div></div>
+  <div class="row dim"><h2>فلاتر الزيت<small>أصلي وبدائل</small></h2><div class="rail">${tileP("filter","فلتر أصلي ZT350")}${tileP("filter","فلتر K&N KN-204")}${tileP("filter","فلتر HiFlo HF204")}${tileP("filter","فلتر أصلي ZT310")}${tileP("filter","فلتر أصلي ZT125")}${tileP("filter","جوان غطا الفلتر")}</div></div></div>`,
+ bike:()=>`<div class="C">${navC("bikes")}
+  <div class="hero2"><div class="art">${bikeL(640,"#a9a59b","#8a2a22",1.3)}</div><div class="shade"></div><div class="tx"><span class="score">92 من 100 · فحص أبو يوسف</span><h1 style="margin-top:12px">Zontes ZT350-T</h1><div style="color:var(--mu);font-size:19px;margin:4px 0 14px">2023 · 12,400 كم · أول مالك · رخصة لحد 2027</div><div style="font-size:40px;font-weight:800;line-height:1.1">245,000 ج.م</div><div style="color:var(--mu);font-size:16px;margin-bottom:20px">أو تقسيط من 10,200 في الشهر</div><div style="display:flex;gap:12px"><span class="btn">احجز معاينة</span><span class="btn g">اسأل على واتساب</span></div></div></div>
+  <div class="row"><h2>تقرير الفحص<small>120 نقطة · 28 أكتوبر 2026</small><a>التقرير الكامل PDF</a></h2><div class="grp">${[["المحرك",100],["الفرامل",100],["الكهرباء",94,1],["الشاسيه",100],["العفشة",100],["الكاوتش",75,1]].map(c=>`<div><small>${c[0]}</small><b>${c[1]}</b><div class="bar"><i class="${c[2]?"w":""}" style="width:${c[1]}%"></i></div></div>`).join("")}</div><p style="color:var(--mu);margin:14px 0 0">ملاحظتين: لمبة إشارة خلفي هتتغير مجاناً قبل التسليم، والكاوتش الخلفي 70%.</p></div>
+  <div class="row dim"><h2>موتوسيكلات شبهه<small>نفس الفئة والسعر</small></h2><div class="rail">${tileB("ZT350-GK · 2023 · 232,000",94)}${tileB("ZT350-D · 2024 · 268,000",98)}${tileB("ZT310-R · 2022 · 189,000",86)}${tileB("ZT310-X · 2021 · 162,000",81)}</div></div></div>`,
+ garage:()=>`<div class="C">${navC("")}
+  <div class="bill" style="height:430px"><div class="art">${bikeL(560,"#8f887a","#8a2a22",1.3)}</div><div class="shade"></div><div class="tx"><div class="meta"><b>جراجك</b><span>كريم محمود</span><span>س ط ع 1234</span></div><h1>ZT350-T بتاعتك</h1><p>العداد 12,400 كم. فاضل 2,600 كم على صيانة الـ 15,000.</p><div style="display:flex;gap:12px"><span class="btn">احجز الصيانة الجاية</span><span class="btn g">حدّث العداد</span></div></div></div>
+  <div class="row"><h2>للصيانة الجاية<small>الطقم اللي أبو يوسف رشحه</small><a>اطلب الطقم كله · 5,350</a></h2><div class="rail">${tileP("oil","زيت موتول 7100 × 3")}${tileP("filter","فلتر أصلي ZT350")}<div class="tile focus" style="flex-basis:360px"><div class="im" style="height:160px">${ic("brake",80,0.9)}</div><div class="info"><b>تيل فرامل أمامي Brembo</b><span class="fit" style="color:var(--acc)">التيل الحالي من 9,300 كم</span><div class="act"><span class="pr">680 ج.م</span><span class="btn sm">ضيف</span></div></div></div>${tileP("helmet","خوذة LS2 · مقترح")}</div></div>
+  <div class="row dim"><h2>سجل الصيانة<small>4 زيارات</small><a>PDF</a></h2><div class="rail">${[["الزيارة 4 · 12 أكتوبر 2026","تغيير زيت + فلتر","12,000 كم · أبو يوسف","1,770"],["الزيارة 3 · 5 يوليو 2026","تيل فرامل أمامي وخلفي","9,300 كم · محمد","1,240"],["الزيارة 2 · 20 مارس 2026","صيانة 6,000 الشاملة","6,000 كم · أبو يوسف","2,450"],["الزيارة 1 · 2 يناير 2026","فحص كهرباء وبطارية","4,100 كم · محمد","350"]].map(e=>`<div class="ep"><span class="n">${e[0]}</span><b>${e[1]}</b><small>${e[2]}</small><span class="c">${e[3]} ج.م</span></div>`).join("")}</div></div>
+  <div class="row dim"><h2>طلباتي</h2><div class="rail"><div class="ep"><span class="n">#1042 · تم التوصيل</span><b>زيت موتول 7100 × 2 + فلتر</b><small>3 نوفمبر</small><span class="c">3,220 ج.م</span></div><div class="ep"><span class="n">#0987 · استلام من الجراج</span><b>خوذة LS2 Rapid</b><small>14 سبتمبر</small><span class="c">4,200 ج.م</span></div></div></div></div>`
+};
+
+const R={A:A,B:B,C:C};
+let dir="A",page="home";
+try{const d=localStorage.getItem("ayg5-dir"),p=localStorage.getItem("ayg5-page");if(R[d])dir=d;if(PAGES.some(x=>x[0]==p))page=p}catch(e){}
+{const m=/^#([ABC])-(\w+)$/.exec(location.hash);if(m&&PAGES.some(x=>x[0]==m[2])){dir=m[1];page=m[2]}}
+const $=s=>document.querySelector(s);
+$("#pages").innerHTML=PAGES.map(p=>`<button class="pg" role="tab" data-p="${p[0]}" aria-selected="false">${p[1]}</button>`).join("");
+function render(){
+ document.querySelectorAll(".dir").forEach(b=>b.setAttribute("aria-selected",b.dataset.d==dir));
+ document.querySelectorAll(".pg").forEach(b=>b.setAttribute("aria-selected",b.dataset.p==page));
+ const i=INFO[dir];
+ $("#card").innerHTML=`<div><h4>الفكرة</h4><p>${i.thesis}</p><h4>أول ما تفتح الموقع</h4><p style="margin:0">${i.first}</p></div><div><h4>الشكل</h4><p>${i.feel}</p>${i.raises.length?`<h4>اللي خدته من الأفكار المستبعدة</h4><ul>${i.raises.map(r=>`<li>${r}</li>`).join("")}</ul>`:""}</div><div><h4>محتاج انتباه</h4><p>${i.risk}</p></div>`;
+ $("#url").textContent="aygarage.com"+PAGES.find(p=>p[0]==page)[2];
+ $("#mock").innerHTML=R[dir][page]();
+ try{localStorage.setItem("ayg5-dir",dir);localStorage.setItem("ayg5-page",page)}catch(e){}
+ fit();
+}
+function fit(){const vp=$("#vp"),m=$("#mock");const s=vp.clientWidth/1280;m.style.transform=`scale(${s})`;vp.style.height=(m.offsetHeight*s)+"px"}
+document.querySelectorAll(".dir").forEach(b=>b.onclick=()=>{dir=b.dataset.d;render()});
+$("#pages").onclick=e=>{const b=e.target.closest(".pg");if(b){page=b.dataset.p;render()}};
+window.addEventListener("resize",fit);
+document.fonts&&document.fonts.ready.then(fit);
+render();
+})();
+</script>

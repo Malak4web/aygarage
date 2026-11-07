@@ -1,0 +1,402 @@
+<title>Abu Yousef Garage Brand</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+/* Shell: quiet review board. */
+:root{--bg:#f3f3f4;--surface:#fff;--fg:#151518;--muted:#6c6c72;--line:#e0e0e3;--accent:#d9252c;--chip:#e9e9ec;--f-ui:"Tajawal","Segoe UI",Tahoma,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121214;--surface:#1b1b1e;--fg:#f0f0f2;--muted:#9d9da4;--line:#2d2d31;--accent:#ff4d54;--chip:#26262a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121214;--surface:#1b1b1e;--fg:#f0f0f2;--muted:#9d9da4;--line:#2d2d31;--accent:#ff4d54;--chip:#26262a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.6}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+header.intro{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+header.intro img{width:72px;height:72px;border-radius:50%;flex:none}
+header.intro h1{margin:0;font-size:clamp(22px,3.6vw,30px);font-weight:800;line-height:1.25}
+header.intro p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.intro-txt{flex:1;min-width:0}
+.brand{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:12px;margin-bottom:20px}
+.brand > div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.brand h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:700}
+.pal{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.pal div{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.pal i{height:44px;border-radius:10px;border:1px solid var(--line)}
+.pal b{color:var(--fg);font-size:13px;font-weight:700}
+.typ .big{font-family:"Readex Pro";font-weight:600;font-size:28px;line-height:1.2}
+.typ .sm{font-family:"Readex Pro";font-weight:400;font-size:14px;color:var(--muted)}
+.logo-row{display:flex;gap:12px;align-items:center}
+.logo-row img{width:64px;height:64px;border-radius:50%}
+.logo-row .wm{font-family:"Readex Pro";font-weight:600;font-size:18px;line-height:1.2}
+.logo-row .wm small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.pages{display:flex;gap:6px;flex-wrap:wrap}
+.pg,.th{all:unset;cursor:pointer;padding:8px 14px;border-radius:999px;background:var(--chip);font-size:15px;font-weight:500}
+.pg:focus-visible,.th:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pg[aria-selected="true"],.th[aria-pressed="true"]{background:var(--fg);color:var(--bg);font-weight:700}
+.themes{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.themes .th{background:transparent}
+.frame{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#111;box-shadow:0 18px 40px -24px rgba(0,0,0,.4)}
+.bar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--chip);direction:ltr}
+.bar i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.bar span{flex:1;margin-inline-start:10px;background:var(--surface);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewport{position:relative;overflow:hidden}
+.mock{width:1280px;transform-origin:top right;position:absolute;top:0;right:0}
+.note{color:var(--muted);font-size:14px;margin-top:12px}
+.principles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
+.principles div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.principles b{display:block;margin-bottom:2px}
+.principles span{color:var(--muted);font-size:14px}
+@media (max-width:900px){.brand{grid-template-columns:1fr}.principles{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.principles{grid-template-columns:1fr}}
+
+/* =========================================================
+   The site — one calm brand system, light and dark.
+   ========================================================= */
+.X{--bg:#ffffff;--sf:#f6f6f7;--sf2:#efeff1;--ink:#111214;--mute:#6b6e75;--line:#e8e8eb;--red:#d9252c;--redsoft:#fdeeee;--ok:#1f8a4c;--oksoft:#e8f5ee;--warn:#a8670b;--warnsoft:#fbf2e3;--photo:#1a1b1e;
+  background:var(--bg);color:var(--ink);font-family:"Readex Pro",sans-serif;font-size:15px;line-height:1.6;font-variant-numeric:tabular-nums}
+.X.dk{--bg:#0f1012;--sf:#17181b;--sf2:#1e1f23;--ink:#f1f1f3;--mute:#9a9ca3;--line:#25272b;--red:#ec383f;--redsoft:#2a1517;--ok:#3cc47a;--oksoft:#132a1e;--warn:#e0a04a;--warnsoft:#2c2214;--photo:#1a1b1f}
+.X *{box-sizing:border-box}
+.X svg{display:block}
+.X .ctr{padding:0 64px}
+.X nav{display:flex;align-items:center;gap:30px;height:76px;padding:0 64px;border-bottom:1px solid var(--line)}
+.X nav .lg{display:flex;align-items:center;gap:10px}
+.X nav .lg img{width:44px;height:44px;border-radius:50%}
+.X nav .lg b{font-weight:600;font-size:16px;line-height:1.15}
+.X nav .lg small{display:block;font-weight:400;font-size:11px;color:var(--mute)}
+.X nav a{color:var(--mute);text-decoration:none;font-size:15px}
+.X nav a.on{color:var(--ink);font-weight:500;box-shadow:inset 0 -2px 0 var(--red);padding-bottom:26px;margin-bottom:-27px}
+.X nav .sp{flex:1}
+.X .ib{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--ink);position:relative}
+.X .ib .n{position:absolute;top:4px;left:4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;display:grid;place-items:center}
+.X .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:10px;font-weight:500;font-size:15px;background:var(--red);color:#fff;white-space:nowrap}
+.X .btn.sec{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.X .btn.ink{background:var(--ink);color:var(--bg)}
+.X .btn.sm{height:36px;padding:0 14px;font-size:14px}
+.X .eyebrow{font-size:13px;color:var(--red);font-weight:500}
+.X h1{font-weight:600;letter-spacing:-.01em}
+.X .muted{color:var(--mute)}
+.X .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--sf2);color:var(--mute)}
+.X .tag.ok{background:var(--oksoft);color:var(--ok)}
+.X .tag.warn{background:var(--warnsoft);color:var(--warn)}
+.X .tag.red{background:var(--redsoft);color:var(--red)}
+.X .photo{background:radial-gradient(120% 90% at 50% 100%,#2a2b30,var(--photo) 70%);border-radius:16px;display:grid;place-items:center;position:relative;overflow:hidden}
+.X .soft{background:var(--sf);border-radius:14px;display:grid;place-items:center}
+
+/* home */
+.X .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:center;padding:64px 64px 56px}
+.X .hero h1{font-size:46px;line-height:1.2;margin:12px 0 16px;text-wrap:balance}
+.X .hero h1 span{color:var(--red)}
+.X .hero p{font-size:18px;color:var(--mute);margin:0 0 28px;max-width:44ch}
+.X .trust{display:flex;gap:36px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
+.X .trust b{display:block;font-size:24px;font-weight:600}
+.X .trust small{color:var(--mute);font-size:13px}
+.X .hero .photo{height:440px}
+.X .float{position:absolute;bottom:22px;right:22px;background:var(--bg);color:var(--ink);border-radius:14px;padding:14px 16px;width:250px;box-shadow:0 12px 30px -10px rgba(0,0,0,.4)}
+.X .float small{color:var(--mute);font-size:12px}
+.X .float b{display:block;font-size:17px;font-weight:600}
+.X .meter{height:6px;border-radius:6px;background:var(--sf2);margin-top:10px;overflow:hidden}
+.X .meter i{display:block;height:100%;background:var(--red);border-radius:6px}
+.X section{padding:56px 64px 0}
+.X .sh{display:flex;justify-content:space-between;align-items:end;margin-bottom:22px}
+.X .sh h2{margin:0;font-size:26px;font-weight:600}
+.X .sh p{margin:4px 0 0;color:var(--mute)}
+.X .sh a{color:var(--ink);font-size:14px;text-decoration:none;font-weight:500}
+.X .cats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.X .cat{border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.X .cat svg{color:var(--red)}
+.X .cat b{font-weight:500}
+.X .cat small{color:var(--mute);font-size:12px}
+.X .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.X .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.X .pc .soft{height:220px;margin-bottom:14px}
+.X .pc .fit{font-size:12px;color:var(--ok);display:flex;gap:4px;align-items:center}
+.X .pc h4{margin:4px 0 8px;font-size:15px;font-weight:500;line-height:1.45}
+.X .pc .row{display:flex;justify-content:space-between;align-items:center}
+.X .pc .pr{font-size:17px;font-weight:600}
+.X .pc .pr small{font-size:12px;color:var(--mute);font-weight:400}
+.X .add{width:36px;height:36px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center;color:var(--ink)}
+.X .band{margin:64px 64px 0;background:var(--sf);border-radius:20px;padding:44px;display:grid;grid-template-columns:1fr 1.4fr;gap:48px;align-items:center}
+.X .band h2{font-size:30px;margin:8px 0 12px;font-weight:600;line-height:1.25}
+.X .band p{color:var(--mute);margin:0 0 22px}
+.X .steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.X .steps3 div{background:var(--bg);border-radius:14px;padding:20px}
+.X .steps3 .n{width:30px;height:30px;border-radius:50%;background:var(--redsoft);color:var(--red);display:grid;place-items:center;font-weight:600;font-size:14px;margin-bottom:12px}
+.X .steps3 b{display:block;font-weight:500;margin-bottom:4px}
+.X .steps3 small{color:var(--mute)}
+.X .bc .photo{height:230px;margin-bottom:14px}
+.X .bc .sc{position:absolute;top:14px;right:14px;background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 12px 5px 6px;font-size:13px;display:flex;gap:8px;align-items:center}
+.X .bc .sc b{background:var(--ok);color:#fff;border-radius:999px;padding:0 8px;font-weight:600}
+.X .bc h4{margin:0;font-size:17px;font-weight:600}
+.X .bc .meta{color:var(--mute);font-size:14px;margin:2px 0 10px}
+.X .bc .pr{font-size:18px;font-weight:600}
+.X footer{margin-top:72px;border-top:1px solid var(--line);padding:36px 64px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:30px;font-size:14px}
+.X footer b{display:block;margin-bottom:10px;font-weight:500}
+.X footer span{display:block;color:var(--mute);margin-bottom:6px}
+
+/* inner pages */
+.X .phd{padding:40px 64px 28px}
+.X .crumb{font-size:13px;color:var(--mute);margin-bottom:10px}
+.X .phd h1{font-size:34px;margin:0}
+.X .phd p{margin:6px 0 0;color:var(--mute)}
+.X .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.X .chip{height:36px;padding:0 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);display:inline-flex;align-items:center;font-size:14px;color:var(--mute)}
+.X .chip.on{background:var(--ink);color:var(--bg);box-shadow:none}
+.X .layout{display:grid;grid-template-columns:250px 1fr;gap:40px;padding:0 64px}
+.X .flt .grp{padding:18px 0;border-bottom:1px solid var(--line)}
+.X .flt .grp:first-child{padding-top:0}
+.X .flt h5{margin:0 0 12px;font-size:14px;font-weight:500}
+.X .flt label{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px;color:var(--mute)}
+.X .flt label small{margin-inline-start:auto;font-size:12px}
+.X .flt .cb{width:18px;height:18px;border-radius:5px;box-shadow:inset 0 0 0 1.5px var(--line);flex:none}
+.X .flt .cb.on{background:var(--red);box-shadow:none;position:relative}
+.X .flt .cb.on::after{content:"";position:absolute;inset:4px 6px 6px 6px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.X .flt label.on{color:var(--ink)}
+.X .sel{height:44px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:14px}
+.X .bar2{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;font-size:14px;color:var(--mute)}
+.X .range{height:4px;background:var(--sf2);border-radius:4px;position:relative;margin:16px 0 10px}
+.X .range i{position:absolute;right:15%;left:40%;top:0;bottom:0;background:var(--red);border-radius:4px}
+.X .range i::before,.X .range i::after{content:"";position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 2px var(--red)}
+.X .range i::before{right:-8px}.X .range i::after{left:-8px}
+.X .det{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;padding:0 64px}
+.X .det .photo{height:480px}
+.X .thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px}
+.X .thumbs div{height:76px;border-radius:12px;background:var(--sf)}
+.X .thumbs div.on{box-shadow:0 0 0 2px var(--ink)}
+.X .specs{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:22px 0}
+.X .specs div{padding:14px 16px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.X .specs div:nth-child(3n){border-left:0}
+.X .specs div:nth-last-child(-n+3){border-bottom:0}
+.X .specs small{display:block;color:var(--mute);font-size:12px}
+.X .specs b{font-weight:500}
+.X .report{border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:28px}
+.X .rhd{display:flex;align-items:center;gap:20px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.X .score{width:84px;height:84px;border-radius:50%;background:conic-gradient(var(--ok) calc(var(--v)*1%),var(--sf2) 0);display:grid;place-items:center;flex:none}
+.X .score div{width:68px;height:68px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:22px;font-weight:600}
+.X .rrow{display:grid;grid-template-columns:160px 1fr 70px 1.3fr;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.X .rrow:last-child{border-bottom:0}
+.X .pb{height:6px;border-radius:6px;background:var(--sf2);overflow:hidden}
+.X .pb i{display:block;height:100%;background:var(--ok)}
+.X .pb i.w{background:var(--warn)}
+.X .stepper{display:flex;gap:0;padding:0 64px;margin-bottom:32px}
+.X .stepper div{flex:1;display:flex;gap:10px;align-items:center;padding:14px 0;border-top:2px solid var(--line);font-size:14px;color:var(--mute)}
+.X .stepper div i{width:26px;height:26px;border-radius:50%;background:var(--sf2);display:grid;place-items:center;font-style:normal;font-size:13px}
+.X .stepper div.done{border-color:var(--ink);color:var(--ink)}
+.X .stepper div.done i{background:var(--ink);color:var(--bg)}
+.X .stepper div.on{border-color:var(--red);color:var(--ink);font-weight:500}
+.X .stepper div.on i{background:var(--red);color:#fff}
+.X .book{display:grid;grid-template-columns:1fr 380px;gap:40px;padding:0 64px}
+.X .opt{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px}
+.X .opt div{border-radius:14px;padding:16px;box-shadow:inset 0 0 0 1px var(--line)}
+.X .opt div.on{box-shadow:inset 0 0 0 2px var(--red);background:var(--redsoft)}
+.X .opt b{display:block;font-weight:500}
+.X .opt small{color:var(--mute);font-size:13px}
+.X h3.t{font-size:17px;font-weight:500;margin:0 0 14px}
+.X .days{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:20px}
+.X .days div{border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);text-align:center;padding:10px 0;font-size:12px;color:var(--mute)}
+.X .days div b{display:block;font-size:20px;font-weight:500;color:var(--ink)}
+.X .days div.on{background:var(--ink);box-shadow:none;color:var(--bg)}
+.X .days div.on b{color:var(--bg)}
+.X .days div.off{opacity:.4}
+.X .times{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.X .times span{height:42px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center;font-size:14px}
+.X .times span.on{background:var(--red);color:#fff;box-shadow:none}
+.X .times span.off{color:var(--mute);text-decoration:line-through;opacity:.6}
+.X .sum{background:var(--sf);border-radius:16px;padding:24px;align-self:start}
+.X .sum h3{margin:0 0 14px;font-size:18px;font-weight:600}
+.X .dl{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+.X .dl span{color:var(--mute)}
+.X .dl b{font-weight:500}
+.X .acc{display:grid;grid-template-columns:220px 1fr;gap:40px;padding:36px 64px 0}
+.X .side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--mute);text-decoration:none;font-size:15px}
+.X .side a.on{background:var(--sf);color:var(--ink);font-weight:500}
+.X .veh{display:grid;grid-template-columns:300px 1fr;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.X .veh .photo{border-radius:0;height:100%}
+.X .veh .body{padding:24px 28px}
+.X .kv4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}
+.X .kv4 small{display:block;color:var(--mute);font-size:12px}
+.X .kv4 b{font-size:18px;font-weight:600}
+.X .alert{display:flex;gap:12px;align-items:center;background:var(--warnsoft);color:var(--ink);border-radius:12px;padding:12px 16px;font-size:14px;margin-top:18px}
+.X .alert i{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+.X table{width:100%;border-collapse:collapse;font-size:14px}
+.X th{text-align:right;font-weight:400;color:var(--mute);font-size:13px;padding:12px 0;border-bottom:1px solid var(--line)}
+.X td{padding:16px 0;border-bottom:1px solid var(--line)}
+.X .auth{display:grid;grid-template-columns:1fr 1fr;min-height:800px}
+.X .auth .l{padding:56px 96px;display:flex;flex-direction:column}
+.X .auth .r{background:#0f1012;display:grid;place-items:center;position:relative;color:#f1f1f3}
+.X .auth .r img{width:300px;height:300px;border-radius:50%}
+.X .auth .r .q{position:absolute;bottom:56px;right:56px;left:56px}
+.X .fld{margin-bottom:16px}
+.X .fld label{display:block;font-size:14px;margin-bottom:6px;font-weight:500}
+.X .fld div{height:48px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;padding:0 14px;font-size:15px;color:var(--mute)}
+.X .fld div.f{box-shadow:inset 0 0 0 2px var(--ink);color:var(--ink)}
+.X .seg{display:flex;background:var(--sf);border-radius:12px;padding:4px;margin-bottom:28px}
+.X .seg span{flex:1;text-align:center;padding:9px;border-radius:9px;font-size:14px;color:var(--mute)}
+.X .seg span.on{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <header class="intro">
+    <img src="logo.png" alt="لوجو جراج أبو يوسف">
+    <div class="intro-txt">
+      <h1>جراج أبو يوسف: الهوية والتصميم</h1>
+      <p>تصميم واحد هادي وشيك، ألوانه من اللوجو: أبيض وأسود وأحمر "Garage". الأحمر بيظهر بس في الأزرار المهمة والحاجات اللي محتاجة انتباه، والباقي مساحة نضيفة وخط واحد واضح. كل الصفحات السبعة جاهزة، واختار بين الفاتح والغامق.</p>
+    </div>
+  </header>
+
+  <div class="brand">
+    <div>
+      <h4>اللوجو</h4>
+      <div class="logo-row"><img src="logo.png" alt=""><div class="wm">جراج أبو يوسف<small>Abu Yousef Garage · Zontes</small></div></div>
+      <p style="margin:12px 0 0;font-size:14px;color:var(--muted)">اللوجو في دايرة صغيرة في الهيدر، ويكبر بس في صفحة الدخول والفوتر.</p>
+    </div>
+    <div>
+      <h4>الألوان</h4>
+      <div class="pal">
+        <div><i style="background:#111214"></i><b>أسود</b>النصوص</div>
+        <div><i style="background:#ffffff"></i><b>أبيض</b>الخلفية</div>
+        <div><i style="background:#d9252c"></i><b>أحمر</b>الأزرار</div>
+        <div><i style="background:#f6f6f7"></i><b>رمادي فاتح</b>المساحات</div>
+        <div><i style="background:#1f8a4c"></i><b>أخضر</b>سليم / متوفر</div>
+      </div>
+    </div>
+    <div class="typ">
+      <h4>الخط</h4>
+      <div class="big">ريدكس برو</div>
+      <div class="sm">Readex Pro: خط واحد عربي وإنجليزي، واضح على الموبايل، وأرقامه متناسقة في الأسعار والكيلومترات.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="pages" role="tablist" aria-label="الصفحات" id="pages"></div>
+    <div class="themes" aria-label="نسخة التصميم">
+      <button class="th" data-t="light" aria-pressed="true">فاتح</button>
+      <button class="th" data-t="dark" aria-pressed="false">غامق</button>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="bar"><i></i><i></i><i></i><span id="url">aygarage.com</span></div>
+    <div class="viewport" id="vp"><div class="mock" id="mock"></div></div>
+  </div>
+  <p class="note">مقاس ديسكتوب (1280px) متصغّر. أماكن الصور الغامقة هتتملي بصور حقيقية للموتوسيكلات والمنتجات بخلفية موحدة.</p>
+
+  <div class="principles">
+    <div><b>لون واحد للفعل</b><span>الأحمر يعني "اضغط هنا". مفيش أحمر للزينة.</span></div>
+    <div><b>المعلومة الأهم الأول</b><span>السعر، التوافق مع الموديل، ودرجة الفحص بتبان من غير ما تدوّر.</span></div>
+    <div><b>مساحة كفاية</b><span>عناصر أقل في كل صفحة، وكل حاجة ليها مكانها الثابت.</span></div>
+    <div><b>نفس الشكل في كل مكان</b><span>الكروت والأزرار والجداول واحدة في الموقع كله.</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const LOGO="logo.png";
+const PAGES=[["home","الرئيسية","/"],["shop","المتجر","/shop/oils"],["bikes","موتوسيكلات للبيع","/bikes"],["bike","صفحة موتوسيكل","/bikes/zt350t-2023"],["book","حجز صيانة","/booking"],["garage","حسابي","/account/garage"],["auth","تسجيل الدخول","/login"]];
+const P=[
+ {n:"زيت موتول 7100 4T 10W-40، لتر",fit:"يركب على موديلك",p:"1,450",t:"oil",col:"#c8202a"},
+ {n:"فلتر زيت أصلي Zontes ZT350",fit:"يركب على موديلك",p:"320",t:"filter",col:"#2a2a2e"},
+ {n:"تيل فرامل أمامي Brembo",fit:"يركب على موديلك",p:"680",t:"brake",col:"#55575c"},
+ {n:"خوذة LS2 Rapid، أسود مط",fit:"مقاسات M – XL",p:"4,200",t:"helmet",col:"#1c1c1f"},
+ {n:"زيت موتول 5100 15W-50، لتر",fit:"يركب على موديلك",p:"980",t:"oil",col:"#2c7a52"},
+ {n:"بوجيه NGK Iridium",fit:"يركب على موديلك",p:"240",t:"plug",col:"#ccc"}
+];
+const B=[{m:"Zontes ZT350-T",y:2023,km:"12,400",p:"245,000",s:92,col:"#c8202a"},{m:"Zontes ZT310-R",y:2022,km:"18,900",p:"189,000",s:86,col:"#e6e6e6"},{m:"Zontes ZT125-U",y:2024,km:"3,200",p:"98,000",s:97,col:"#3a3a3e"},{m:"Zontes ZT350-GK",y:2023,km:"7,800",p:"232,000",s:94,col:"#5b6b4a"},{m:"Zontes ZT310-X",y:2021,km:"26,000",p:"162,000",s:81,col:"#2d5a8f"},{m:"Zontes ZT350-D",y:2024,km:"1,900",p:"268,000",s:98,col:"#8a8a8f"}];
+function bike(c,w,s){w=w||220;s=s||"#5d5f66";return `<svg width="${w}" viewBox="0 0 220 130" aria-hidden="true"><circle cx="48" cy="92" r="30" fill="none" stroke="${s}" stroke-width="6"/><circle cx="172" cy="92" r="30" fill="none" stroke="${s}" stroke-width="6"/><circle cx="48" cy="92" r="5" fill="${s}"/><circle cx="172" cy="92" r="5" fill="${s}"/><path d="M48 92 L86 58 L132 58 L172 92" fill="none" stroke="${s}" stroke-width="5" stroke-linejoin="round"/><path d="M88 92 L104 62 L130 92 Z" fill="${s}" opacity=".7"/><path d="M82 52 Q100 30 132 38 L140 54 L86 60 Z" fill="${c}"/><path d="M132 40 L156 36 L162 46 L140 54 Z" fill="${c}" opacity=".85"/><path d="M60 50 L90 48 L88 56 L62 58 Z" fill="#0c0c0d"/><path d="M150 30 L162 22 L170 26 L172 92" fill="none" stroke="${s}" stroke-width="4"/><path d="M146 26 L160 18" stroke="${s}" stroke-width="4" stroke-linecap="round"/><rect x="164" y="32" width="12" height="8" rx="3" fill="${c}"/></svg>`}
+function prod(t,c,w){w=w||100;const s={
+ oil:`<rect x="30" y="22" width="40" height="66" rx="6" fill="${c}"/><rect x="40" y="10" width="20" height="14" rx="2" fill="#222"/><rect x="34" y="44" width="32" height="20" fill="#fff" opacity=".92"/>`,
+ filter:`<rect x="24" y="26" width="52" height="56" rx="8" fill="${c}"/><rect x="24" y="40" width="52" height="3" fill="#777"/><rect x="24" y="64" width="52" height="3" fill="#777"/><circle cx="50" cy="22" r="10" fill="#9a9a9f"/>`,
+ brake:`<path d="M20 70 Q20 30 60 22 L80 22 L80 40 Q46 44 42 76 Z" fill="${c}"/><path d="M28 70 Q30 40 62 32 L74 32 L74 36 Q48 42 44 72 Z" fill="#222"/>`,
+ helmet:`<path d="M16 66 Q16 22 54 20 Q86 20 86 56 L86 72 L28 76 Z" fill="${c}"/><path d="M40 44 Q60 38 84 46 L84 60 L44 62 Z" fill="#55575c"/>`,
+ plug:`<rect x="44" y="8" width="12" height="20" fill="#e5e5e5" stroke="#999"/><rect x="38" y="28" width="24" height="18" fill="#9a9a9f"/><rect x="42" y="46" width="16" height="30" fill="#bbb"/><rect x="48" y="76" width="4" height="12" fill="#777"/>`
+}[t];return `<svg width="${w}" viewBox="0 0 100 96" aria-hidden="true">${s}</svg>`}
+const I={
+ search:`<svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>`,
+ cart:`<svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 11h10.2L20 7H7"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>`,
+ user:`<svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>`,
+ plus:`<svg width="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
+ check:`<svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>`,
+ drop:`<svg width="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg>`,
+ filter:`<svg width="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="5" width="12" height="15" rx="2"/><path d="M6 10h12M6 15h12M10 2h4v3h-4z"/></svg>`,
+ disc:`<svg width="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/></svg>`,
+ bolt:`<svg width="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L5 14h6l-1 8 8-12h-6z"/></svg>`,
+ chain:`<svg width="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="9" width="10" height="6" rx="3"/><rect x="12" y="9" width="10" height="6" rx="3"/></svg>`,
+ helmet:`<svg width="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 16a9 9 0 0 1 18-1v3H6z"/><path d="M11 10h10"/></svg>`,
+ bike:`<svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="16" r="3.5"/><circle cx="19" cy="16" r="3.5"/><path d="M5 16l4-6h6l4 6M12 10l-2 6"/></svg>`,
+ wrench:`<svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 6a4 4 0 0 0 5 5l-9 9a2 2 0 0 1-3-3l9-9a4 4 0 0 0-2-2z"/></svg>`,
+ cal:`<svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>`,
+ box:`<svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>`,
+ gear:`<svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>`
+};
+function nav(on){const L=[["home","الرئيسية"],["shop","المتجر"],["bikes","موتوسيكلات للبيع"],["book","الصيانة"]];return `<nav><div class="lg"><img src="${LOGO}" alt=""><b>جراج أبو يوسف<small>Zontes · قطع غيار وصيانة</small></b></div>${L.map(l=>`<a class="${l[0]==on||(on=="bike"&&l[0]=="bikes")?"on":""}">${l[1]}</a>`).join("")}<span class="sp"></span><span class="ib">${I.search}</span><span class="ib">${I.cart}<span class="n">2</span></span><span class="ib" style="${on=="garage"?"background:var(--sf)":""}">${I.user}</span><span class="btn sm">احجز صيانة</span></nav>`}
+function pc(x){return `<div class="pc"><div class="soft">${prod(x.t,x.col,110)}</div><div class="fit">${x.fit.startsWith("يركب")?I.check:""}${x.fit}</div><h4>${x.n}</h4><div class="row"><span class="pr">${x.p} <small>ج.م</small></span><span class="add">${I.plus}</span></div></div>`}
+function bc(x){return `<div class="bc"><div class="photo"><span class="sc"><b>${x.s}</b>درجة الفحص</span>${bike(x.col,260)}</div><h4>${x.m}</h4><div class="meta">${x.y} · ${x.km} كم · أول مالك</div><div class="pr">${x.p} <small class="muted" style="font-size:13px;font-weight:400">ج.م</small></div></div>`}
+const foot=`<footer><div><div class="lg" style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><img src="${LOGO}" alt="" style="width:40px;height:40px;border-radius:50%"><b style="margin:0">جراج أبو يوسف</b></div><span>متخصصين في موتوسيكلات Zontes: قطع غيار أصلية، صيانة، وموتوسيكلات مستعملة مفحوصة.</span></div><div><b>المتجر</b><span>زيوت</span><span>فلاتر</span><span>فرامل</span><span>إكسسوارات</span></div><div><b>الخدمات</b><span>حجز صيانة</span><span>فحص قبل الشراء</span><span>موتوسيكلات للبيع</span></div><div><b>تواصل</b><span>010 0000 0000</span><span>السبت – الخميس، 11 ص – 9 م</span><span>القاهرة</span></div></footer>`;
+const V={
+ home:()=>`${nav("home")}
+  <div class="hero"><div><span class="eyebrow">متخصصين في Zontes</span><h1>كل اللي موتوسيكلك محتاجه، <span>في مكان واحد.</span></h1><p>قطع غيار أصلية وزيوت، صيانة بميعاد، وموتوسيكلات مستعملة مفحوصة عند أبو يوسف بتقرير مكتوب.</p><div style="display:flex;gap:10px"><span class="btn">احجز صيانة</span><span class="btn sec">تسوّق قطع الغيار</span></div>
+   <div class="trust"><div><b>4.9</b><small>تقييم العملاء</small></div><div><b>+1,200</b><small>صيانة اتعملت</small></div><div><b>120</b><small>نقطة في كل فحص</small></div></div></div>
+   <div class="photo">${bike("#c8202a",460)}<div class="float"><small>Zontes ZT350-T · س ط ع 1234</small><b>الصيانة الجاية بعد 2,600 كم</b><div class="meter"><i style="width:82%"></i></div></div></div></div>
+  <section><div class="sh"><div><h2>تسوّق حسب القسم</h2></div><a>كل المنتجات ←</a></div><div class="cats">${[["drop","زيوت","48 منتج"],["filter","فلاتر","26 منتج"],["disc","فرامل","31 منتج"],["bolt","كهرباء","44 منتج"],["chain","نقل حركة","19 منتج"],["helmet","خوذ وملابس","37 منتج"]].map(c=>`<div class="cat">${I[c[0]]}<div><b>${c[1]}</b><br><small>${c[2]}</small></div></div>`).join("")}</div></section>
+  <section><div class="sh"><div><h2>الأكثر طلباً</h2><p>مختارة لموتوسيكلات ZT350</p></div><a>عرض الكل ←</a></div><div class="g4">${P.slice(0,4).map(pc).join("")}</div></section>
+  <div class="band"><div><span class="eyebrow">فحص أبو يوسف</span><h2>بتشتري موتوسيكل مستعمل؟ افحصه الأول.</h2><p>كل موتوسيكل معروض عندنا عدّى على فحص 120 نقطة، وتقدر تجيب أي موتوسيكل تاني نفحصهولك قبل ما تدفع.</p><span class="btn ink">احجز فحص · 600 ج.م</span></div>
+   <div class="steps3"><div><span class="n">1</span><b>احجز ميعاد</b><small>من الموقع في أقل من دقيقة</small></div><div><span class="n">2</span><b>فحص 90 دقيقة</b><small>محرك، فرامل، كهرباء، شاسيه، وأوراق</small></div><div><span class="n">3</span><b>تقرير مكتوب</b><small>بيوصلك PDF وبيتحفظ في حسابك</small></div></div></div>
+  <section><div class="sh"><div><h2>موتوسيكلات للبيع</h2><p>كلها مفحوصة ومعاها التقرير</p></div><a>المعرض ←</a></div><div class="g3">${B.slice(0,3).map(bc).join("")}</div></section>${foot}`,
+ shop:()=>`${nav("shop")}
+  <div class="phd"><div class="crumb">الرئيسية / المتجر</div><h1>زيوت المحرك</h1><p>48 منتج · توصيل لكل المحافظات أو استلام من الجراج</p><div class="chips">${["الكل","زيوت","فلاتر","فرامل","كهرباء","نقل حركة","خوذ وملابس"].map((c,i)=>`<span class="chip ${i==1?"on":""}">${c}</span>`).join("")}</div></div>
+  <div class="layout"><div class="flt"><div class="grp"><h5>موديل الموتوسيكل</h5><div class="sel">Zontes ZT350-T · 2023 <span class="muted">▾</span></div><div class="fit" style="font-size:12px;color:var(--ok);margin-top:8px;display:flex;gap:4px;align-items:center">${I.check}بيظهر اللي يركب بس</div></div>
+   <div class="grp"><h5>اللزوجة</h5>${[["10W-40",18,1],["15W-50",9],["10W-50",7],["20W-50",14]].map(l=>`<label class="${l[2]?"on":""}"><span class="cb ${l[2]?"on":""}"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div>
+   <div class="grp"><h5>الماركة</h5>${[["Motul",16,1],["Castrol",11],["Liqui Moly",8],["Shell",13]].map(l=>`<label class="${l[2]?"on":""}"><span class="cb ${l[2]?"on":""}"></span>${l[0]}<small>${l[1]}</small></label>`).join("")}</div>
+   <div class="grp" style="border:0"><h5>السعر</h5><div class="range"><i></i></div><div style="display:flex;justify-content:space-between;font-size:13px" class="muted"><span>500 ج.م</span><span>2,000 ج.م</span></div></div></div>
+  <div><div class="bar2"><span>12 منتج</span><span class="sel" style="height:38px;gap:20px">الأكثر مبيعاً <span class="muted">▾</span></span></div><div class="g3">${[P[0],P[4],P[0],P[4],P[0],P[4]].map((x,i)=>pc(Object.assign({},x,{n:[x.n,x.n,"كاسترول Power1 Racing 10W-40","ليكوي مولي Street Race 10W-40","شل Advance Ultra 10W-40","موتول 300V Factory Line 10W-40"][i],p:[x.p,x.p,"1,180","1,390","1,060","2,350"][i]}))).join("")}</div></div></div>${foot}`,
+ bikes:()=>`${nav("bikes")}
+  <div class="phd"><div class="crumb">الرئيسية / موتوسيكلات للبيع</div><h1>موتوسيكلات مستعملة مفحوصة</h1><p>كل موتوسيكل عدّى على فحص 120 نقطة في الجراج، والتقرير الكامل في صفحته.</p><div class="chips">${["الكل · 22","ZT125","ZT310","ZT350","ZT703","فحص 90+","أقل من 200 ألف"].map((c,i)=>`<span class="chip ${i==0?"on":""}">${c}</span>`).join("")}</div></div>
+  <div class="ctr"><div class="bar2"><span>22 موتوسيكل</span><span class="sel" style="height:38px;gap:20px">الأحدث <span class="muted">▾</span></span></div><div class="g3" style="row-gap:36px">${B.map(bc).join("")}</div></div>${foot}`,
+ bike:()=>{const x=B[0];return `${nav("bike")}
+  <div class="phd" style="padding-bottom:20px"><div class="crumb">الرئيسية / موتوسيكلات للبيع / ${x.m}</div></div>
+  <div class="det"><div><div class="photo">${bike(x.col,560)}</div><div class="thumbs"><div class="on"></div><div></div><div></div><div></div><div></div></div>
+   <div class="report"><div class="rhd"><div class="score" style="--v:${x.s}"><div>${x.s}</div></div><div><h3 style="margin:0;font-size:20px;font-weight:600">تقرير فحص أبو يوسف</h3><div class="muted" style="font-size:14px">120 نقطة · 28 أكتوبر 2026 · رقم التقرير 0418</div></div><span class="btn sec sm" style="margin-inline-start:auto">تحميل PDF</span></div>
+   ${[["المحرك",100,"","سليم، مفيش تهريب"],["الفرامل وABS",100,"","تيل أمامي جديد"],["الكهرباء",94,"w","لمبة إشارة خلفي، هتتغير قبل التسليم"],["الشاسيه والرقم",100,"","مطابق للرخصة"],["العفشة",100,"","المساعدين سليمة"],["الكاوتش",75,"w","الخلفي 70%، الأمامي 85%"]].map(r=>`<div class="rrow"><span>${r[0]}</span><div class="pb"><i class="${r[2]}" style="width:${r[1]}%"></i></div><span class="tag ${r[2]?"warn":"ok"}">${r[2]?"ملاحظة":"سليم"}</span><span class="muted">${r[3]}</span></div>`).join("")}</div></div>
+  <div><span class="tag ok">${I.check} مفحوص · ${x.s}/100</span><h1 style="font-size:34px;margin:12px 0 4px">${x.m}</h1><div class="muted">${x.y} · ${x.km} كم · أول مالك</div><div style="font-size:32px;font-weight:600;margin:20px 0 4px">${x.p} <span class="muted" style="font-size:16px;font-weight:400">ج.م</span></div><div class="muted" style="font-size:14px">أو تقسيط من 10,200 ج.م في الشهر</div>
+   <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px"><span class="btn" style="height:50px">احجز معاينة في الجراج</span><span class="btn sec" style="height:50px">اسأل على واتساب</span></div>
+   <div class="specs">${[["سعة المحرك","348 cc"],["القوة","38 حصان"],["ناقل الحركة","6 سرعات"],["الفرامل","ABS مزدوج"],["الرخصة","سارية لـ 2027"],["الضمان","3 شهور محرك"]].map(s=>`<div><small>${s[0]}</small><b>${s[1]}</b></div>`).join("")}</div>
+   <p class="muted" style="margin:0;font-size:14px">الموتوسيكل متغيرله زيت وفلتر وتيل أمامي من شهر. اللمبة الخلفية هتتغير مجاناً قبل التسليم.</p></div></div>${foot}`},
+ book:()=>`${nav("book")}
+  <div class="phd"><h1>حجز صيانة</h1><p>اختار الخدمة والميعاد، وهيوصلك تأكيد على الواتساب.</p></div>
+  <div class="stepper"><div class="done"><i>✓</i>المركبة</div><div class="done"><i>✓</i>الخدمة</div><div class="on"><i>3</i>الميعاد</div><div><i>4</i>التأكيد</div></div>
+  <div class="book"><div><h3 class="t">الخدمة</h3><div class="opt">${[["تغيير زيت وفلتر","45 دقيقة · 1,770 ج.م",1],["صيانة دورية شاملة","3 ساعات · 2,450 ج.م"],["فحص قبل الشراء","90 دقيقة · 600 ج.م"],["فرامل","ساعة · حسب القطع"],["كهرباء","حسب العطل"],["ضبط بلوف","ساعتين · 900 ج.م"]].map(s=>`<div class="${s[2]?"on":""}"><b>${s[0]}</b><small>${s[1]}</small></div>`).join("")}</div>
+   <div style="display:flex;justify-content:space-between;align-items:center"><h3 class="t">نوفمبر 2026</h3><span class="muted" style="font-size:14px">‹ ›</span></div><div class="days">${[["سبت",7],["أحد",8],["اثنين",9],["ثلاثاء",10],["أربعاء",11],["خميس",12],["جمعة",13]].map((d,i)=>`<div class="${i==2?"on":i==6?"off":""}">${d[0]}<b>${d[1]}</b></div>`).join("")}</div>
+   <h3 class="t">المواعيد المتاحة يوم الاثنين</h3><div class="times">${["11:00","12:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00"].map((t,i)=>`<span class="${i==3?"on":i==1||i==6?"off":""}">${t}</span>`).join("")}</div></div>
+  <div class="sum"><h3>ملخص الحجز</h3><div class="dl"><span>المركبة</span><b>ZT350-T · س ط ع 1234</b></div><div class="dl"><span>الخدمة</span><b>تغيير زيت وفلتر</b></div><div class="dl"><span>الميعاد</span><b>الاثنين 9 نوفمبر · 2:00 م</b></div><div class="dl" style="border:0"><span>التكلفة التقديرية</span><b style="font-size:18px;font-weight:600">1,770 ج.م</b></div><span class="btn" style="width:100%;height:50px;margin-top:12px">أكّد الحجز</span><p class="muted" style="font-size:13px;margin:12px 0 0">الدفع في الجراج بعد استلام الموتوسيكل. تقدر تلغي أو تغيّر الميعاد من حسابك.</p></div></div>${foot}`,
+ garage:()=>`${nav("garage")}
+  <div class="acc"><div class="side">${[["bike","مركباتي",1],["wrench","سجل الصيانة"],["cal","حجوزاتي"],["box","طلباتي"],["gear","الإعدادات"]].map(s=>`<a class="${s[2]?"on":""}">${I[s[0]]}${s[1]}</a>`).join("")}</div>
+  <div><div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:22px"><div><h1 style="font-size:30px;margin:0">أهلاً يا كريم</h1><div class="muted">عضو من مارس 2025 · مركبتين</div></div><span class="btn sec">${I.plus} أضف مركبة</span></div>
+   <div class="veh"><div class="photo">${bike("#c8202a",250)}</div><div class="body"><div style="display:flex;justify-content:space-between;align-items:start"><div><h2 style="margin:0;font-size:22px;font-weight:600">Zontes ZT350-T · 2023</h2><div class="muted">لوحة س ط ع 1234 · أحمر</div></div><span class="btn">احجز الصيانة الجاية</span></div>
+    <div class="kv4"><div><small>العداد الحالي</small><b>12,400 كم</b></div><div><small>الصيانة الجاية</small><b>15,000 كم</b></div><div><small>آخر زيارة</small><b>12 أكتوبر</b></div><div><small>الرخصة</small><b>مارس 2027</b></div></div>
+    <div class="meter" style="margin-top:18px"><i style="width:82%"></i></div><div class="muted" style="font-size:13px;margin-top:6px">فاضل 2,600 كم على صيانة الـ 15,000</div>
+    <div class="alert"><i></i>الكاوتش الخلفي 70%. أبو يوسف نصح بتغييره قبل 16,000 كم.</div></div></div>
+   <div class="sh" style="margin-top:40px"><h2 style="font-size:20px">سجل الصيانة</h2><a>تحميل PDF</a></div>
+   <table><tr><th>التاريخ</th><th>العداد</th><th>الشغل اللي اتعمل</th><th>الفني</th><th style="text-align:left">التكلفة</th></tr>${[["12 أكتوبر 2026","12,000 كم","تغيير زيت + فلتر زيت","أبو يوسف","1,770"],["5 يوليو 2026","9,300 كم","تيل فرامل أمامي وخلفي","محمد","1,240"],["20 مارس 2026","6,000 كم","صيانة 6,000 كم الشاملة","أبو يوسف","2,450"],["2 يناير 2026","4,100 كم","فحص كهرباء وبطارية","محمد","350"]].map(r=>`<tr><td>${r[0]}</td><td class="muted">${r[1]}</td><td>${r[2]}</td><td class="muted">${r[3]}</td><td style="text-align:left;font-weight:500">${r[4]} ج.م</td></tr>`).join("")}</table></div></div>${foot}`,
+ auth:()=>`<div class="auth"><div class="l"><div style="display:flex;align-items:center;gap:10px"><img src="${LOGO}" alt="" style="width:40px;height:40px;border-radius:50%"><b style="font-weight:600">جراج أبو يوسف</b></div><div style="margin:auto 0;max-width:400px;width:100%"><h1 style="font-size:30px;margin:0 0 6px">أهلاً بيك</h1><p class="muted" style="margin:0 0 28px">ادخل عشان تتابع صيانة موتوسيكلك وطلباتك.</p><div class="seg"><span class="on">تسجيل الدخول</span><span>حساب جديد</span></div><div class="fld"><label>رقم الموبايل</label><div class="f" style="direction:ltr;justify-content:flex-end">010 1234 5678</div></div><div class="fld"><label>كلمة السر</label><div>••••••••</div></div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:22px"><span class="muted">نسيت كلمة السر؟</span></div><span class="btn" style="width:100%;height:50px">دخول</span><div class="muted" style="text-align:center;font-size:13px;margin:18px 0">أو</div><span class="btn sec" style="width:100%;height:50px">ادخل بكود على الواتساب</span></div><div class="muted" style="font-size:13px">© 2026 جراج أبو يوسف</div></div>
+  <div class="r"><img src="${LOGO}" alt=""><div class="q"><div style="font-size:22px;font-weight:500;line-height:1.4">"كل موتوسيكل بيدخل الجراج بيطلع وأنا مطمّن عليه كإنه بتاعي."</div><div style="color:#9a9ca3;margin-top:8px;font-size:14px">أبو يوسف</div></div></div></div>`
+};
+let page="home",theme="light";
+try{const p=localStorage.getItem("ayg3-page"),t=localStorage.getItem("ayg3-theme");if(V[p])page=p;if(t=="dark"||t=="light")theme=t}catch(e){}
+const $=s=>document.querySelector(s);
+$("#pages").innerHTML=PAGES.map(p=>`<button class="pg" role="tab" data-p="${p[0]}" aria-selected="false">${p[1]}</button>`).join("");
+function render(){
+ document.querySelectorAll(".pg").forEach(b=>b.setAttribute("aria-selected",b.dataset.p==page));
+ document.querySelectorAll(".th").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t==theme));
+ $("#url").textContent="aygarage.com"+PAGES.find(p=>p[0]==page)[2];
+ $("#mock").innerHTML=`<div class="X ${theme=="dark"?"dk":""}">${V[page]()}</div>`;
+ $("#mock").querySelectorAll("img").forEach(i=>i.complete||i.addEventListener("load",fit,{once:true}));
+ try{localStorage.setItem("ayg3-page",page);localStorage.setItem("ayg3-theme",theme)}catch(e){}
+ fit();
+}
+function fit(){const vp=$("#vp"),m=$("#mock");const s=vp.clientWidth/1280;m.style.transform=`scale(${s})`;vp.style.height=(m.offsetHeight*s)+"px"}
+$("#pages").onclick=e=>{const b=e.target.closest(".pg");if(b){page=b.dataset.p;render()}};
+document.querySelectorAll(".th").forEach(b=>b.onclick=()=>{theme=b.dataset.t;render()});
+window.addEventListener("resize",fit);
+document.fonts&&document.fonts.ready.then(fit);
+render();
+})();
+</script>
