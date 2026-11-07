@@ -332,8 +332,10 @@ const activeFilterChips = computed(() => {
     const k = kmOptions.value.find((opt) => opt.value === selectedKmRange.value)
     if (k) chips.push({ id: 'km', label: k.label })
   }
-  if (selectedMinScore.value > 0) {
-    chips.push({ id: 'score', label: `فحص ${selectedMinScore.value}+` })
+  if (selectedMinScore.value === 90) {
+    chips.push({ id: 'score', label: 'فحص 90 وأكتر' })
+  } else if (selectedMinScore.value === 80) {
+    chips.push({ id: 'score', label: 'فحص 80 – 89' })
   }
   selectedYears.value.forEach((yr) => {
     chips.push({ id: `year-${yr}`, label: yr === 2021 ? '2021 وأقدم' : String(yr) })
@@ -398,8 +400,10 @@ const filteredBikes = computed(() => {
   }
 
   // Inspection Score
-  if (selectedMinScore.value > 0) {
-    list = list.filter((b) => b.inspectionScore >= selectedMinScore.value)
+  if (selectedMinScore.value === 90) {
+    list = list.filter((b) => b.inspectionScore >= 90)
+  } else if (selectedMinScore.value === 80) {
+    list = list.filter((b) => b.inspectionScore >= 80 && b.inspectionScore < 90)
   }
 
   // Year: "2021 وأقدم" means <= 2021

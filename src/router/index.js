@@ -50,8 +50,7 @@ const routes = [
   {
     path: '/booking',
     name: 'booking',
-    component: () => import('@/pages/BookingPage.vue'),
-    meta: { requiresAuth: true }
+    component: () => import('@/pages/BookingPage.vue')
   },
   {
     path: '/account',

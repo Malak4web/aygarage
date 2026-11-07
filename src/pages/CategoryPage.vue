@@ -20,7 +20,7 @@
       <FilterChips
         :chips="activeFilterChips"
         @remove="handleRemoveChip"
-        @clear-all="resetFilters"
+        @clear-all="clearAllFilters"
       />
     </div>
 
@@ -168,7 +168,7 @@
             title="لا توجد منتجات مطابقة للبحث أو الفلترة"
             description="جرّب تقليل شروط الفلترة أو مسح الموديل لعرض كل المنتجات المتوفرة."
             action-label="مسح كل الفلاتر"
-            @action="resetFilters"
+            @action="clearAllFilters"
           />
         </div>
 
@@ -351,7 +351,18 @@ const handleRemoveChip = (chipId) => {
   if (chipId === 'onSale') onSaleOnly.value = false
 }
 
-const resetFilters = () => {
+const clearAllFilters = () => {
+  filterOnlyFitting.value = false
+  selectedViscosity.value = ''
+  selectedBrand.value = ''
+  selectedOilType.value = ''
+  inStockOnly.value = false
+  onSaleOnly.value = false
+  minPrice.value = 0
+  maxPrice.value = 10000
+}
+
+const resetCategoryFilters = () => {
   filterOnlyFitting.value = !!userStore.selectedBike
   selectedViscosity.value = ''
   selectedBrand.value = ''
@@ -366,7 +377,7 @@ const resetFilters = () => {
 watch(
   () => route.params.category,
   () => {
-    resetFilters()
+    resetCategoryFilters()
     currentPage.value = 1
   }
 )

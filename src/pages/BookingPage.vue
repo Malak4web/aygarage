@@ -232,6 +232,7 @@ const loadServices = async () => {
   try {
     const list = await api.getServices()
     serviceList.value = list
+    restorePendingChoices()
     if (list.length > 0 && !selectedService.value) {
       selectedService.value = list[0]
     }
@@ -240,6 +241,27 @@ const loadServices = async () => {
   } finally {
     loadingServices.value = false
   }
+}
+
+const restorePendingChoices = () => {
+  try {
+    const raw = sessionStorage.getItem('ayg_pending_booking')
+    if (raw) {
+      const p = JSON.parse(raw)
+      if (p.bikeChoice) bikeChoice.value = p.bikeChoice
+      if (p.customModel) customModel.value = p.customModel
+      if (p.customOdo) customOdo.value = p.customOdo
+      if (p.time) selectedTime.value = p.time
+      if (p.dateString) {
+        const foundDay = days.value.find(d => d.dateString === p.dateString)
+        if (foundDay) selectedDay.value = foundDay
+      }
+      if (p.serviceId && serviceList.value.length > 0) {
+        const foundSvc = serviceList.value.find(s => s.id === p.serviceId)
+        if (foundSvc) selectedService.value = foundSvc
+      }
+    }
+  } catch (e) {}
 }
 
 // Item 25: Dynamically generate next 7 days from today
@@ -309,6 +331,17 @@ const selectedBikeTitle = computed(() => {
 
 const handleConfirmBooking = async () => {
   if (!userStore.isAuthenticated) {
+    try {
+      sessionStorage.setItem('ayg_pending_booking', JSON.stringify({
+        bikeChoice: bikeChoice.value,
+        customModel: customModel.value,
+        customOdo: customOdo.value,
+        serviceId: selectedService.value?.id,
+        dateString: selectedDay.value?.dateString,
+        time: selectedTime.value
+      }))
+    } catch (e) {}
+
     return router.push({
       path: '/login',
       query: { redirect: route.fullPath }
@@ -344,6 +377,9 @@ const handleConfirmBooking = async () => {
     }
 
     bookingConfirmed.value = true
+    try {
+      sessionStorage.removeItem('ayg_pending_booking')
+    } catch (e) {}
   } catch (err) {
     bookingError.value = 'حدث خطأ أثناء حجز الموعد، برجاء المحاولة لاحقاً.'
   } finally {
