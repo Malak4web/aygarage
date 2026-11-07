@@ -245,6 +245,7 @@ const restorePendingChoices = () => {
   try {
     const raw = sessionStorage.getItem('ayg_pending_booking')
     if (raw) {
+      sessionStorage.removeItem('ayg_pending_booking')
       const p = JSON.parse(raw)
       if (p.bikeChoice) bikeChoice.value = p.bikeChoice
       if (p.customModel) customModel.value = p.customModel

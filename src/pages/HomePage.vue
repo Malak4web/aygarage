@@ -290,7 +290,7 @@ const handleHeroAction = (slide) => {
     router.push('/booking')
   } else {
     const p1 = allProducts.value.find((p) => p.id === 'p1')
-    if (p1) {
+    if (p1 && (p1.stock === undefined || p1.stock > 0)) {
       const opt = p1.options && p1.options.length > 0 ? p1.options[0] : null
       cartStore.addItem(p1, 1, opt)
     }

@@ -97,12 +97,26 @@ export const useCartStore = defineStore('cart', {
     },
 
     addItem(product, qty = 1, selectedOption = null) {
-      const lineId = `${product.id}_${selectedOption?.id || 'default'}`
-      const existing = this.items.find((i) => i.lineId === lineId)
       const stock = product.stock !== undefined ? product.stock : 99
       const toastStore = useToastStore()
 
+      if (stock <= 0 || qty <= 0) {
+        if (toastStore && stock <= 0) {
+          toastStore.show('هذا المنتج غير متوفر حالياً في المخزن', 'warning')
+        }
+        return false
+      }
+
+      const lineId = `${product.id}_${selectedOption?.id || 'default'}`
+      const existing = this.items.find((i) => i.lineId === lineId)
+
       if (existing) {
+        if (existing.qty >= stock) {
+          if (toastStore) {
+            toastStore.show(`الكمية المتاحة في المخزن ${stock} قطع فقط`, 'info')
+          }
+          return false
+        }
         if (existing.qty + qty > stock) {
           existing.qty = stock
           if (toastStore) {
@@ -118,6 +132,9 @@ export const useCartStore = defineStore('cart', {
           if (toastStore) {
             toastStore.show(`الكمية المتاحة في المخزن ${stock} قطع فقط`, 'info')
           }
+        }
+        if (initialQty <= 0) {
+          return false
         }
         this.items.push({
           lineId,
@@ -140,6 +157,7 @@ export const useCartStore = defineStore('cart', {
         })
       }
       this.persist()
+      return true
     },
 
     removeItem(lineId) {

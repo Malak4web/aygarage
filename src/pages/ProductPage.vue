@@ -403,14 +403,18 @@ const selectBike = (model) => {
 
 const handleAddToCart = () => {
   if (!product.value || product.value.stock === 0) return
-  cartStore.addItem(product.value, quantity.value, selectedOption.value)
-  toastStore.show(`تمت إضافة ${product.value.name} إلى السلة بنجاح`, 'success')
+  const added = cartStore.addItem(product.value, quantity.value, selectedOption.value)
+  if (added) {
+    toastStore.show(`تمت إضافة ${product.value.name} إلى السلة بنجاح`, 'success')
+  }
 }
 
 const handleBuyNow = () => {
   if (!product.value || product.value.stock === 0) return
-  cartStore.addItem(product.value, quantity.value, selectedOption.value)
-  router.push('/checkout')
+  const added = cartStore.addItem(product.value, quantity.value, selectedOption.value)
+  if (added) {
+    router.push('/checkout')
+  }
 }
 </script>
 
