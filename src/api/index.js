@@ -86,7 +86,8 @@ export const api = {
       items: orderData.items,
       customer: orderData.customer,
       deliveryMethod: orderData.deliveryMethod,
-      paymentMethod: orderData.paymentMethod
+      paymentMethod: orderData.paymentMethod,
+      deliveryDate: orderData.deliveryDate
     }
     storedOrders.unshift(order)
     try {

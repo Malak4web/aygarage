@@ -207,13 +207,59 @@ async function main() {
     throw new Error(`FAIL: Pending choice was not restored to form, got: ${modelValue}`);
   }
 
+  console.log('--- 6. Testing Section C: Order Delivery Date & Pickup ---');
+  // 6.1 Delivery order
+  await page.goto('http://localhost:5173/c/oils', { waitUntil: 'networkidle0' });
+  const oilAdd = await page.$('.pc button.btn.sm');
+  await oilAdd.click();
+  await new Promise(r => setTimeout(r, 400));
+  await page.goto('http://localhost:5173/checkout', { waitUntil: 'networkidle0' });
+  
+  // Submit order as home delivery
+  await page.click('button[type="submit"]');
+  await page.waitForFunction(() => window.location.pathname.startsWith('/order/'), { timeout: 5000 });
+  await page.waitForSelector('.order-perks-box', { timeout: 5000 });
+
+  const deliveryText = await page.$eval('.perk-row span', el => el.textContent.trim());
+  console.log('Order success delivery text:', deliveryText);
+  if (deliveryText.includes('يوصلك')) {
+    throw new Error(`FAIL: Delivery text should not have doubled "يوصلك": ${deliveryText}`);
+  }
+  if (!deliveryText.startsWith('التوصيل المتوقع:')) {
+    throw new Error(`FAIL: Expected text to start with "التوصيل المتوقع:", got: ${deliveryText}`);
+  }
+
+  // 6.2 Pickup order
+  await page.goto('http://localhost:5173/c/oils', { waitUntil: 'networkidle0' });
+  const oilAdd2 = await page.$('.pc button.btn.sm');
+  await oilAdd2.click();
+  await new Promise(r => setTimeout(r, 400));
+  await page.goto('http://localhost:5173/checkout', { waitUntil: 'networkidle0' });
+  
+  // Select pickup
+  const radioCards = await page.$$('.rad-card');
+  // First two are delivery options
+  if (radioCards.length > 1) {
+    await radioCards[1].click(); // pickup
+    await new Promise(r => setTimeout(r, 200));
+  }
+  await page.click('button[type="submit"]');
+  await page.waitForFunction(() => window.location.pathname.startsWith('/order/'), { timeout: 5000 });
+  await page.waitForSelector('.order-perks-box', { timeout: 5000 });
+
+  const pickupText = await page.$eval('.perk-row span', el => el.textContent.trim());
+  console.log('Order success pickup text:', pickupText);
+  if (!pickupText.includes('جاهز للاستلام من الجراج')) {
+    throw new Error(`FAIL: Pickup order should say "جاهز للاستلام من الجراج", got: ${pickupText}`);
+  }
+
   console.log('Total console errors across all tests:', consoleErrors.length);
   if (consoleErrors.length > 0) {
     throw new Error(`FAIL: ${consoleErrors.length} console errors detected!`);
   }
 
   await browser.close();
-  console.log('=== ALL SECTION A & B VERIFICATION CHECKS PASSED SUCCESSFULLY ===');
+  console.log('=== ALL SECTIONS A, B & C VERIFICATION CHECKS PASSED SUCCESSFULLY ===');
 }
 
 main().catch(err => {

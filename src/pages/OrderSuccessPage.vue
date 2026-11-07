@@ -67,8 +67,13 @@
 
       <div class="order-perks-box">
         <div class="perk-row">
-          <AppIcon name="truck" :size="20" />
-          <span>التوصيل المتوقع: <b>{{ storeConfig.deliveryEstimate }}</b></span>
+          <AppIcon :name="order?.deliveryMethod === 'pickup' ? 'pin' : 'truck'" :size="20" />
+          <span v-if="order?.deliveryMethod === 'pickup'">
+            <b>جاهز للاستلام من الجراج</b>
+          </span>
+          <span v-else>
+            التوصيل المتوقع: <b>{{ order?.deliveryDate || storeConfig.deliveryEstimate.replace(/^يوصلك\s*/, '') }}</b>
+          </span>
         </div>
         <div class="perk-row">
           <AppIcon name="shield" :size="20" />

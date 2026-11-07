@@ -265,6 +265,11 @@ const handleConfirmOrder = async () => {
   try {
     const deliveryFeeNum = cartStore.getDeliveryFee(deliveryMethod.value)
     const totalNum = cartStore.getTotal(deliveryMethod.value)
+    const cleanEstimate = storeConfig.deliveryEstimate.replace(/^يوصلك\s*/, '')
+    const deliveryDate = deliveryMethod.value === 'pickup'
+      ? 'جاهز للاستلام من الجراج'
+      : cleanEstimate
+
     const orderData = {
       items: [...cartStore.items],
       totalNum,
@@ -279,7 +284,8 @@ const handleConfirmOrder = async () => {
         address: addressDetails.value
       },
       deliveryMethod: deliveryMethod.value,
-      paymentMethod: paymentMethod.value
+      paymentMethod: paymentMethod.value,
+      deliveryDate
     }
 
     const createdOrder = await api.createOrder(orderData)
