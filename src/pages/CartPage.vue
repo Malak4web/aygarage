@@ -388,18 +388,19 @@ const companionProducts = computed(() => {
     grid-template-columns: 80px 1fr auto;
     grid-template-rows: auto auto;
     gap: 12px;
+    position: relative;
   }
   .line-qty {
     grid-column: 2;
   }
   .line-total {
     grid-column: 3;
-    text-align: right;
+    text-align: end;
   }
   .line-remove {
     position: absolute;
     top: 10px;
-    left: 10px;
+    inset-inline-end: 10px;
   }
 }
 </style>
