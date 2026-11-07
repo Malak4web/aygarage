@@ -1,5 +1,20 @@
 <template>
-  <div v-if="!bike" class="not-found-page in">
+  <!-- Loading Skeleton -->
+  <div v-if="loading" class="bdp-skeleton in">
+    <div class="skeleton" style="height: 24px; width: 260px; margin-bottom: 24px;"></div>
+    <div class="bdp">
+      <div class="skeleton" style="width: 100%; height: 350px; border-radius: 12px;"></div>
+      <div>
+        <div class="skeleton" style="height: 20px; width: 140px; margin-bottom: 12px;"></div>
+        <div class="skeleton" style="height: 36px; width: 75%; margin-bottom: 16px;"></div>
+        <div class="skeleton" style="height: 16px; width: 50%; margin-bottom: 20px;"></div>
+        <div class="skeleton" style="height: 48px; width: 100%; border-radius: 10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not found state -->
+  <div v-else-if="!bike" class="not-found-page in">
     <EmptyState
       icon="bike"
       title="الموتوسيكل غير موجود"
@@ -8,6 +23,8 @@
       action-to="/bikes"
     />
   </div>
+
+  <!-- Bike detail page -->
   <div class="bike-detail-page" v-else>
     <Breadcrumbs :items="breadcrumbItems" />
 
@@ -18,12 +35,16 @@
           <BikeIllustration :color="bike.col" :width="560" />
         </div>
         <div class="thr">
-          <div
+          <button
             v-for="(_, i) in 5"
             :key="i"
+            type="button"
+            class="thumb-btn"
             :class="{ on: activeThumb === i }"
+            :aria-pressed="activeThumb === i"
+            :aria-label="`صورة الموتوسيكل ${i + 1}`"
             @click="activeThumb = i"
-          ></div>
+          ></button>
         </div>
       </div>
 
@@ -32,14 +53,14 @@
         <span class="tg">{{ bike.inspectionScore }}/100 · فحص أبو يوسف</span>
         <h1 class="bike-title">{{ bike.model }} · {{ bike.year }}</h1>
         <div class="bike-meta-line">
-          {{ bike.km }} كم · {{ bike.owner || 'أول مالك' }} · رخصة سارية لحد {{ bike.licenseUntil }}
+          {{ formattedKm }} كم · {{ bike.owner || 'أول مالك' }} · رخصة سارية لحد {{ bike.licenseUntil }}
         </div>
 
         <div class="price">
           <b class="price-val">{{ formattedPrice }} <small>ج.م</small></b>
         </div>
         <div class="installment-line">
-          أو تقسيط من {{ bike.installmentMonthly?.toLocaleString('en') || '10,200' }} ج.م في الشهر
+          أو تقسيط من {{ bike.installmentMonthly?.toLocaleString('en') || storeConfig.defaultInstallmentMonthly.toLocaleString('en') }} ج.م في الشهر
         </div>
 
         <div class="bike-actions">
@@ -63,31 +84,11 @@
     </div>
 
     <!-- Tabs: Inspection report, Description, Service History -->
-    <div class="tabs in">
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'inspection' }"
-        @click="activeTab = 'inspection'"
-      >
-        تقرير الفحص
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'desc' }"
-        @click="activeTab = 'desc'"
-      >
-        الوصف
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'history' }"
-        @click="activeTab = 'history'"
-      >
-        سجل الصيانة
-      </button>
+    <div class="in">
+      <Tabs
+        v-model="activeTab"
+        :tabs="bikeTabs"
+      />
     </div>
 
     <!-- Tab Content -->
@@ -99,17 +100,23 @@
           <div class="pb">
             <i :class="{ w: item.warning }" :style="{ width: `${item.score}%` }"></i>
           </div>
-          <span class="tg" :class="{ w: item.warning }" style="text-align: center">
-            {{ item.warning ? 'ملاحظة' : 'سليم' }}
-          </span>
+          <b>{{ item.score }}%</b>
+          <small>{{ item.note }}</small>
+        </div>
+        <div class="pdf-action">
+          <button type="button" class="btn o sm" @click="handleDownloadReport">
+            تحميل تقرير الفحص كاملاً (PDF)
+          </button>
         </div>
       </div>
 
-      <div class="desc-tab" v-else-if="activeTab === 'desc'">
+      <!-- Description Content -->
+      <div v-else-if="activeTab === 'desc'" class="desc-tab">
         <p>{{ bike.notes }}</p>
       </div>
 
-      <div class="history-tab" v-else-if="activeTab === 'history'">
+      <!-- Service History Content -->
+      <div v-else-if="activeTab === 'history'" class="history-tab">
         <table class="history-table">
           <thead>
             <tr>
@@ -129,21 +136,10 @@
           </tbody>
         </table>
       </div>
-
-      <!-- Abu Yousef Notes Box -->
-      <div class="box notes-box">
-        <h3>ملاحظات أبو يوسف</h3>
-        <p class="notes-text">
-          {{ bike.notes }}
-        </p>
-        <button type="button" class="btn o sm dl-report-btn" @click="handleDownloadReport">
-          تحميل التقرير PDF
-        </button>
-      </div>
     </div>
 
-    <!-- Similar Bikes -->
-    <ProductRow title="موتوسيكلات مشابهة" columns="3">
+    <!-- Similar Bikes Row -->
+    <ProductRow title="موتوسيكلات مشابهة">
       <BikeCard
         v-for="b in similarBikes"
         :key="b.id"
@@ -154,24 +150,56 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { bikes } from '@/data/bikes.js'
+import { api } from '@/api/index.js'
+import { useToastStore } from '@/stores/toast.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import BikeCard from '@/components/common/BikeCard.vue'
 import ProductRow from '@/components/common/ProductRow.vue'
+import Tabs from '@/components/common/Tabs.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 const route = useRoute()
+const toastStore = useToastStore()
 
-const bike = computed(() => {
-  return bikes.find((b) => b.slug === route.params.slug) || null
-})
-
+const loading = ref(true)
+const bike = ref(null)
+const similarBikes = ref([])
 const activeThumb = ref(0)
 const activeTab = ref('inspection')
+
+const bikeTabs = [
+  { id: 'inspection', label: 'تقرير الفحص' },
+  { id: 'desc', label: 'الوصف' },
+  { id: 'history', label: 'سجل الصيانة' }
+]
+
+const loadBikeData = async () => {
+  loading.value = true
+  try {
+    const slug = route.params.slug
+    const b = await api.getBikeBySlug(slug)
+    bike.value = b
+
+    const all = await api.getBikes()
+    similarBikes.value = all.filter((item) => item.id !== b.id).slice(0, 3)
+  } catch (e) {
+    bike.value = null
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(
+  () => route.params.slug,
+  () => {
+    loadBikeData()
+  },
+  { immediate: true }
+)
 
 const formattedPrice = computed(() => {
   if (!bike.value) return ''
@@ -180,15 +208,18 @@ const formattedPrice = computed(() => {
     : bike.value.price
 })
 
+const formattedKm = computed(() => {
+  if (!bike.value) return ''
+  return typeof bike.value.km === 'number'
+    ? bike.value.km.toLocaleString('en')
+    : bike.value.km
+})
+
 const breadcrumbItems = computed(() => [
   { label: 'الرئيسية', to: '/' },
   { label: 'موتوسيكلات للبيع', to: '/bikes' },
-  { label: `${bike.value.model} ${bike.value.year}` }
+  { label: `${bike.value?.model || ''} ${bike.value?.year || ''}` }
 ])
-
-const similarBikes = computed(() => {
-  return bikes.filter((b) => b.id !== bike.value.id).slice(0, 3)
-})
 
 const defaultHistory = [
   { date: '12 أكتوبر 2026', odo: '12,000 كم', service: 'تغيير زيت + فلتر', tech: 'أبو يوسف' },
@@ -197,11 +228,15 @@ const defaultHistory = [
 ]
 
 const handleDownloadReport = () => {
-  alert(`جاري تحميل تقرير الفحص المعتمد لموتوسيكل ${bike.value.model} (120 نقطة) بصيغة PDF.`)
+  toastStore.show(`جاري تحميل تقرير الفحص المعتمد لموتوسيكل ${bike.value?.model || ''} (120 نقطة) بصيغة PDF.`, 'info')
 }
 </script>
 
 <style scoped>
+.bdp-skeleton {
+  padding-top: 30px;
+}
+
 .bdp {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
@@ -210,49 +245,80 @@ const handleDownloadReport = () => {
 }
 
 .bike-gal .big {
-  aspect-ratio: 16 / 10;
-  border-radius: var(--radius-box);
-  background: var(--sf);
+  aspect-ratio: 16/10;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-card);
   display: grid;
   place-items: center;
+  background: #ffffff;
+  overflow: hidden;
 }
 
 .thr {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 14px;
 }
 
-.thr div {
-  aspect-ratio: 4 / 3;
-  border-radius: 10px;
-  background: var(--sf);
+.thumb-btn {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ln);
+  border: none;
   cursor: pointer;
-  transition: box-shadow 0.15s ease;
+  padding: 0;
+  transition: all 0.2s ease;
 }
 
-.thr div.on {
-  box-shadow: 0 0 0 2px var(--ink);
+.thumb-btn.on {
+  background: var(--ink);
+  transform: scale(1.15);
+}
+
+.thumb-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.bike-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--oksoft);
+  color: var(--ok);
+  font-size: 13px;
+  font-weight: 700;
+  align-self: flex-start;
+  margin-bottom: 8px;
 }
 
 .bike-title {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
-  margin: 10px 0 2px;
+  margin: 0 0 8px;
+  line-height: 1.2;
 }
 
 .bike-meta-line {
   color: var(--mu);
   font-size: 14px;
+  margin-bottom: 18px;
 }
 
 .price {
-  margin-top: 12px;
+  margin-bottom: 6px;
 }
 
 .price-val {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
 }
 
@@ -264,75 +330,56 @@ const handleDownloadReport = () => {
 .installment-line {
   font-size: 14px;
   color: var(--mu);
-  margin-top: -4px;
+  margin-bottom: 24px;
 }
 
 .bike-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 20px 0;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
-table.spec {
+.spec {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  border-top: 1px solid var(--ln);
 }
 
-table.spec td {
-  padding: 11px 0;
+.spec td {
+  padding: 10px 14px;
   border-bottom: 1px solid var(--ln);
 }
 
-table.spec td:first-child {
+.spec td:first-child {
   color: var(--mu);
-  width: 40%;
-}
-
-.tabs {
-  display: flex;
-  gap: 26px;
-  border-bottom: 1px solid var(--ln);
-  margin-top: 44px;
-}
-
-.tab-btn {
-  padding: 12px 0;
-  font-size: 15px;
-  color: var(--mu);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.tab-btn.on {
-  color: var(--ink);
+  width: 35%;
   font-weight: 700;
-  box-shadow: inset 0 -2px 0 var(--ink);
 }
 
 .tabc {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 44px;
-  padding-top: 22px;
+  padding-bottom: 40px;
+}
+
+.rep {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
 }
 
 .rep .r {
   display: grid;
-  grid-template-columns: 140px 1fr 70px;
-  gap: 14px;
+  grid-template-columns: 140px 1fr 50px 180px;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--ln);
+  gap: 16px;
   font-size: 14px;
 }
 
 .pb {
-  height: 6px;
-  border-radius: 6px;
-  background: var(--sf2);
+  height: 8px;
+  background: var(--sf);
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -340,53 +387,54 @@ table.spec td:first-child {
   display: block;
   height: 100%;
   background: var(--ok);
+  border-radius: 4px;
 }
 
 .pb i.w {
-  background: #d88a12;
+  background: var(--star);
 }
 
-.notes-box {
-  margin: 0;
-  align-self: flex-start;
+.pdf-action {
+  margin-top: 20px;
 }
 
-.notes-text {
-  margin: 0;
-  color: var(--mu);
+.desc-tab p {
   line-height: 1.8;
-  font-size: 14.5px;
-}
-
-.dl-report-btn {
-  margin-top: 14px;
+  font-size: 15px;
+  max-width: 680px;
 }
 
 .history-table {
   width: 100%;
+  max-width: 720px;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.history-table th {
-  text-align: right;
-  color: var(--mu);
-  font-weight: 400;
-  padding: 8px 0;
+.history-table th,
+.history-table td {
+  padding: 10px 14px;
+  text-align: start;
   border-bottom: 1px solid var(--ln);
 }
 
-.history-table td {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--ln);
+.history-table th {
+  font-weight: 700;
+  color: var(--mu);
 }
 
 @media (max-width: 900px) {
   .bdp {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
-  .tabc {
-    grid-template-columns: 1fr;
+  .rep .r {
+    grid-template-columns: 100px 1fr 40px;
+  }
+  .rep .r small {
+    grid-column: 1 / -1;
+    color: var(--mu);
+    margin-top: -6px;
   }
 }
 </style>

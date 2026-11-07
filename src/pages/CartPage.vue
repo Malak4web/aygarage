@@ -96,57 +96,42 @@
         </div>
       </div>
 
-      <!-- Order Summary -->
-      <aside class="sum">
-        <h3>ملخص الطلب</h3>
+      <!-- Order Summary Component (Item 28) -->
+      <aside class="sum-wrap">
+        <OrderSummary :delivery-method="'home'">
+          <template #actions>
+            <!-- Coupon code -->
+            <div class="coupon">
+              <label for="cart-coupon-input" class="visually-hidden">كود الخصم</label>
+              <input
+                id="cart-coupon-input"
+                type="text"
+                v-model="couponInput"
+                placeholder="كود الخصم (جرب ZONTES10)"
+                class="coupon-input"
+              />
+              <button type="button" class="btn o sm coupon-btn" @click="applyCoupon">
+                تطبيق
+              </button>
+            </div>
+            <div v-if="cartStore.couponError" class="coupon-msg err">
+              {{ cartStore.couponError }}
+            </div>
+            <div v-else-if="cartStore.couponCode" class="coupon-msg ok">
+              تم تطبيق كود الخصم {{ cartStore.couponCode }} (10%)
+            </div>
 
-        <div class="dl">
-          <span>المنتجات ({{ cartStore.totalPieces }} قطع)</span>
-          <b>{{ cartStore.subtotal.toLocaleString('en') }} ج.م</b>
-        </div>
+            <RouterLink to="/checkout" class="btn full checkout-btn">
+              إتمام الشراء
+            </RouterLink>
 
-        <div v-if="cartStore.discount > 0" class="dl">
-          <span>الخصم</span>
-          <b class="discount-val">− {{ cartStore.discount.toLocaleString('en') }} ج.م</b>
-        </div>
-
-        <div class="dl">
-          <span>التوصيل</span>
-          <b v-if="cartStore.deliveryFee === 0" class="free-text">مجاناً</b>
-          <b v-else>{{ cartStore.deliveryFee }} ج.م</b>
-        </div>
-
-        <!-- Coupon code -->
-        <div class="coupon">
-          <input
-            type="text"
-            v-model="couponInput"
-            placeholder="كود الخصم (جرب ZONTES10)"
-            class="coupon-input"
-          />
-          <button type="button" class="btn o sm coupon-btn" @click="applyCoupon">
-            تطبيق
-          </button>
-        </div>
-        <div v-if="cartStore.couponError" class="coupon-msg err">
-          {{ cartStore.couponError }}
-        </div>
-        <div v-else-if="cartStore.couponCode" class="coupon-msg ok">
-          تم تطبيق كود الخصم {{ cartStore.couponCode }} (10%)
-        </div>
-
-        <div class="dl tot">
-          <span>الإجمالي</span>
-          <b>{{ cartStore.total.toLocaleString('en') }} ج.م</b>
-        </div>
-
-        <RouterLink to="/checkout" class="btn full checkout-btn">
-          إتمام الشراء
-        </RouterLink>
-
-        <div class="pay-notes">
-          كاش عند الاستلام · كارت · فودافون كاش · InstaPay
-        </div>
+            <div class="pay-notes">
+              <span v-for="(pm, idx) in storeConfig.paymentMethods" :key="pm.id">
+                {{ pm.title }}<template v-if="idx < storeConfig.paymentMethods.length - 1"> · </template>
+              </span>
+            </div>
+          </template>
+        </OrderSummary>
       </aside>
     </div>
 
@@ -158,14 +143,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { storeConfig } from '@/config/store.js'
 import { products } from '@/data/products.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useUserStore } from '@/stores/user.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import QtyStepper from '@/components/common/QtyStepper.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
-import ProductCard from '@/components/common/ProductCard.vue'
 import ProductRow from '@/components/common/ProductRow.vue'
+import OrderSummary from '@/components/common/OrderSummary.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import { doesFit } from '@/utils/fit.js'

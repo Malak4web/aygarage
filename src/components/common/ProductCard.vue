@@ -45,7 +45,7 @@
     <RatingStars :rating="product.rating" :count="product.reviewCount" />
 
     <!-- Fit badge based on selected bike -->
-    <FitBadge :fits="product.fits" />
+    <FitBadge :product="product" :fits="product.fits" />
 
     <!-- Price -->
     <div class="price">

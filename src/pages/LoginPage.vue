@@ -23,8 +23,9 @@
       <!-- Login Form -->
       <form v-if="mode === 'login'" @submit.prevent="handleLogin" class="auth-form">
         <div class="form-fld">
-          <label>رقم الموبايل</label>
+          <label for="login-phone">رقم الموبايل</label>
           <input
+            id="login-phone"
             type="tel"
             v-model="phone"
             placeholder="010 1234 5678"
@@ -35,8 +36,9 @@
         </div>
 
         <div class="form-fld">
-          <label>كلمة المرور</label>
+          <label for="login-pwd">كلمة المرور</label>
           <input
+            id="login-pwd"
             type="password"
             v-model="password"
             placeholder="••••••••"
@@ -57,19 +59,21 @@
       <!-- Register Form -->
       <form v-else @submit.prevent="handleRegister" class="auth-form">
         <div class="form-fld">
-          <label>الاسم بالكامل</label>
+          <label for="reg-name">الاسم بالكامل</label>
           <input
+            id="reg-name"
             type="text"
             v-model="name"
-            placeholder="مثال: كريم محمود"
+            placeholder="مثال: أحمد محمد"
             class="auth-input"
             required
           />
         </div>
 
         <div class="form-fld">
-          <label>رقم الموبايل</label>
+          <label for="reg-phone">رقم الموبايل</label>
           <input
+            id="reg-phone"
             type="tel"
             v-model="phone"
             placeholder="010 1234 5678"
@@ -80,8 +84,9 @@
         </div>
 
         <div class="form-fld">
-          <label>كلمة المرور</label>
+          <label for="reg-pwd">كلمة المرور</label>
           <input
+            id="reg-pwd"
             type="password"
             v-model="password"
             placeholder="••••••••"
@@ -91,8 +96,8 @@
         </div>
 
         <div class="form-fld">
-          <label>موديل موتوسيكلك (اختياري)</label>
-          <select v-model="bikeModel" class="auth-select">
+          <label for="reg-bike">موديل موتوسيكلك (اختياري)</label>
+          <select id="reg-bike" v-model="bikeModel" class="auth-select">
             <option value="">اختر الموديل</option>
             <option v-for="m in storeConfig.models" :key="m" :value="m">
               {{ m }}
@@ -113,15 +118,18 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { useUserStore } from '@/stores/user.js'
+import { useToastStore } from '@/stores/toast.js'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const toastStore = useToastStore()
 
 const mode = ref('login')
 const name = ref('')
-const phone = ref('010 1234 5678')
-const password = ref('password')
+// Item 29: Clear pre-filled credentials
+const phone = ref('')
+const password = ref('')
 const bikeModel = ref('')
 
 const redirectAfterAuth = () => {
@@ -131,16 +139,23 @@ const redirectAfterAuth = () => {
 
 const handleLogin = () => {
   userStore.login(phone.value, password.value)
+  toastStore.show('مرحباً بك مجدداً في جراج أبو يوسف!', 'success')
   redirectAfterAuth()
 }
 
 const handleRegister = () => {
   userStore.register(name.value, phone.value, bikeModel.value)
+  toastStore.show('تم إنشاء حسابك بنجاح!', 'success')
   redirectAfterAuth()
 }
 
+// Item 29: Replace alert with toast
 const handleWhatsAppCode = () => {
-  alert(`تم إرسال كود تسجيل الدخول على رقم الواتساب: ${phone.value}`)
+  if (!phone.value) {
+    toastStore.show('يرجى كتابة رقم الموبايل أولاً لإرسال كود الواتساب', 'warning')
+    return
+  }
+  toastStore.show(`تم إرسال كود تسجيل الدخول على رقم الواتساب: ${phone.value}`, 'info')
   userStore.login(phone.value, 'whatsapp_token')
   redirectAfterAuth()
 }
@@ -158,35 +173,38 @@ const handleWhatsAppCode = () => {
   max-width: 440px;
   width: 100%;
   border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
+  border-radius: var(--radius-card);
   padding: 32px;
   background: #ffffff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
 }
 
 .auth-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--ln);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-btn);
+  padding: 4px;
+  background: var(--sf);
   margin-bottom: 24px;
 }
 
 .auth-tab {
-  flex: 1;
-  text-align: center;
-  padding: 12px 0;
-  font-size: 15px;
-  color: var(--mu);
-  background: none;
+  height: 38px;
   border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mu);
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
-  position: relative;
+  transition: all 0.15s ease;
 }
 
 .auth-tab.active {
+  background: #ffffff;
   color: var(--ink);
-  font-weight: 700;
-  box-shadow: inset 0 -2px 0 var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .auth-form {
@@ -203,26 +221,30 @@ const handleWhatsAppCode = () => {
 
 .form-fld label {
   font-size: 13.5px;
-  color: var(--mu);
+  font-weight: 700;
 }
 
-.auth-input, .auth-select {
+.auth-input,
+.auth-select {
   height: 46px;
   border: 1px solid var(--ln);
   border-radius: var(--radius-btn);
   padding: 0 14px;
-  font-size: 14.5px;
+  font-size: 14px;
+  font-family: inherit;
   outline: none;
-  background: #ffffff;
-  color: var(--ink);
+}
+
+.auth-input:focus-visible,
+.auth-select:focus-visible {
+  outline: 2px solid var(--ink);
 }
 
 .auth-btn {
-  height: 48px;
   margin-top: 8px;
 }
 
 .whatsapp-btn {
-  height: 46px;
+  margin-top: -6px;
 }
 </style>

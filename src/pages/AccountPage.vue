@@ -6,8 +6,8 @@
       <!-- Sidebar -->
       <aside class="side">
         <div class="u">
-          <b>{{ userStore.user?.name || 'كريم محمود' }}</b>
-          <small>{{ userStore.user?.phone || '010 1234 5678' }}</small>
+          <b>{{ userStore.user?.name || 'مستخدم الجراج' }}</b>
+          <small>{{ userStore.user?.phone || '' }}</small>
         </div>
 
         <nav class="acc-nav">
@@ -21,6 +21,15 @@
           >
             <AppIcon :name="tab.icon" :size="18" />
             <span>{{ tab.label }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="tab-link logout-btn"
+            @click="handleLogout"
+          >
+            <AppIcon name="user" :size="18" />
+            <span>تسجيل الخروج</span>
           </button>
         </nav>
       </aside>
@@ -36,113 +45,144 @@
             </button>
           </div>
 
-          <!-- My Vehicle Card -->
-          <div
-            v-for="b in userStore.userBikes"
-            :key="b.id"
-            class="veh"
-          >
-            <div class="im">
-              <BikeIllustration :color="b.col" :width="190" />
-            </div>
-
-            <div class="veh-info">
-              <b>{{ b.model }} · {{ b.year }}</b>
-              <div class="veh-plate">لوحة {{ b.plate }}</div>
-
-              <div class="kv">
-                <div>
-                  <small>العداد</small>
-                  <b>{{ b.odo.toLocaleString('en') }} كم</b>
-                </div>
-                <div>
-                  <small>الصيانة الجاية</small>
-                  <b>{{ b.nextService.toLocaleString('en') }} كم</b>
-                </div>
-                <div>
-                  <small>آخر زيارة</small>
-                  <b>{{ b.lastVisit }}</b>
-                </div>
-                <div>
-                  <small>الرخصة</small>
-                  <b>{{ b.license }}</b>
-                </div>
-              </div>
-
-              <div class="meter">
-                <i :style="{ width: `${Math.round((b.odo / b.nextService) * 100)}%` }"></i>
-              </div>
-              <small class="meter-note">
-                فاضل {{ (b.nextService - b.odo).toLocaleString('en') }} كم على الصيانة الجاية
-              </small>
-            </div>
-
-            <div class="veh-actions">
-              <RouterLink to="/booking" class="btn sm">
-                احجز صيانة
-              </RouterLink>
-              <RouterLink to="/p/motul-7100-10w40" class="btn o sm">
-                اطلب طقم الصيانة
-              </RouterLink>
-            </div>
+          <!-- Empty State when no bikes (Item 26) -->
+          <div v-if="userStore.userBikes.length === 0">
+            <EmptyState
+              icon="bike"
+              title="معندكش موتوسيكلات مسجلة"
+              description="سجّل موتوسيكلك لمتابعة مواعيد الصيانة وقطع الغيار المناسبة له بسهولة."
+              action-label="+ أضف موتوسيكل"
+              @action="showAddBikeModal = true"
+            />
           </div>
 
-          <!-- Service History Table Box -->
-          <div class="box">
-            <div class="box-head">
-              <h3>سجل الصيانة</h3>
-              <a href="#pdf" @click.prevent="downloadServicePdf">تحميل PDF</a>
+          <!-- My Vehicle Cards -->
+          <div v-else>
+            <div
+              v-for="b in userStore.userBikes"
+              :key="b.id"
+              class="veh"
+            >
+              <div class="im">
+                <BikeIllustration :color="b.col" :width="190" />
+              </div>
+
+              <div class="veh-info">
+                <b>{{ b.model }} · {{ b.year }}</b>
+                <div class="veh-plate">لوحة {{ b.plate }}</div>
+
+                <div class="kv">
+                  <div>
+                    <small>العداد</small>
+                    <b>{{ Number(b.odo).toLocaleString('en') }} كم</b>
+                  </div>
+                  <div>
+                    <small>الصيانة الجاية</small>
+                    <b>{{ Number(b.nextService).toLocaleString('en') }} كم</b>
+                  </div>
+                  <div>
+                    <small>آخر زيارة</small>
+                    <b>{{ b.lastVisit }}</b>
+                  </div>
+                  <div>
+                    <small>الرخصة</small>
+                    <b>{{ b.license }}</b>
+                  </div>
+                </div>
+
+                <!-- Clamped meter 0-100% (Item 26) -->
+                <div class="meter">
+                  <i :style="{ width: `${Math.min(100, Math.max(0, Math.round((Number(b.odo) / Number(b.nextService)) * 100)))}%` }"></i>
+                </div>
+                <small class="meter-note">
+                  فاضل {{ Math.max(0, Number(b.nextService) - Number(b.odo)).toLocaleString('en') }} كم على الصيانة الجاية
+                </small>
+              </div>
+
+              <div class="veh-actions">
+                <RouterLink to="/booking" class="btn sm">
+                  احجز صيانة
+                </RouterLink>
+                <RouterLink to="/p/motul-7100-10w40" class="btn o sm">
+                  اطلب طقم الصيانة
+                </RouterLink>
+              </div>
             </div>
 
+            <!-- Service History Table Box -->
+            <div class="box">
+              <div class="box-head">
+                <h3>سجل الصيانة</h3>
+                <a href="#pdf" @click.prevent="downloadServicePdf">تحميل PDF</a>
+              </div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>العداد</th>
+                      <th>الشغل</th>
+                      <th>الفني</th>
+                      <th style="text-align: end">التكلفة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="r in (userStore.user?.serviceHistory || defaultHistory)" :key="r.date">
+                      <td>{{ r.date }}</td>
+                      <td>{{ r.odo }}</td>
+                      <td>{{ r.service }}</td>
+                      <td class="tech-cell">{{ r.tech }}</td>
+                      <td style="text-align: end">{{ r.cost }} ج.م</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Recommended parts -->
+            <ProductRow title="قطع غيار متوافقة مع موتوسيكلك" :products="compatibleProducts" />
+          </div>
+        </div>
+
+        <!-- 2. Bookings Tab (Item 26) -->
+        <div v-else-if="activeTab === 'bookings'">
+          <div class="sec-head">
+            <h1>حجوزاتي</h1>
+            <RouterLink to="/booking" class="btn sm">
+              + حجز جديد
+            </RouterLink>
+          </div>
+          <div v-if="!userBookings || userBookings.length === 0">
+            <EmptyState
+              icon="wrench"
+              title="لا توجد حجوزات صيانة حالية"
+              description="يمكنك حجز موعد صيانة أو فحص لموتوسيكلك واختيار الخدمة والميعاد المناسب."
+              action-label="احجز صيانة الآن"
+              action-to="/booking"
+            />
+          </div>
+          <div v-else class="box">
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>التاريخ</th>
-                    <th>العداد</th>
-                    <th>الشغل</th>
-                    <th>الفني</th>
-                    <th style="text-align: left">التكلفة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="r in userStore.user.serviceHistory" :key="r.date">
-                    <td>{{ r.date }}</td>
-                    <td>{{ r.odo }}</td>
-                    <td>{{ r.service }}</td>
-                    <td class="tech-cell">{{ r.tech }}</td>
-                    <td style="text-align: left">{{ r.cost }} ج.م</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Recent Orders Box -->
-          <div class="box">
-            <div class="box-head">
-              <h3>آخر الطلبات</h3>
-              <button type="button" class="link-btn" @click="activeTab = 'orders'">
-                كل الطلبات
-              </button>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم الطلب</th>
-                    <th>التاريخ</th>
+                    <th>رقم الحجز</th>
+                    <th>الموتوسيكل</th>
+                    <th>الخدمة</th>
+                    <th>الميعاد</th>
                     <th>الحالة</th>
-                    <th style="text-align: left">الإجمالي</th>
+                    <th style="text-align: end">التكلفة</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="ord in userStore.user.orders" :key="ord.id">
-                    <td>#{{ ord.id }}</td>
-                    <td>{{ ord.date }}</td>
-                    <td><span class="tg">{{ ord.status }}</span></td>
-                    <td style="text-align: left">{{ ord.total }}</td>
+                  <tr v-for="bkg in userBookings" :key="bkg.id">
+                    <td>#{{ bkg.id }}</td>
+                    <td><b>{{ bkg.bike }}</b></td>
+                    <td>{{ bkg.service }}</td>
+                    <td>{{ bkg.date }} · {{ bkg.time }}</td>
+                    <td><span class="tg">{{ bkg.status }}</span></td>
+                    <td style="text-align: end">{{ bkg.cost }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -150,7 +190,7 @@
           </div>
         </div>
 
-        <!-- 2. Service History Tab -->
+        <!-- 3. Service History Tab -->
         <div v-else-if="activeTab === 'history'">
           <div class="sec-head">
             <h1>سجل الصيانة الكامل</h1>
@@ -164,16 +204,16 @@
                     <th>العداد</th>
                     <th>الشغل</th>
                     <th>الفني</th>
-                    <th style="text-align: left">التكلفة</th>
+                    <th style="text-align: end">التكلفة</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in userStore.user.serviceHistory" :key="r.date">
+                  <tr v-for="r in (userStore.user?.serviceHistory || defaultHistory)" :key="r.date">
                     <td>{{ r.date }}</td>
                     <td>{{ r.odo }}</td>
                     <td>{{ r.service }}</td>
                     <td class="tech-cell">{{ r.tech }}</td>
-                    <td style="text-align: left">{{ r.cost }} ج.م</td>
+                    <td style="text-align: end">{{ r.cost }} ج.م</td>
                   </tr>
                 </tbody>
               </table>
@@ -181,12 +221,21 @@
           </div>
         </div>
 
-        <!-- 3. Orders Tab -->
+        <!-- 4. Orders Tab -->
         <div v-else-if="activeTab === 'orders'">
           <div class="sec-head">
             <h1>طلباتي</h1>
           </div>
-          <div class="box">
+          <div v-if="!userOrders || userOrders.length === 0">
+            <EmptyState
+              icon="box"
+              title="لا توجد طلبات سابقة"
+              description="تصفح المتجر واطلب قطع الغيار والزيوت الأصلية لموتوسيكلك."
+              action-label="تصفح المتجر"
+              action-to="/c/oils"
+            />
+          </div>
+          <div v-else class="box">
             <div class="table-wrap">
               <table>
                 <thead>
@@ -194,15 +243,15 @@
                     <th>رقم الطلب</th>
                     <th>التاريخ</th>
                     <th>الحالة</th>
-                    <th style="text-align: left">الإجمالي</th>
+                    <th style="text-align: end">الإجمالي</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="ord in userStore.user.orders" :key="ord.id">
+                  <tr v-for="ord in userOrders" :key="ord.id">
                     <td>#{{ ord.id }}</td>
                     <td>{{ ord.date }}</td>
                     <td><span class="tg">{{ ord.status }}</span></td>
-                    <td style="text-align: left">{{ ord.total }}</td>
+                    <td style="text-align: end">{{ ord.total }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -210,7 +259,7 @@
           </div>
         </div>
 
-        <!-- 4. Favorites Tab -->
+        <!-- 5. Favorites Tab -->
         <div v-else-if="activeTab === 'favorites'">
           <div class="sec-head">
             <h1>المنتجات المفضلة</h1>
@@ -233,18 +282,18 @@
           </div>
         </div>
 
-        <!-- 5. Addresses Tab -->
+        <!-- 6. Addresses Tab -->
         <div v-else-if="activeTab === 'addresses'">
           <div class="sec-head">
             <h1>عناويني المسجلة</h1>
           </div>
           <div class="box">
             <b>عنوان المنزل الرئيسي</b>
-            <p>{{ userStore.user?.address?.street }}، {{ userStore.user?.address?.area }}، {{ userStore.user?.address?.governorate }}</p>
+            <p>{{ userStore.user?.address?.street || 'لم يتم تسجيل العنوان' }}، {{ userStore.user?.address?.area || '' }}، {{ userStore.user?.address?.governorate || '' }}</p>
           </div>
         </div>
 
-        <!-- 6. Settings Tab -->
+        <!-- 7. Settings Tab (Item 26: v-model and saving without alert) -->
         <div v-else-if="activeTab === 'settings'">
           <div class="sec-head">
             <h1>إعدادات الحساب</h1>
@@ -253,13 +302,36 @@
             <div class="fl">
               <div class="fld">
                 <label>الاسم</label>
-                <input type="text" :value="userStore.user.name" class="form-input" />
+                <input type="text" v-model="settingsName" class="form-input" />
               </div>
               <div class="fld">
                 <label>الموبايل</label>
-                <input type="text" :value="userStore.user.phone" class="form-input" dir="ltr" />
+                <input type="text" v-model="settingsPhone" class="form-input" dir="ltr" />
               </div>
             </div>
+            <div class="fl" style="margin-top: 12px;">
+              <div class="fld">
+                <label>المحافظة</label>
+                <select v-model="settingsGovernorate" class="form-select">
+                  <option v-for="gov in storeConfig.governorates" :key="gov.name" :value="gov.name">
+                    {{ gov.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="fld">
+                <label>المنطقة</label>
+                <input type="text" v-model="settingsArea" class="form-input" />
+              </div>
+            </div>
+            <div class="fld" style="margin-top: 12px;">
+              <label>تفاصيل العنوان</label>
+              <input type="text" v-model="settingsStreet" class="form-input" />
+            </div>
+
+            <div v-if="settingsSaved" class="success-banner">
+              تم حفظ بيانات الحساب بنجاح.
+            </div>
+
             <button type="button" class="btn sm" style="margin-top: 16px" @click="handleSaveSettings">
               حفظ التعديلات
             </button>
@@ -270,7 +342,7 @@
 
     <!-- Add Bike Modal -->
     <div v-if="showAddBikeModal" class="modal-backdrop" @click="showAddBikeModal = false">
-      <div class="modal-card" @click.stop>
+      <div class="modal-card" @click.stop role="dialog" aria-modal="true" aria-label="إضافة موتوسيكل">
         <h3>إضافة موتوسيكل جديد لحسابك</h3>
         <form @submit.prevent="handleAddBike">
           <div class="form-group">
@@ -309,20 +381,24 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { products } from '@/data/products.js'
 import { useUserStore } from '@/stores/user.js'
 import { useFavoritesStore } from '@/stores/favorites.js'
+import { useToastStore } from '@/stores/toast.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
+import ProductRow from '@/components/common/ProductRow.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const favStore = useFavoritesStore()
+const toastStore = useToastStore()
 
 const activeTab = ref(route.query.tab || 'bikes')
 
@@ -331,8 +407,10 @@ const breadcrumbItems = [
   { label: 'حسابي' }
 ]
 
+// Item 26: Add bookings tab
 const tabs = [
   { id: 'bikes', label: 'موتوسيكلاتي', icon: 'bike' },
+  { id: 'bookings', label: 'حجوزاتي', icon: 'wrench' },
   { id: 'history', label: 'سجل الصيانة', icon: 'wrench' },
   { id: 'orders', label: 'طلباتي', icon: 'box' },
   { id: 'favorites', label: 'المفضلة', icon: 'heart' },
@@ -343,6 +421,24 @@ const tabs = [
 const favProducts = computed(() => {
   return products.filter((p) => favStore.isFavorite(p.id))
 })
+
+const userBookings = computed(() => {
+  return userStore.user?.bookings || []
+})
+
+const userOrders = computed(() => {
+  return userStore.user?.orders || []
+})
+
+const compatibleProducts = computed(() => {
+  return products.slice(0, 5)
+})
+
+const defaultHistory = [
+  { date: '12 أكتوبر 2026', odo: '12,000 كم', service: 'تغيير زيت + فلتر', tech: 'أبو يوسف', cost: '1,770' },
+  { date: '5 يوليو 2026', odo: '9,300 كم', service: 'تيل فرامل أمامي وخلفي', tech: 'محمد', cost: '1,240' },
+  { date: '20 مارس 2026', odo: '6,000 كم', service: 'صيانة شاملة', tech: 'أبو يوسف', cost: '2,450' }
+]
 
 const showAddBikeModal = ref(false)
 const newBikeModel = ref(storeConfig.models[0])
@@ -363,14 +459,45 @@ const handleAddBike = () => {
     col: '#2e2e2e'
   })
   showAddBikeModal.value = false
+  toastStore.show('تمت إضافة الموتوسيكل بنجاح', 'success')
 }
 
+// Item 26: Settings with v-model
+const settingsName = ref(userStore.user?.name || '')
+const settingsPhone = ref(userStore.user?.phone || '')
+const settingsGovernorate = ref(userStore.user?.address?.governorate || 'القاهرة')
+const settingsArea = ref(userStore.user?.address?.area || 'مدينة نصر')
+const settingsStreet = ref(userStore.user?.address?.street || '')
+const settingsSaved = ref(false)
+
 const handleSaveSettings = () => {
-  alert('تم حفظ بيانات الحساب بنجاح.')
+  if (!userStore.user) return
+  userStore.user.name = settingsName.value
+  userStore.user.phone = settingsPhone.value
+  if (!userStore.user.address) userStore.user.address = {}
+  userStore.user.address.governorate = settingsGovernorate.value
+  userStore.user.address.area = settingsArea.value
+  userStore.user.address.street = settingsStreet.value
+
+  try {
+    localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
+  } catch (e) {}
+
+  settingsSaved.value = true
+  toastStore.show('تم حفظ التعديلات بنجاح', 'success')
+  setTimeout(() => {
+    settingsSaved.value = false
+  }, 3000)
+}
+
+const handleLogout = () => {
+  userStore.logout()
+  toastStore.show('تم تسجيل الخروج بنجاح', 'info')
+  router.push('/login')
 }
 
 const downloadServicePdf = () => {
-  alert('جاري تجهيز وتحميل كشف سجل الصيانة بصيغة PDF.')
+  toastStore.show('جاري تجهيز وتحميل كشف سجل الصيانة بصيغة PDF.', 'info')
 }
 </script>
 
@@ -380,6 +507,7 @@ const downloadServicePdf = () => {
   grid-template-columns: 240px 1fr;
   gap: 28px;
   padding-top: 18px;
+  padding-bottom: 48px;
 }
 
 .side {
@@ -403,6 +531,7 @@ const downloadServicePdf = () => {
 
 .side .u small {
   color: var(--mu);
+  font-size: 12.5px;
 }
 
 .acc-nav {
@@ -413,110 +542,126 @@ const downloadServicePdf = () => {
 
 .tab-link {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
   padding: 10px 12px;
-  border-radius: 10px;
-  color: var(--ink);
-  font-size: 14.5px;
-  width: 100%;
-  text-align: right;
+  border-radius: var(--radius-btn);
   border: none;
   background: none;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--mu);
   cursor: pointer;
-  transition: background 0.15s ease;
+  text-align: start;
+  transition: all 0.15s ease;
 }
 
 .tab-link:hover {
   background: var(--sf);
+  color: var(--ink);
 }
 
 .tab-link.on {
   background: var(--sf);
-  font-weight: 700;
+  color: var(--ink);
+}
+
+.tab-link:focus-visible {
+  outline: 2px solid var(--ink);
+}
+
+.logout-btn {
+  color: var(--sale);
+  margin-top: 8px;
+  border-top: 1px solid var(--ln);
+  border-radius: 0;
+  padding-top: 12px;
+}
+
+.logout-btn:hover {
+  color: var(--sale);
+  background: var(--salesoft);
 }
 
 .sec-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
 }
 
 .sec-head h1 {
   font-size: 26px;
-  margin: 0;
   font-weight: 800;
+  margin: 0;
 }
 
-/* Vehicle Card */
 .veh {
   display: grid;
-  grid-template-columns: 220px 1fr auto;
-  gap: 22px;
-  align-items: center;
+  grid-template-columns: 200px 1fr auto;
+  gap: 24px;
   border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
-  padding: 16px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-card);
+  padding: 20px;
   background: #ffffff;
+  margin-bottom: 24px;
+  align-items: center;
 }
 
 .veh .im {
-  aspect-ratio: 16 / 10;
-  border-radius: 10px;
-  background: var(--sf);
+  aspect-ratio: 16/10;
   display: grid;
   place-items: center;
+  background: var(--sf);
+  border-radius: var(--radius-box);
 }
 
 .veh-info b {
   font-size: 18px;
-  display: block;
 }
 
 .veh-plate {
+  font-size: 13px;
   color: var(--mu);
-  font-size: 14px;
   margin-top: 2px;
 }
 
 .kv {
   display: grid;
-  grid-template-columns: repeat(4, auto);
-  gap: 22px;
-  margin-top: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 16px 0;
 }
 
 .kv small {
   display: block;
-  color: var(--mu);
   font-size: 12px;
+  color: var(--mu);
 }
 
 .kv b {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .meter {
-  height: 6px;
-  border-radius: 6px;
-  background: var(--sf2);
-  margin-top: 12px;
+  height: 8px;
+  background: var(--sf);
+  border-radius: 4px;
   overflow: hidden;
+  margin-bottom: 6px;
 }
 
 .meter i {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--ok);
+  border-radius: 4px;
 }
 
 .meter-note {
-  display: block;
+  font-size: 12px;
   color: var(--mu);
-  margin-top: 4px;
-  font-size: 13px;
 }
 
 .veh-actions {
@@ -525,35 +670,30 @@ const downloadServicePdf = () => {
   gap: 8px;
 }
 
-/* Box & Tables */
 .box {
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
-  padding: 22px;
-  margin-bottom: 16px;
   background: #ffffff;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  margin-bottom: 24px;
 }
 
 .box-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
-.box h3 {
-  margin: 0;
+.box-head h3 {
   font-size: 17px;
+  margin: 0;
 }
 
-.box a, .link-btn {
-  font-size: 14px;
-  font-weight: 400;
-  text-decoration: underline;
+.box-head a {
+  font-size: 13px;
   color: var(--ink);
-  background: none;
-  border: none;
-  cursor: pointer;
+  text-decoration: underline;
 }
 
 .table-wrap {
@@ -566,71 +706,25 @@ table {
   font-size: 14px;
 }
 
+th, td {
+  padding: 12px 14px;
+  text-align: start;
+  border-bottom: 1px solid var(--ln);
+}
+
 th {
-  text-align: right;
-  font-weight: 400;
-  color: var(--mu);
-  padding: 10px 0;
-  border-bottom: 1px solid var(--ln);
-}
-
-td {
-  padding: 11px 0;
-  border-bottom: 1px solid var(--ln);
-}
-
-.tech-cell {
+  font-weight: 700;
   color: var(--mu);
 }
 
-/* Modals */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
-  padding: 16px;
-}
-
-.modal-card {
-  background: #ffffff;
-  border-radius: var(--radius-box);
-  padding: 28px;
-  width: 100%;
-  max-width: 440px;
-}
-
-.modal-card h3 {
-  margin: 0 0 16px;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 13px;
-  color: var(--mu);
-  margin-bottom: 4px;
-}
-
-.form-select-full, .form-input-full {
-  width: 100%;
-  height: 44px;
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-btn);
-  padding: 0 12px;
-  font-size: 14px;
-  outline: none;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
+.tg {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--oksoft);
+  color: var(--ok);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .fav-grid {
@@ -639,26 +733,124 @@ td {
   gap: 16px;
 }
 
+.fl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fld label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-input,
+.form-select {
+  height: 44px;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-btn);
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-input:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid var(--ink);
+}
+
+.success-banner {
+  background: var(--oksoft);
+  color: var(--ok);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  margin-top: 14px;
+  font-weight: 700;
+}
+
+/* Add bike modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.modal-card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: var(--radius-card);
+  max-width: 440px;
+  width: 90%;
+}
+
+.modal-card h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.form-group {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-select-full,
+.form-input-full {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-btn);
+  padding: 0 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-select-full:focus-visible,
+.form-input-full:focus-visible {
+  outline: 2px solid var(--ink);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
 @media (max-width: 900px) {
   .acc {
     grid-template-columns: 1fr;
   }
-  .fav-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .veh {
     grid-template-columns: 1fr;
-    gap: 16px;
+    text-align: center;
   }
   .kv {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: 1fr 1fr;
   }
-}
-
-@media (max-width: 600px) {
-  .fav-grid {
+  .fl {
     grid-template-columns: 1fr;
+  }
+  .fav-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

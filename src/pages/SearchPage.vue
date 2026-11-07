@@ -9,8 +9,12 @@
       </div>
     </div>
 
-    <div class="in" style="padding-top: 20px">
-      <div v-if="results.length === 0">
+    <div class="in" style="padding-top: 20px; padding-bottom: 48px;">
+      <div v-if="loading" class="grid">
+        <ProductCardSkeleton v-for="i in 5" :key="i" />
+      </div>
+
+      <div v-else-if="results.length === 0">
         <EmptyState
           icon="search"
           :title="`لا توجد نتائج بحث لـ '${searchQuery}'`"
@@ -32,14 +36,27 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { products } from '@/data/products.js'
+import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
+import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 const route = useRoute()
+const loading = ref(true)
+const allProducts = ref([])
+
+onMounted(async () => {
+  try {
+    allProducts.value = await api.getProducts()
+  } catch (e) {
+    allProducts.value = []
+  } finally {
+    loading.value = false
+  }
+})
 
 const searchQuery = computed(() => (route.query.q || '').trim())
 
@@ -49,9 +66,9 @@ const breadcrumbItems = computed(() => [
 ])
 
 const results = computed(() => {
-  if (!searchQuery.value) return products
+  if (!searchQuery.value) return allProducts.value
   const q = searchQuery.value.toLowerCase()
-  return products.filter((p) => {
+  return allProducts.value.filter((p) => {
     return (
       p.name.toLowerCase().includes(q) ||
       p.brand.toLowerCase().includes(q) ||

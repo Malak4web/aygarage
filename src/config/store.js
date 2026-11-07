@@ -7,7 +7,14 @@ export const storeConfig = {
   announcement: 'توصيل لكل المحافظات · استلام مجاني من الجراج · كلّمنا: 010 0000 0000',
   deliveryFee: 60,
   freeDeliveryThreshold: 3000,
+  deliveryEstimateDays: '2-4 أيام عمل',
   returnDays: 14,
+  returnPolicyNote: 'لو العبوة ما اتفتحتش أو القطعة ما ركبتش',
+  totalInspectedBikes: 22,
+  defaultInstallmentMonthly: 10200,
+  heroKitPrice: 5350,
+  heroKitPriceFormatted: '5,350 ج.م',
+  heroKitDiscount: '10%',
   models: [
     'ZT125-U',
     'ZT310-R',
@@ -23,6 +30,36 @@ export const storeConfig = {
     { id: 'card', title: 'كارت بنكي', desc: 'Visa · Mastercard · Meeza' },
     { id: 'vodafone', title: 'فودافون كاش', desc: 'هيوصلك طلب دفع على رقمك' },
     { id: 'instapay', title: 'InstaPay', desc: 'تحويل لحساب الجراج' }
+  ],
+  governorates: [
+    {
+      name: 'القاهرة',
+      areas: ['مدينة نصر', 'مصر الجديدة', 'التجمع الخامس', 'المعادي', 'شبرا', 'الدقي', 'المهندسين']
+    },
+    {
+      name: 'الجيزة',
+      areas: ['الدقي', 'المهندسين', 'الهرم', 'فيصل', 'الشيخ زايد', '6 أكتوبر']
+    },
+    {
+      name: 'الإسكندرية',
+      areas: ['سموحة', 'سيدي جابر', 'لوران', 'ميامي', 'ستانلي', 'محرم بك']
+    },
+    {
+      name: 'الشرقية',
+      areas: ['الزقازيق', 'العاشر من رمضان', 'بلبيس', 'منيا القمح']
+    }
+  ],
+  serviceFeatures: [
+    { title: 'تغيير زيت وفلتر', price: '1,770 ج.م' },
+    { title: 'صيانة شاملة', price: '2,450 ج.م' },
+    { title: 'فحص قبل الشراء', price: '600 ج.م' },
+    { title: 'ضبط بلوف', price: '900 ج.م' }
+  ],
+  trustItems: [
+    { icon: 'truck', title: 'توصيل لكل المحافظات', desc: 'خلال 2-4 أيام عمل' },
+    { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
+    { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
+    { icon: 'ret', title: 'استرجاع خلال 14 يوم', desc: 'لو القطعة ما ركبتش' }
   ],
   pickupTimes: 'جاهز النهارده بعد 3 العصر',
   deliveryEstimate: 'يوصلك الخميس 12 نوفمبر'

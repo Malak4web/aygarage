@@ -58,26 +58,24 @@
             </div>
 
             <div class="fld">
-              <label>المحافظة</label>
+              <label for="co-gov">المحافظة</label>
               <div class="sel-input-wrap">
-                <select v-model="governorate" class="form-select">
-                  <option value="القاهرة">القاهرة</option>
-                  <option value="الجيزة">الجيزة</option>
-                  <option value="الإسكندرية">الإسكندرية</option>
-                  <option value="الشرقية">الشرقية</option>
+                <select id="co-gov" v-model="governorate" class="form-select">
+                  <option v-for="gov in storeConfig.governorates" :key="gov.name" :value="gov.name">
+                    {{ gov.name }}
+                  </option>
                 </select>
                 <AppIcon name="down" :size="14" class="sel-arr" />
               </div>
             </div>
 
             <div class="fld">
-              <label>المنطقة</label>
+              <label for="co-area">المنطقة</label>
               <div class="sel-input-wrap">
-                <select v-model="area" class="form-select">
-                  <option value="مدينة نصر">مدينة نصر</option>
-                  <option value="مصر الجديدة">مصر الجديدة</option>
-                  <option value="التجمع الخامس">التجمع الخامس</option>
-                  <option value="المعادي">المعادي</option>
+                <select id="co-area" v-model="area" class="form-select">
+                  <option v-for="a in availableAreas" :key="a" :value="a">
+                    {{ a }}
+                  </option>
                 </select>
                 <AppIcon name="down" :size="14" class="sel-arr" />
               </div>
@@ -255,6 +253,17 @@ const customerPhone = ref(userStore.user?.phone || '')
 const governorate = ref(userStore.user?.address?.governorate || 'القاهرة')
 const area = ref(userStore.user?.address?.area || 'مدينة نصر')
 const addressDetails = ref(userStore.user?.address?.street || '')
+
+const availableAreas = computed(() => {
+  const g = storeConfig.governorates.find((item) => item.name === governorate.value)
+  return g ? g.areas : ['مدينة نصر', 'مصر الجديدة', 'المعادي']
+})
+
+watch(governorate, () => {
+  if (availableAreas.value.length > 0 && !availableAreas.value.includes(area.value)) {
+    area.value = availableAreas.value[0]
+  }
+})
 
 const deliveryMethod = ref('home')
 const paymentMethod = ref('cod')

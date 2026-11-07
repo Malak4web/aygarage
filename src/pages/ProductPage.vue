@@ -1,5 +1,23 @@
 <template>
-  <div v-if="!product" class="not-found-page in">
+  <!-- Loading skeleton state -->
+  <div v-if="loading" class="pdp-skeleton in">
+    <div class="skeleton" style="height: 24px; width: 220px; margin-bottom: 24px;"></div>
+    <div class="pdp">
+      <div class="gal">
+        <div class="skeleton" style="width: 100%; aspect-ratio: 1; border-radius: 12px;"></div>
+      </div>
+      <div class="buy-box">
+        <div class="skeleton" style="height: 14px; width: 140px; margin-bottom: 12px;"></div>
+        <div class="skeleton" style="height: 32px; width: 80%; margin-bottom: 16px;"></div>
+        <div class="skeleton" style="height: 20px; width: 180px; margin-bottom: 24px;"></div>
+        <div class="skeleton" style="height: 48px; width: 100%; border-radius: 10px; margin-bottom: 16px;"></div>
+        <div class="skeleton" style="height: 46px; width: 100%; border-radius: 10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not found state -->
+  <div v-else-if="!product" class="not-found-page in">
     <EmptyState
       icon="box"
       title="المنتج غير موجود"
@@ -8,6 +26,8 @@
       action-to="/c/oils"
     />
   </div>
+
+  <!-- Product page content -->
   <div class="product-page" v-else>
     <Breadcrumbs :items="breadcrumbItems" />
 
@@ -22,6 +42,7 @@
             class="thumb-btn"
             :class="{ on: activeThumb === idx }"
             @click="activeThumb = idx"
+            :aria-label="`صورة المنتج ${idx + 1}`"
           >
             <ProductIllustration
               :type="product.type"
@@ -96,59 +117,65 @@
           </div>
         </div>
 
-        <!-- Buy Actions -->
+        <!-- Stock Status (Item 12) -->
+        <div class="stock-status" :class="{ 'out-of-stock': product.stock === 0 }">
+          <span v-if="product.stock > 0">
+            متوفر · {{ product.stock }} قطعة في المخزن
+          </span>
+          <span v-else class="out-badge">
+            غير متوفر حالياً
+          </span>
+        </div>
+
+        <!-- Quantity & Buy Buttons -->
         <div class="buy">
           <QtyStepper
             v-model="quantity"
-            :max="product.stock"
             :min="product.stock > 0 ? 1 : 0"
+            :max="product.stock"
+            :disabled="product.stock === 0"
           />
           <button
             type="button"
-            class="btn"
-            @click="handleAddToCart"
+            class="btn add-cart-btn"
             :disabled="product.stock === 0"
+            @click="handleAddToCart"
           >
             <AppIcon name="cart" :size="18" />
             <span>{{ product.stock === 0 ? 'غير متوفر' : 'أضف للسلة' }}</span>
           </button>
           <button
             type="button"
-            class="btn o"
-            @click="handleBuyNow"
+            class="btn o buy-now-btn"
             :disabled="product.stock === 0"
+            @click="handleBuyNow"
           >
             اشتري دلوقتي
           </button>
         </div>
 
-        <!-- Stock Notice -->
-        <div class="stock-line" :class="{ out: product.stock === 0 }">
-          {{ product.stock > 0 ? `متوفر · ${product.stock} قطعة في المخزن` : 'غير متوفر' }}
-        </div>
-
-        <!-- Delivery & Service Perks -->
+        <!-- Perks List -->
         <div class="perks">
-          <div>
+          <div class="perk-item">
             <AppIcon name="truck" :size="22" :stroke-width="1.5" />
-            <span>
-              {{ storeConfig.deliveryEstimate }}
+            <div>
+              <span>{{ storeConfig.deliveryEstimate }}</span>
               <small>· توصيل {{ storeConfig.deliveryFee }} ج.م، ومجاني فوق {{ storeConfig.freeDeliveryThreshold.toLocaleString('en') }}</small>
-            </span>
+            </div>
           </div>
-          <div>
+          <div class="perk-item">
             <AppIcon name="pin" :size="22" :stroke-width="1.5" />
-            <span>
-              استلام من الجراج
+            <div>
+              <span>استلام من الجراج</span>
               <small>· {{ storeConfig.pickupTimes }}</small>
-            </span>
+            </div>
           </div>
-          <div>
+          <div class="perk-item">
             <AppIcon name="ret" :size="22" :stroke-width="1.5" />
-            <span>
-              استرجاع خلال {{ storeConfig.returnDays }} يوم
-              <small>· لو العبوة ما اتفتحتش</small>
-            </span>
+            <div>
+              <span>استرجاع خلال {{ storeConfig.returnDays }} يوم</span>
+              <small>· {{ storeConfig.returnPolicyNote }}</small>
+            </div>
           </div>
         </div>
       </div>
@@ -163,60 +190,47 @@
       <button
         type="button"
         class="btn sm"
-        @click="handleAddToCart"
         :disabled="product.stock === 0"
+        @click="handleAddToCart"
       >
         <AppIcon name="cart" :size="16" />
         <span>{{ product.stock === 0 ? 'غير متوفر' : 'أضف للسلة' }}</span>
       </button>
-      <button
-        type="button"
-        class="btn o sm"
-        @click="handleBuyNow"
-        :disabled="product.stock === 0"
-      >
-        شراء
-      </button>
+    </div>
+
+    <!-- Bike Picker Modal Dialog -->
+    <div v-if="showBikePicker" class="modal-backdrop" @click="showBikePicker = false">
+      <div class="modal-card" @click.stop role="dialog" aria-modal="true" aria-label="تغيير الموتوسيكل">
+        <h3>اختر موديل موتوسيكلك</h3>
+        <p>هنحدث حالة التوافق لكل قطع الغيار بناءً على اختيارك</p>
+        <div class="models-grid">
+          <button
+            v-for="model in storeConfig.models"
+            :key="model"
+            type="button"
+            class="model-chip"
+            :class="{ active: userStore.selectedBike === model }"
+            @click="selectBike(model)"
+          >
+            {{ model }}
+          </button>
+        </div>
+        <button type="button" class="btn o sm close-modal-btn" @click="showBikePicker = false">
+          إغلاق
+        </button>
+      </div>
     </div>
 
     <!-- Tabs: Description, Specs, Reviews, Compatibility -->
-    <div class="tabs in">
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'desc' }"
-        @click="activeTab = 'desc'"
-      >
-        الوصف
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'specs' }"
-        @click="activeTab = 'specs'"
-      >
-        المواصفات
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'reviews' }"
-        @click="activeTab = 'reviews'"
-      >
-        التقييمات ({{ product.reviewCount }})
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ on: activeTab === 'fit' }"
-        @click="activeTab = 'fit'"
-      >
-        الموديلات المتوافقة
-      </button>
+    <div class="in">
+      <Tabs
+        v-model="activeTab"
+        :tabs="productTabs"
+      />
     </div>
 
     <!-- Tab Content -->
-    <div class="tabc in">
+    <div class="tabc in" id="reviews">
       <div class="tab-main">
         <div v-if="activeTab === 'desc'">
           <p class="desc-text">{{ product.description }}</p>
@@ -235,19 +249,12 @@
 
         <div v-else-if="activeTab === 'reviews'">
           <div class="reviews-list">
-            <div class="review-item">
+            <div v-for="rev in defaultReviews" :key="rev.id" class="review-item">
               <div class="review-author">
-                <b>أحمد إبراهيم</b>
-                <RatingStars :rating="5" />
+                <b>{{ rev.author }}</b>
+                <RatingStars :rating="rev.rating" />
               </div>
-              <p>زيت ممتاز جداً صوته ناعم مع محرك الـ 350 ونقلات الجير بقت سلسة جداً بدون أي تكة.</p>
-            </div>
-            <div class="review-item">
-              <div class="review-author">
-                <b>محمد فتحي</b>
-                <RatingStars :rating="5" />
-              </div>
-              <p>التوصيل كان سريع جداً واستلمت القطع أصلية بالباركود من جراج أبو يوسف.</p>
+              <p>{{ rev.content }}</p>
             </div>
           </div>
         </div>
@@ -277,44 +284,27 @@
 
     <!-- Frequently Bought Together Row -->
     <ProductRow title="بيتشترى معاه" :products="companionProducts" />
-
-    <!-- Bike Selector Modal -->
-    <div v-if="showBikePicker" class="modal-backdrop" @click="showBikePicker = false">
-      <div class="modal-card" @click.stop>
-        <h3>اختر موديل الموتوسيكل</h3>
-        <p>حدد موتوسيكلك لتأكيد توافق قطع الغيار</p>
-        <div class="modal-bikes-grid">
-          <button
-            v-for="m in storeConfig.models"
-            :key="m"
-            type="button"
-            class="modal-bike-btn"
-            :class="{ active: userStore.selectedBike === m }"
-            @click="selectBike(m)"
-          >
-            {{ m }}
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
-import { products } from '@/data/products.js'
+import { categories } from '@/data/categories.js'
+import { defaultReviews } from '@/data/reviews.js'
+import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
+import { useToastStore } from '@/stores/toast.js'
 import { doesFit } from '@/utils/fit.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import RatingStars from '@/components/common/RatingStars.vue'
 import PriceTag from '@/components/common/PriceTag.vue'
 import QtyStepper from '@/components/common/QtyStepper.vue'
-import ProductCard from '@/components/common/ProductCard.vue'
 import ProductRow from '@/components/common/ProductRow.vue'
+import Tabs from '@/components/common/Tabs.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
@@ -322,10 +312,11 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
+const toastStore = useToastStore()
 
-const product = computed(() => {
-  return products.find((p) => p.slug === route.params.slug) || null
-})
+const loading = ref(true)
+const product = ref(null)
+const companionProducts = ref([])
 
 const activeThumb = ref(0)
 const activeTab = ref('desc')
@@ -333,13 +324,38 @@ const quantity = ref(1)
 const showBikePicker = ref(false)
 const selectedOption = ref(null)
 
-watch(
-  () => route.params.slug,
-  () => {
+const productTabs = computed(() => [
+  { id: 'desc', label: 'الوصف' },
+  { id: 'specs', label: 'المواصفات' },
+  { id: 'reviews', label: `التقييمات (${product.value?.reviewCount || 0})` },
+  { id: 'fit', label: 'الموديلات المتوافقة' }
+])
+
+const loadProductData = async () => {
+  loading.value = true
+  try {
+    const slug = route.params.slug
+    const p = await api.getProductBySlug(slug)
+    product.value = p
+    selectedOption.value = p.options?.[0] ?? null
     activeTab.value = 'desc'
     activeThumb.value = 0
     quantity.value = 1
-    selectedOption.value = product.value?.options?.[0] ?? null
+
+    // Load companion products
+    const all = await api.getProducts()
+    companionProducts.value = all.filter((prod) => prod.id !== p.id).slice(0, 5)
+  } catch (e) {
+    product.value = null
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(
+  () => route.params.slug,
+  () => {
+    loadProductData()
   },
   { immediate: true }
 )
@@ -362,17 +378,14 @@ const userBikeYear = computed(() => {
 
 const breadcrumbItems = computed(() => {
   if (!product.value) return [{ label: 'الرئيسية', to: '/' }, { label: 'المنتج' }]
+  const cat = categories.find((c) => c.slug === product.value.category)
+  const catName = cat ? cat.name : 'المنتجات'
+  const catSlug = cat ? cat.slug : 'oils'
   return [
     { label: 'الرئيسية', to: '/' },
-    { label: 'زيوت', to: '/c/oils' },
-    { label: 'زيوت المحرك', to: '/c/oils' },
+    { label: catName, to: `/c/${catSlug}` },
     { label: product.value.name }
   ]
-})
-
-const companionProducts = computed(() => {
-  if (!product.value) return []
-  return products.filter((p) => p.id !== product.value.id).slice(0, 5)
 })
 
 const selectBike = (model) => {
@@ -383,6 +396,7 @@ const selectBike = (model) => {
 const handleAddToCart = () => {
   if (!product.value || product.value.stock === 0) return
   cartStore.addItem(product.value, quantity.value, selectedOption.value)
+  toastStore.show(`تمت إضافة ${product.value.name} إلى السلة بنجاح`, 'success')
 }
 
 const handleBuyNow = () => {
@@ -393,339 +407,314 @@ const handleBuyNow = () => {
 </script>
 
 <style scoped>
+.product-page {
+  padding-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+  .product-page {
+    padding-bottom: 80px;
+  }
+}
+
+.pdp-skeleton {
+  padding-top: 30px;
+}
+
 .pdp {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 44px;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 40px;
   padding-top: 18px;
 }
 
 .gal {
-  display: grid;
-  grid-template-columns: 84px 1fr;
-  gap: 12px;
+  display: flex;
+  gap: 14px;
 }
 
-.th {
+.gal .th {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .thumb-btn {
-  aspect-ratio: 1;
-  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  border: 1.5px solid var(--ln);
+  border-radius: var(--radius-btn);
   background: var(--sf);
   display: grid;
   place-items: center;
-  border: none;
   cursor: pointer;
-  padding: 6px;
-  transition: box-shadow 0.15s ease;
+  padding: 0;
+  transition: border-color 0.15s ease;
 }
 
 .thumb-btn.on {
-  box-shadow: 0 0 0 2px var(--ink);
+  border-color: var(--ink);
 }
 
-.big {
+.gal .big {
+  flex: 1;
   aspect-ratio: 1;
-  border-radius: var(--radius-box);
-  background: var(--sf);
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-card);
   display: grid;
   place-items: center;
+  background: #ffffff;
+}
+
+.buy-box {
+  display: flex;
+  flex-direction: column;
 }
 
 .meta-line {
   font-size: 14px;
   color: var(--mu);
+  margin-bottom: 4px;
 }
 
 .buy-box h1 {
   font-size: 28px;
   font-weight: 800;
-  margin: 4px 0 8px;
-  line-height: 1.4;
+  line-height: 1.3;
+  margin: 0 0 10px;
 }
 
 .rate-line {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 14px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .reviews-count {
-  text-decoration: underline;
+  font-size: 14px;
   color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .price {
-  margin: 12px 0;
+  margin-bottom: 18px;
 }
 
 .fitbox {
-  border: 1px solid var(--ln);
-  border-radius: 12px;
-  padding: 14px 16px;
   display: flex;
-  gap: 12px;
   align-items: center;
-  margin: 16px 0;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-btn);
   background: var(--sf);
+  margin-bottom: 20px;
+  border: 1px solid var(--ln);
 }
 
 .fitbox.ok {
   background: var(--oksoft);
-  border-color: #cfe6d9;
+  color: var(--ok);
+  border-color: rgba(27, 127, 75, 0.2);
+}
+
+.fitbox div {
+  flex: 1;
 }
 
 .fitbox b {
   display: block;
   font-size: 14.5px;
+  color: var(--ink);
+}
+
+.fitbox.ok b {
+  color: var(--ok);
 }
 
 .fitbox small {
+  display: block;
+  font-size: 12.5px;
   color: var(--mu);
-  font-size: 13px;
 }
 
 .change-bike-btn {
-  margin-inline-start: auto;
-  font-size: 13px;
-  color: var(--ink);
-  text-decoration: underline;
   background: none;
   border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: underline;
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
+}
+
+.opt {
+  margin-bottom: 20px;
 }
 
 .opt h5 {
-  margin: 0 0 8px;
   font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 8px;
 }
 
-.opt .os {
+.os {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .option-pill {
-  height: 40px;
-  padding: 0 16px;
+  padding: 8px 16px;
   border: 1px solid var(--ln);
   border-radius: var(--radius-btn);
-  display: grid;
-  place-items: center;
-  font-size: 14px;
   background: #ffffff;
+  font-size: 14px;
   cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
 .option-pill.on {
-  border: 2px solid var(--ink);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.stock-status {
+  font-size: 14px;
+  color: var(--ok);
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+.stock-status.out-of-stock {
+  color: var(--sale);
+}
+
+.out-badge {
+  color: var(--sale);
   font-weight: 700;
 }
 
 .buy {
-  display: grid;
-  grid-template-columns: 130px 1fr 1fr;
+  display: flex;
   gap: 10px;
+  margin-bottom: 24px;
 }
 
-.stock-line {
-  font-size: 14px;
-  color: var(--ok);
-  margin-top: 10px;
-  font-weight: 700;
+.add-cart-btn {
+  flex: 2;
 }
 
-.stock-line.out {
-  color: var(--sale);
+.buy-now-btn {
+  flex: 1;
 }
 
 .perks {
   border-top: 1px solid var(--ln);
-  margin-top: 20px;
-  padding-top: 16px;
-  display: grid;
-  gap: 10px;
-  font-size: 14px;
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.perks div {
+.perk-item {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
 }
 
-.perks small {
-  color: var(--mu);
-}
-
-.tabs {
-  display: flex;
-  gap: 26px;
-  border-bottom: 1px solid var(--ln);
-  margin-top: 44px;
-}
-
-.tab-btn {
-  padding: 12px 0;
-  font-size: 15px;
-  color: var(--mu);
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  font-weight: 500;
-}
-
-.tab-btn.on {
-  color: var(--ink);
+.perk-item span {
   font-weight: 700;
-  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+.perk-item small {
+  color: var(--mu);
 }
 
 .tabc {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 44px;
-  padding-top: 22px;
+  grid-template-columns: 2fr 1fr;
+  gap: 36px;
+  padding-bottom: 40px;
 }
 
 .desc-text {
-  margin-top: 0;
-  line-height: 1.9;
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.8;
+  margin: 0;
+  color: var(--ink);
 }
 
-table.spec {
+.spec {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-table.spec td {
-  padding: 11px 0;
+.spec td {
+  padding: 10px 14px;
   border-bottom: 1px solid var(--ln);
 }
 
-table.spec td:first-child {
+.spec td:first-child {
   color: var(--mu);
-  width: 40%;
-}
-
-.reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  width: 35%;
+  font-weight: 700;
 }
 
 .review-item {
   border-bottom: 1px solid var(--ln);
-  padding-bottom: 14px;
+  padding: 14px 0;
+}
+
+.review-item:last-child {
+  border-bottom: none;
 }
 
 .review-author {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 6px;
 }
 
 .compat-list {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  list-style: square;
+  padding-inline-start: 20px;
+  line-height: 1.8;
 }
 
-.compat-list li {
-  padding: 6px 14px;
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  background: var(--sf);
-}
-
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
-  padding: 16px;
-}
-
-.modal-card {
-  background: #ffffff;
-  border-radius: var(--radius-box);
-  padding: 24px;
-  width: 100%;
-  max-width: 420px;
-}
-
-.modal-bikes-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.modal-bike-btn {
-  padding: 10px;
-  border: 1px solid var(--ln);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #ffffff;
-}
-
-.modal-bike-btn.active {
-  background: var(--ink);
-  color: #ffffff;
-}
-
+/* Sticky buy bar for phones */
 .mobile-sticky-buy {
   display: none;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .pdp {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  .tabc {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
   .gal {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
   .gal .th {
     flex-direction: row;
     order: 2;
   }
-  .buy {
+  .tabc {
     grid-template-columns: 1fr;
   }
   .mobile-sticky-buy {
     display: flex;
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
+    inset-inline: 0;
     background: #ffffff;
     border-top: 1px solid var(--ln);
     padding: 10px 16px;
@@ -743,5 +732,63 @@ table.spec td:first-child {
     font-size: 16px;
     font-weight: 800;
   }
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.modal-card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: var(--radius-card);
+  max-width: 440px;
+  width: 90%;
+}
+
+.modal-card h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.modal-card p {
+  color: var(--mu);
+  font-size: 13.5px;
+  margin: 0 0 18px;
+}
+
+.models-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.model-chip {
+  padding: 10px 14px;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-btn);
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+
+.model-chip.active {
+  background: var(--ink);
+  color: #ffffff;
+  border-color: var(--ink);
+}
+
+.close-modal-btn {
+  width: 100%;
 }
 </style>

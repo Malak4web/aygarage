@@ -2,22 +2,22 @@
   <div class="booking-page">
     <Breadcrumbs :items="breadcrumbItems" />
 
-    <div v-if="bookingConfirmed" class="booking-success in">
-      <div class="success-box">
-        <div class="check-icon">
+    <!-- Confirmation Banner when completed -->
+    <div v-if="bookingConfirmed" class="confirmed-wrap in">
+      <div class="confirmed-card">
+        <div class="ok-icon-circle">
           <AppIcon name="check" :size="36" :stroke-width="2.5" />
         </div>
-        <h2>تم تأكيد ميعاد الصيانة بنجاح!</h2>
-        <p class="bk-code">رقم الحجز: <b>{{ bookingRef }}</b></p>
-        <p class="bk-desc">
-          تم حجز خدمة <b>{{ selectedService.name }}</b> لموتوسيكلك <b>{{ selectedBikeTitle }}</b> يوم <b>{{ selectedDay.name }} {{ selectedDay.num }} نوفمبر الساعة {{ selectedTime }}</b>.
+        <h2>تم تأكيد حجز الصيانة بنجاح!</h2>
+        <p class="ref-text">
+          رقم الحجز: <b>#{{ bookingRef }}</b>
         </p>
-        <div class="bk-notice">
-          <AppIcon name="wrench" :size="20" />
-          <span>هيوصلك رسالة تأكيد على الواتساب، والدفع هيتم في الجراج بعد الانتهاء واستلام الموتوسيكل.</span>
-        </div>
-        <div class="bk-actions">
-          <RouterLink to="/account" class="btn">
+        <p class="desc">
+          مستنينك في جراج أبو يوسف يوم <b>{{ selectedDay.name }} {{ selectedDay.num }} {{ selectedDay.month }}</b> الساعة <b>{{ selectedTime }}</b>.
+          هيوصلك تذكير على الواتساب قبل الميعاد بساعتين.
+        </p>
+        <div class="confirmed-actions">
+          <RouterLink to="/account?tab=bookings" class="btn">
             عرض حجوزاتي
           </RouterLink>
           <button type="button" class="btn o" @click="resetBooking">
@@ -34,22 +34,31 @@
         <!-- Step 1: Motorcycle -->
         <div class="box">
           <h3>1. الموتوسيكل</h3>
-          <label
-            class="rad"
-            :class="{ on: bikeChoice === 'saved' }"
-          >
-            <input
-              type="radio"
-              value="saved"
-              v-model="bikeChoice"
-              class="hidden-radio"
-            />
-            <i></i>
-            <span class="rad-body">
-              <b>Zontes {{ userStore.selectedBike }} · {{ userStore.userBikeYear }}</b>
-              <small>{{ primaryBikeInfo }}</small>
-            </span>
-          </label>
+
+          <!-- Saved bikes list if user has any -->
+          <div v-if="userStore.userBikes && userStore.userBikes.length > 0">
+            <label
+              v-for="b in userStore.userBikes"
+              :key="b.id"
+              class="rad"
+              :class="{ on: bikeChoice === b.id }"
+            >
+              <input
+                type="radio"
+                :value="b.id"
+                v-model="bikeChoice"
+                class="hidden-radio"
+              />
+              <i></i>
+              <span class="rad-body">
+                <b>{{ b.model }} · {{ b.year }}</b>
+                <small>{{ b.plate }} · {{ Number(b.odo).toLocaleString('en') }} كم</small>
+              </span>
+            </label>
+          </div>
+          <div v-else class="no-bikes-hint">
+            معندكش موتوسيكلات مسجلة في حسابك، حدد بيانات موتوسيكلك في الأسفل:
+          </div>
 
           <label
             class="rad"
@@ -69,34 +78,37 @@
           </label>
 
           <div v-if="bikeChoice === 'custom'" class="custom-bike-inputs">
-            <select v-model="customModel" class="form-select-full">
+            <select v-model="customModel" class="form-select-full" aria-label="موديل الموتوسيكل">
               <option v-for="m in storeConfig.models" :key="m" :value="m">
                 {{ m }}
               </option>
             </select>
             <input
-              type="text"
-              v-model="customOdo"
+              type="number"
+              v-model.number="customOdo"
               placeholder="قراءة العداد الحالية (كم)"
               class="form-input-full"
+              aria-label="قراءة العداد الحالية"
             />
           </div>
         </div>
 
-        <!-- Step 2: Service Selection -->
+        <!-- Step 2: Service Selection (Buttons with aria-pressed per Item 36) -->
         <div class="box">
           <h3>2. الخدمة</h3>
           <div class="svs">
-            <div
+            <button
               v-for="svc in serviceList"
               :key="svc.id"
+              type="button"
               class="service-item"
               :class="{ on: selectedService.id === svc.id }"
+              :aria-pressed="selectedService.id === svc.id"
               @click="selectedService = svc"
             >
               <b>{{ svc.name }}</b>
               <small>{{ svc.desc }}</small>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -104,38 +116,44 @@
         <div class="box">
           <div class="date-header">
             <h3>3. اليوم والميعاد</h3>
-            <span class="month-label">نوفمبر 2026</span>
+            <span class="month-label">{{ currentMonthLabel }}</span>
           </div>
 
-          <div class="days">
-            <div
-              v-for="(day, idx) in days"
-              :key="day.num"
+          <div class="days" role="group" aria-label="الأيام المتاحة">
+            <button
+              v-for="day in days"
+              :key="day.dateString"
+              type="button"
               class="day-slot"
               :class="{
-                on: selectedDay.num === day.num,
+                on: selectedDay.dateString === day.dateString,
                 off: day.off
               }"
+              :disabled="day.off"
+              :aria-pressed="selectedDay.dateString === day.dateString"
               @click="!day.off && (selectedDay = day)"
             >
               <span>{{ day.name }}</span>
               <b>{{ day.num }}</b>
-            </div>
+            </button>
           </div>
 
-          <div class="times">
-            <span
-              v-for="(time, idx) in timeSlots"
+          <div class="times" role="group" aria-label="الأوقات المتاحة">
+            <button
+              v-for="time in timeSlots"
               :key="time.val"
+              type="button"
               class="time-slot"
               :class="{
                 on: selectedTime === time.val,
                 off: time.off
               }"
+              :disabled="time.off"
+              :aria-pressed="selectedTime === time.val"
               @click="!time.off && (selectedTime = time.val)"
             >
               {{ time.val }}
-            </span>
+            </button>
           </div>
         </div>
       </div>
@@ -153,36 +171,39 @@
         </div>
         <div class="dl">
           <span>الميعاد</span>
-          <b>{{ selectedDay.name }} {{ selectedDay.num }}/11 · {{ selectedTime }}</b>
+          <b>{{ selectedDay.name }} {{ selectedDay.num }} {{ selectedDay.month }} · {{ selectedTime }}</b>
         </div>
         <div class="dl">
-          <span>المدة</span>
-          <b>{{ selectedService.duration }}</b>
+          <span>المكان</span>
+          <b>جراج أبو يوسف، فرع مصر القديمة</b>
         </div>
-        <div class="dl tot">
+        <div class="dl">
           <span>التكلفة التقديرية</span>
-          <b>{{ selectedService.priceFormatted }}</b>
+          <b>{{ selectedService.estimatedCost }}</b>
+        </div>
+
+        <div v-if="bookingError" class="submit-error">
+          {{ bookingError }}
         </div>
 
         <button
           type="button"
-          class="btn full confirm-booking-btn"
+          class="btn full confirm-btn"
+          :disabled="isSubmitting"
           @click="handleConfirmBooking"
         >
-          تأكيد الحجز
+          {{ isSubmitting ? 'جاري التأكيد...' : 'تأكيد الحجز' }}
         </button>
 
-        <div class="booking-notice">
-          هيوصلك تأكيد على الواتساب. الدفع في الجراج.
-        </div>
+        <p class="pay-note">الدفع في الجراج بعد ما الفني يخلص الشغل وتستلم الموتوسيكل وتجرّبه.</p>
       </aside>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { services } from '@/data/services.js'
 import { useUserStore } from '@/stores/user.js'
@@ -191,6 +212,7 @@ import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 const breadcrumbItems = [
@@ -198,23 +220,41 @@ const breadcrumbItems = [
   { label: 'حجز صيانة' }
 ]
 
-const bikeChoice = ref('saved')
-const customModel = ref('ZT125-U')
+// Item 25: Bike selection & reading route.query.bike
+const bikeChoice = ref(userStore.userBikes && userStore.userBikes.length > 0 ? userStore.userBikes[0].id : 'custom')
+const customModel = ref('ZT350-T')
 const customOdo = ref('')
 
 const serviceList = services
 const selectedService = ref(services[0])
 
-const days = [
-  { name: 'سبت', num: 7 },
-  { name: 'أحد', num: 8 },
-  { name: 'اثنين', num: 9 },
-  { name: 'ثلاثاء', num: 10 },
-  { name: 'أربعاء', num: 11 },
-  { name: 'خميس', num: 12 },
-  { name: 'جمعة', num: 13, off: true }
-]
-const selectedDay = ref(days[2]) // الاثنين 9
+// Item 25: Dynamically generate next 7 days from today
+const generateNext7Days = () => {
+  const dayNames = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت']
+  const result = []
+  const today = new Date()
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    const dayOfWeek = d.getDay()
+    result.push({
+      dateString: d.toISOString().slice(0, 10),
+      name: dayNames[dayOfWeek],
+      num: d.getDate(),
+      month: d.toLocaleDateString('ar-EG', { month: 'short' }),
+      off: dayOfWeek === 5 // Friday off
+    })
+  }
+  return result
+}
+
+const days = ref(generateNext7Days())
+const selectedDay = ref(days.value.find((d) => !d.off) || days.value[0])
+
+const currentMonthLabel = computed(() => {
+  const now = new Date()
+  return now.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })
+})
 
 const timeSlots = [
   { val: '11:00 ص' },
@@ -232,20 +272,22 @@ const selectedTime = ref('2:00 م')
 
 const bookingConfirmed = ref(false)
 const bookingRef = ref('')
+const isSubmitting = ref(false)
+const bookingError = ref('')
 
-const selectedBikeTitle = computed(() => {
-  if (bikeChoice.value === 'saved') {
-    return userStore.selectedBike
+onMounted(() => {
+  if (route.query.bike) {
+    bikeChoice.value = 'custom'
+    customModel.value = decodeURIComponent(route.query.bike)
   }
-  return customModel.value
 })
 
-const primaryBikeInfo = computed(() => {
-  const b = userStore.user?.savedBikes?.[0]
-  if (b) {
-    return `${b.plate} · ${Number(b.odo).toLocaleString('en')} كم`
+const selectedBikeTitle = computed(() => {
+  if (bikeChoice.value !== 'custom') {
+    const found = userStore.userBikes?.find((b) => b.id === bikeChoice.value)
+    if (found) return `${found.model} · ${found.year}`
   }
-  return 'الموتوسيكل الافتراضي'
+  return customModel.value
 })
 
 const handleConfirmBooking = async () => {
@@ -256,84 +298,151 @@ const handleConfirmBooking = async () => {
     })
   }
 
-  const result = await api.createBooking({
-    bike: selectedBikeTitle.value,
-    service: selectedService.value.name,
-    date: `${selectedDay.value.name} ${selectedDay.value.num} نوفمبر`,
-    time: selectedTime.value,
-    cost: selectedService.value.priceFormatted
-  })
-  bookingRef.value = result.id
-  bookingConfirmed.value = true
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  bookingError.value = ''
+
+  try {
+    const refNum = String(Math.floor(1000 + Math.random() * 9000))
+    bookingRef.value = refNum
+
+    // Store in user bookings
+    const newBooking = {
+      id: refNum,
+      bike: selectedBikeTitle.value,
+      service: selectedService.value.name,
+      date: `${selectedDay.value.name} ${selectedDay.value.num} ${selectedDay.value.month}`,
+      time: selectedTime.value,
+      cost: selectedService.value.estimatedCost,
+      status: 'مؤكد'
+    }
+
+    if (!userStore.user.bookings) {
+      userStore.user.bookings = []
+    }
+    userStore.user.bookings.unshift(newBooking)
+    try {
+      localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
+    } catch (e) {}
+
+    bookingConfirmed.value = true
+  } catch (err) {
+    bookingError.value = 'حدث خطأ أثناء حجز الموعد، برجاء المحاولة لاحقاً.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 const resetBooking = () => {
   bookingConfirmed.value = false
+  bookingRef.value = ''
+  selectedService.value = services[0]
 }
 </script>
 
 <style scoped>
 .page-title {
-  font-size: 28px;
-  margin: 0 0 16px;
+  font-size: 30px;
+  font-weight: 800;
+  margin: 10px 0 20px;
 }
 
 .book {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 28px;
-  padding-top: 18px;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  padding-top: 10px;
+  padding-bottom: 48px;
+}
+
+.booking-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .box {
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
-  padding: 22px;
-  margin-bottom: 16px;
   background: #ffffff;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-card);
+  padding: 24px;
 }
 
 .box h3 {
-  margin: 0 0 14px;
-  font-size: 17px;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 16px;
+}
+
+.no-bikes-hint {
+  font-size: 13.5px;
+  color: var(--mu);
+  margin-bottom: 12px;
 }
 
 .rad {
   display: flex;
-  gap: 12px;
   align-items: center;
-  border: 1px solid var(--ln);
-  border-radius: 12px;
+  gap: 12px;
   padding: 14px 16px;
-  margin-bottom: 10px;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-box);
   cursor: pointer;
+  margin-bottom: 10px;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.rad:hover {
+  border-color: #b5b5b5;
 }
 
 .rad.on {
-  border: 2px solid var(--ink);
+  border-color: var(--ink);
+  background: var(--sf);
 }
 
 .hidden-radio {
   position: absolute;
   opacity: 0;
-  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.rad:has(.hidden-radio:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .rad i {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 1.5px solid #bdbdbd;
-  flex: none;
+  border: 1.5px solid var(--mu);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .rad.on i {
-  border: 6px solid var(--ink);
-  background: #ffffff;
+  border-color: var(--ink);
+}
+
+.rad.on i::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.rad-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .rad-body b {
-  display: block;
   font-size: 14.5px;
 }
 
@@ -345,41 +454,66 @@ const resetBooking = () => {
 .custom-bike-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--ln);
 }
 
-.form-select-full, .form-input-full {
+.form-select-full,
+.form-input-full {
+  width: 100%;
   height: 44px;
   border: 1px solid var(--ln);
   border-radius: var(--radius-btn);
   padding: 0 12px;
   font-size: 14px;
+  font-family: inherit;
   outline: none;
 }
 
+.form-select-full:focus-visible,
+.form-input-full:focus-visible {
+  outline: 2px solid var(--ink);
+}
+
+/* Service selection buttons */
 .svs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .service-item {
   border: 1px solid var(--ln);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: var(--radius-box);
+  padding: 16px;
+  background: #ffffff;
   cursor: pointer;
+  text-align: start;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   transition: all 0.15s ease;
 }
 
+.service-item:hover {
+  border-color: #b5b5b5;
+}
+
 .service-item.on {
-  border: 2px solid var(--ink);
+  border-color: var(--ink);
   background: var(--sf);
 }
 
+.service-item:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .service-item b {
-  display: block;
-  font-size: 14.5px;
+  font-size: 15px;
 }
 
 .service-item small {
@@ -387,72 +521,96 @@ const resetBooking = () => {
   font-size: 13px;
 }
 
+/* Date and Time */
 .date-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 16px;
+}
+
+.date-header h3 {
+  margin: 0;
 }
 
 .month-label {
   font-size: 14px;
-  font-weight: 400;
   color: var(--mu);
+  font-weight: 700;
 }
 
 .days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
-  margin-top: 12px;
+  margin-bottom: 20px;
 }
 
 .day-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 64px;
   border: 1px solid var(--ln);
-  border-radius: 10px;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 12px;
-  color: var(--mu);
+  border-radius: var(--radius-btn);
+  background: #ffffff;
   cursor: pointer;
-  user-select: none;
+  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
-.day-slot b {
-  display: block;
-  font-size: 19px;
-  color: var(--ink);
+.day-slot:hover:not(.off) {
+  border-color: var(--ink);
 }
 
 .day-slot.on {
   background: var(--ink);
-  border-color: var(--ink);
-  color: #bbb;
-}
-
-.day-slot.on b {
   color: #ffffff;
+  border-color: var(--ink);
 }
 
 .day-slot.off {
+  background: var(--sf);
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.day-slot:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.day-slot span {
+  font-size: 12px;
+}
+
+.day-slot b {
+  font-size: 16px;
 }
 
 .times {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  margin-top: 12px;
 }
 
 .time-slot {
-  height: 40px;
+  height: 38px;
   border: 1px solid var(--ln);
-  border-radius: 10px;
+  border-radius: var(--radius-btn);
+  background: #ffffff;
   display: grid;
   place-items: center;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.time-slot:hover:not(.off) {
+  border-color: var(--ink);
 }
 
 .time-slot.on {
@@ -463,78 +621,83 @@ const resetBooking = () => {
 }
 
 .time-slot.off {
-  color: #b5b5b5;
-  text-decoration: line-through;
+  background: var(--sf);
+  opacity: 0.4;
   cursor: not-allowed;
+  text-decoration: line-through;
 }
 
-/* Summary Box */
+.time-slot:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Sidebar Summary */
 .sum {
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
-  padding: 22px;
-  align-self: flex-start;
-  margin-top: 52px;
   background: #ffffff;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  align-self: flex-start;
 }
 
 .sum h3 {
-  margin: 0 0 14px;
   font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 18px;
 }
 
 .dl {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  font-size: 14.5px;
+  margin-bottom: 12px;
+  font-size: 13.5px;
 }
 
 .dl span {
   color: var(--mu);
 }
 
-.dl.tot {
-  border-top: 1px solid var(--ln);
-  margin-top: 8px;
-  padding-top: 14px;
-  font-size: 17px;
+.dl b {
+  text-align: end;
+  max-width: 60%;
 }
 
-.dl.tot b {
-  font-size: 20px;
+.confirm-btn {
+  margin-top: 20px;
 }
 
-.confirm-booking-btn {
-  height: 52px;
-  margin-top: 14px;
-}
-
-.booking-notice {
+.submit-error {
+  color: var(--sale);
   font-size: 13px;
-  color: var(--mu);
-  margin-top: 10px;
-  text-align: center;
+  margin-top: 12px;
 }
 
-/* Success View */
-.booking-success {
+.pay-note {
+  font-size: 12px;
+  color: var(--mu);
+  margin: 14px 0 0;
+  line-height: 1.5;
+}
+
+/* Confirmed Card */
+.confirmed-wrap {
+  padding-top: 40px;
   display: flex;
   justify-content: center;
-  padding-top: 40px;
-  padding-bottom: 60px;
 }
 
-.success-box {
-  background: #ffffff;
+.confirmed-card {
+  max-width: 540px;
+  width: 100%;
   border: 1px solid var(--ln);
-  border-radius: var(--radius-box);
-  padding: 36px 32px;
-  max-width: 520px;
+  border-radius: var(--radius-card);
+  padding: 40px;
   text-align: center;
+  background: #ffffff;
 }
 
-.check-icon {
+.ok-icon-circle {
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -542,38 +705,35 @@ const resetBooking = () => {
   color: var(--ok);
   display: grid;
   place-items: center;
-  margin: 0 auto 16px;
+  margin: 0 auto 18px;
 }
 
-.success-box h2 {
+.confirmed-card h2 {
   font-size: 24px;
+  font-weight: 800;
   margin: 0 0 8px;
 }
 
-.bk-code {
+.ref-text {
+  font-size: 16px;
   color: var(--mu);
-  font-size: 15px;
+  margin: 0 0 16px;
 }
 
-.bk-desc {
-  margin: 16px 0;
+.ref-text b {
+  color: var(--ink);
+}
+
+.confirmed-card .desc {
+  font-size: 14.5px;
   line-height: 1.7;
+  color: var(--ink);
+  margin: 0 0 28px;
 }
 
-.bk-notice {
+.confirmed-actions {
   display: flex;
-  gap: 10px;
-  background: var(--sf);
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  text-align: right;
-  margin-bottom: 24px;
-}
-
-.bk-actions {
-  display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
 
@@ -581,11 +741,8 @@ const resetBooking = () => {
   .book {
     grid-template-columns: 1fr;
   }
-  .sum {
-    margin-top: 16px;
-  }
   .svs {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   .times {
     grid-template-columns: repeat(3, 1fr);

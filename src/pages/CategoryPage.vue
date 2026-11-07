@@ -16,70 +16,22 @@
     </div>
 
     <!-- Active Filter Chips -->
-    <div class="chips in">
-      <button
-        type="button"
-        class="chip"
-        :class="{ on: filterOnlyFitting }"
-        @click="filterOnlyFitting = !filterOnlyFitting"
-      >
-        <AppIcon name="check" :size="14" :stroke-width="2.4" />
-        <span>يركب على {{ userStore.selectedBike }}</span>
-        <AppIcon name="x" :size="14" />
-      </button>
-
-      <button
-        v-if="selectedViscosity"
-        type="button"
-        class="chip on"
-        @click="selectedViscosity = ''"
-      >
-        <span>{{ selectedViscosity }}</span>
-        <AppIcon name="x" :size="14" />
-      </button>
-
-      <button
-        v-if="selectedBrand"
-        type="button"
-        class="chip on"
-        @click="selectedBrand = ''"
-      >
-        <span>{{ selectedBrand }}</span>
-        <AppIcon name="x" :size="14" />
-      </button>
-
-      <button
-        v-if="selectedOilType"
-        type="button"
-        class="chip on"
-        @click="selectedOilType = ''"
-      >
-        <span>{{ selectedOilType }}</span>
-        <AppIcon name="x" :size="14" />
-      </button>
-
-      <button
-        v-if="hasActiveFilters"
-        type="button"
-        class="chip clear-all"
-        @click="resetFilters"
-      >
-        مسح الكل
-      </button>
+    <div class="in">
+      <FilterChips
+        :chips="activeFilterChips"
+        @remove="handleRemoveChip"
+        @clear-all="resetFilters"
+      />
     </div>
 
     <!-- Layout: Sidebar + Products Grid -->
     <div class="lay in">
-      <!-- Filter Sidebar (Desktop + Mobile Sheet) -->
-      <div v-if="mobileFilterOpen" class="sheet-backdrop" @click="mobileFilterOpen = false"></div>
-      <aside class="flt" :class="{ 'mobile-sheet': mobileFilterOpen }">
-        <div class="sheet-header" v-if="mobileFilterOpen">
-          <b>الفلاتر</b>
-          <button type="button" class="btn-close" @click="mobileFilterOpen = false">
-            <AppIcon name="x" :size="20" />
-          </button>
-        </div>
-
+      <!-- Filter Sidebar with Bottom Sheet on Mobile -->
+      <FilterSidebar
+        :is-open="mobileFilterOpen"
+        title="فلاتر القسم"
+        @close="mobileFilterOpen = false"
+      >
         <!-- Bike model filter -->
         <div class="g">
           <h5>موديل الموتوسيكل</h5>
@@ -88,6 +40,7 @@
               :value="userStore.selectedBike"
               @change="userStore.setSelectedBike($event.target.value)"
               class="model-select"
+              aria-label="اختيار موديل الموتوسيكل"
             >
               <option v-for="m in storeConfig.models" :key="m" :value="m">
                 {{ m }} · {{ userBikeYear }}
@@ -99,7 +52,7 @@
 
         <!-- Viscosity filter -->
         <div class="g" v-if="viscosities.length > 0">
-          <h5>اللزوجة <AppIcon name="down" :size="14" /></h5>
+          <h5>اللزوجة</h5>
           <label v-for="v in viscosities" :key="v.name" class="filter-label">
             <input
               type="radio"
@@ -116,7 +69,7 @@
 
         <!-- Brand filter -->
         <div class="g" v-if="brands.length > 0">
-          <h5>الماركة <AppIcon name="down" :size="14" /></h5>
+          <h5>الماركة</h5>
           <label v-for="b in brands" :key="b.name" class="filter-label">
             <input
               type="radio"
@@ -133,7 +86,7 @@
 
         <!-- Oil Type filter -->
         <div class="g" v-if="oilTypes.length > 0">
-          <h5>النوع <AppIcon name="down" :size="14" /></h5>
+          <h5>النوع</h5>
           <label v-for="t in oilTypes" :key="t.name" class="filter-label">
             <input
               type="radio"
@@ -148,15 +101,23 @@
           </label>
         </div>
 
-        <!-- Price Range -->
+        <!-- Price Range Slider -->
         <div class="g">
           <h5>السعر</h5>
-          <div class="range">
-            <i></i>
-          </div>
-          <div class="rin">
-            <div>{{ minPrice }}</div>
-            <div>{{ maxPrice }}</div>
+          <div class="price-inputs">
+            <input
+              type="number"
+              v-model.number="minPrice"
+              class="price-num-input"
+              aria-label="الحد الأدنى للسعر"
+            />
+            <span>إلى</span>
+            <input
+              type="number"
+              v-model.number="maxPrice"
+              class="price-num-input"
+              aria-label="الحد الأقصى للسعر"
+            />
           </div>
         </div>
 
@@ -173,30 +134,36 @@
             <span>عليه خصم</span>
           </label>
         </div>
-
-        <div v-if="mobileFilterOpen" class="sheet-apply">
-          <button type="button" class="btn full" @click="mobileFilterOpen = false">
-            تطبيق ({{ filteredProducts.length }})
-          </button>
-        </div>
-      </aside>
+      </FilterSidebar>
 
       <!-- Products Grid Section -->
       <main class="listing-main">
         <div class="tb">
-          <span>عرض 1-{{ Math.min(12, filteredProducts.length) }} من {{ filteredProducts.length }} منتج</span>
-          <div class="sort-wrap">
-            <select v-model="sortBy" class="sort-select">
-              <option value="bestseller">ترتيب: الأكثر مبيعاً</option>
-              <option value="price-asc">السعر: من الأقل للأعلى</option>
-              <option value="price-desc">السعر: من الأعلى للأقل</option>
-              <option value="rating">التقييم</option>
-            </select>
-            <AppIcon name="down" :size="14" class="sort-icon" />
-          </div>
+          <span>{{ paginationText }}</span>
+          <SortSelect
+            v-model="sortBy"
+            :options="sortOptions"
+            id="cat-sort-select"
+          />
         </div>
 
-        <div v-if="filteredProducts.length === 0" class="no-results">
+        <!-- Loading Skeletons -->
+        <div v-if="loading" class="grid g4">
+          <ProductCardSkeleton v-for="i in 8" :key="i" />
+        </div>
+
+        <!-- Error with retry -->
+        <div v-else-if="error" class="no-results">
+          <EmptyState
+            title="حدث خطأ في تحميل المنتجات"
+            :description="error"
+            action-label="إعادة المحاولة"
+            @action="fetchProducts"
+          />
+        </div>
+
+        <!-- Empty Results -->
+        <div v-else-if="filteredProducts.length === 0" class="no-results">
           <EmptyState
             title="لا توجد منتجات مطابقة للبحث أو الفلترة"
             description="جرّب تقليل شروط الفلترة أو مسح الموديل لعرض كل المنتجات المتوفرة."
@@ -205,6 +172,7 @@
           />
         </div>
 
+        <!-- Products Grid -->
         <div v-else class="grid g4">
           <ProductCard
             v-for="product in paginatedProducts"
@@ -228,23 +196,52 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { categories } from '@/data/categories.js'
-import { products } from '@/data/products.js'
+import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { doesFit } from '@/utils/fit.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
+import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import FilterSidebar from '@/components/common/FilterSidebar.vue'
+import FilterChips from '@/components/common/FilterChips.vue'
+import SortSelect from '@/components/common/SortSelect.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
 
-onMounted(() => {
-  if (route.query.model) {
-    userStore.setSelectedBike(route.query.model)
+const loading = ref(true)
+const error = ref('')
+const allProducts = ref([])
+
+const fetchProducts = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    allProducts.value = await api.getProducts()
+  } catch (e) {
+    error.value = 'تعذر الاتصال بقاعدة البيانات، يرجى المحاولة لاحقاً.'
+  } finally {
+    loading.value = false
   }
+}
+
+onMounted(() => {
+  fetchProducts()
 })
+
+// Item 23: Read ?model&year from Home finder
+watch(
+  () => [route.query.model, route.query.year],
+  ([m, y]) => {
+    if (m) {
+      userStore.setSelectedBike(m, y)
+    }
+  },
+  { immediate: true }
+)
 
 // Breadcrumbs
 const categoryName = computed(() => {
@@ -264,8 +261,8 @@ const filterOnlyFitting = ref(true)
 const selectedViscosity = ref('')
 const selectedBrand = ref('')
 const selectedOilType = ref('')
-const minPrice = ref(500)
-const maxPrice = ref(2500)
+const minPrice = ref(0)
+const maxPrice = ref(10000)
 const inStockOnly = ref(false)
 const onSaleOnly = ref(false)
 const sortBy = ref('bestseller')
@@ -273,12 +270,20 @@ const currentPage = ref(1)
 const itemsPerPage = 12
 const mobileFilterOpen = ref(false)
 
+const sortOptions = [
+  { value: 'bestseller', label: 'ترتيب: الأكثر مبيعاً' },
+  { value: 'newest', label: 'ترتيب: الأحدث' },
+  { value: 'price-asc', label: 'السعر: من الأقل للأعلى' },
+  { value: 'price-desc', label: 'السعر: من الأعلى للأقل' },
+  { value: 'rating', label: 'التقييم' }
+]
+
 // Products strictly in this category
 const categoryProducts = computed(() => {
   if (route.params.category && route.params.category !== 'all') {
-    return products.filter((p) => p.category === route.params.category)
+    return allProducts.value.filter((p) => p.category === route.params.category)
   }
-  return [...products]
+  return [...allProducts.value]
 })
 
 // Dynamically derived filter options
@@ -312,27 +317,39 @@ const oilTypes = computed(() => {
   return Object.entries(map).map(([name, count]) => ({ name, count }))
 })
 
-const hasActiveFilters = computed(() => {
-  return (
-    filterOnlyFitting.value ||
-    Boolean(selectedViscosity.value) ||
-    Boolean(selectedBrand.value) ||
-    Boolean(selectedOilType.value) ||
-    inStockOnly.value ||
-    onSaleOnly.value
-  )
+const activeFilterChips = computed(() => {
+  const list = []
+  if (filterOnlyFitting.value) {
+    list.push({ id: 'fitting', label: `يركب على ${userStore.selectedBike}` })
+  }
+  if (selectedViscosity.value) {
+    list.push({ id: 'viscosity', label: selectedViscosity.value })
+  }
+  if (selectedBrand.value) {
+    list.push({ id: 'brand', label: selectedBrand.value })
+  }
+  if (selectedOilType.value) {
+    list.push({ id: 'oilType', label: selectedOilType.value })
+  }
+  if (inStockOnly.value) {
+    list.push({ id: 'inStock', label: 'متوفر بس' })
+  }
+  if (onSaleOnly.value) {
+    list.push({ id: 'onSale', label: 'عليه خصم' })
+  }
+  return list
 })
 
-const activeFiltersCount = computed(() => {
-  let count = 0
-  if (filterOnlyFitting.value) count++
-  if (selectedViscosity.value) count++
-  if (selectedBrand.value) count++
-  if (selectedOilType.value) count++
-  if (inStockOnly.value) count++
-  if (onSaleOnly.value) count++
-  return count
-})
+const activeFiltersCount = computed(() => activeFilterChips.value.length)
+
+const handleRemoveChip = (chipId) => {
+  if (chipId === 'fitting') filterOnlyFitting.value = false
+  if (chipId === 'viscosity') selectedViscosity.value = ''
+  if (chipId === 'brand') selectedBrand.value = ''
+  if (chipId === 'oilType') selectedOilType.value = ''
+  if (chipId === 'inStock') inStockOnly.value = false
+  if (chipId === 'onSale') onSaleOnly.value = false
+}
 
 const resetFilters = () => {
   filterOnlyFitting.value = false
@@ -341,6 +358,8 @@ const resetFilters = () => {
   selectedOilType.value = ''
   inStockOnly.value = false
   onSaleOnly.value = false
+  minPrice.value = 0
+  maxPrice.value = 10000
 }
 
 // Reset filters on category route change
@@ -354,7 +373,7 @@ watch(
 
 // Reset page on filter changes
 watch(
-  [filterOnlyFitting, selectedViscosity, selectedBrand, selectedOilType, inStockOnly, onSaleOnly, sortBy],
+  [filterOnlyFitting, selectedViscosity, selectedBrand, selectedOilType, inStockOnly, onSaleOnly, sortBy, minPrice, maxPrice],
   () => {
     currentPage.value = 1
   }
@@ -388,7 +407,7 @@ const filteredProducts = computed(() => {
 
   // Filter brand
   if (selectedBrand.value) {
-    list = list.filter((p) => p.brand.toLowerCase() === selectedBrand.value.toLowerCase())
+    list = list.filter((p) => p.brand === selectedBrand.value)
   }
 
   // Filter oil type
@@ -396,18 +415,30 @@ const filteredProducts = computed(() => {
     list = list.filter((p) => p.oilType === selectedOilType.value)
   }
 
-  // Filter in-stock
+  // Price range
+  if (minPrice.value > 0) {
+    list = list.filter((p) => p.price >= minPrice.value)
+  }
+  if (maxPrice.value < 10000) {
+    list = list.filter((p) => p.price <= maxPrice.value)
+  }
+
+  // Stock
   if (inStockOnly.value) {
     list = list.filter((p) => p.stock > 0)
   }
 
-  // Filter on-sale
-  if (onSaleOnly.value || route.query.offer === 'true') {
+  // Discount
+  if (onSaleOnly.value) {
     list = list.filter((p) => p.oldPrice && p.oldPrice > p.price)
   }
 
-  // Sorting
-  if (sortBy.value === 'price-asc') {
+  // Item 21: Sorting
+  if (sortBy.value === 'bestseller') {
+    list.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
+  } else if (sortBy.value === 'newest') {
+    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+  } else if (sortBy.value === 'price-asc') {
     list.sort((a, b) => a.price - b.price)
   } else if (sortBy.value === 'price-desc') {
     list.sort((a, b) => b.price - a.price)
@@ -418,7 +449,18 @@ const filteredProducts = computed(() => {
   return list
 })
 
-const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage) || 1)
+// Item 22: Dynamic pagination text
+const paginationText = computed(() => {
+  const total = filteredProducts.value.length
+  if (total === 0) return '0 منتج'
+  const start = (currentPage.value - 1) * itemsPerPage + 1
+  const end = Math.min(currentPage.value * itemsPerPage, total)
+  return `عرض ${start}-${end} من ${total} منتج`
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredProducts.value.length / itemsPerPage)
+})
 
 const paginatedProducts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
@@ -450,66 +492,38 @@ const paginatedProducts = computed(() => {
   display: none;
 }
 
-.chips {
-  display: flex;
-  gap: 8px;
-  padding-top: 16px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-pill);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
-  background: #ffffff;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.chip.on {
-  background: var(--ink);
-  color: #ffffff;
-  border-color: var(--ink);
-}
-
-.chip.clear-all {
-  border: 0;
-  text-decoration: underline;
-  background: transparent;
-  color: var(--ink);
+@media (max-width: 900px) {
+  .mobile-filter-btn {
+    display: inline-flex;
+  }
 }
 
 .lay {
   display: grid;
   grid-template-columns: 260px 1fr;
   gap: 28px;
-  padding-top: 20px;
+  padding-top: 12px;
 }
 
-.flt {
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-card);
-  align-self: flex-start;
-  background: #ffffff;
+@media (max-width: 900px) {
+  .lay {
+    grid-template-columns: 1fr;
+  }
 }
 
-.flt .g {
-  padding: 16px 18px;
+.g {
+  padding: 16px;
   border-bottom: 1px solid var(--ln);
 }
 
-.flt .g:last-child {
-  border: 0;
+.g:last-child {
+  border-bottom: none;
 }
 
-.flt h5 {
+.g h5 {
+  font-size: 14px;
+  font-weight: 700;
   margin: 0 0 10px;
-  font-size: 14.5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -517,30 +531,34 @@ const paginatedProducts = computed(() => {
 
 .sel-wrap {
   position: relative;
-  height: 46px;
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-btn);
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  background: #ffffff;
 }
 
 .model-select {
   width: 100%;
-  appearance: none;
-  border: none;
-  background: transparent;
-  font-size: 14px;
+  height: 40px;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-btn);
+  padding: 0 12px 0 28px;
+  font-size: 13px;
+  background: #ffffff;
   color: var(--ink);
-  outline: none;
+  appearance: none;
   cursor: pointer;
-  padding-left: 20px;
+  outline: none;
+}
+
+:dir(ltr) .model-select {
+  padding: 0 28px 0 12px;
+}
+
+.model-select:focus-visible {
+  outline: 2px solid var(--ink);
 }
 
 .sel-icon {
   position: absolute;
-  left: 12px;
+  inset-inline-end: 10px;
+  top: 13px;
   pointer-events: none;
   color: var(--mu);
 }
@@ -548,140 +566,85 @@ const paginatedProducts = computed(() => {
 .filter-label {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 0;
-  font-size: 14px;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
   cursor: pointer;
-}
-
-.filter-label small {
-  margin-inline-start: auto;
-  color: var(--mu);
-  font-size: 12px;
+  user-select: none;
 }
 
 .cb-input {
   position: absolute;
   opacity: 0;
-  pointer-events: none;
+  width: 0;
+  height: 0;
 }
 
 .cb {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1.5px solid #bdbdbd;
-  flex: none;
-  position: relative;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--mu);
+  border-radius: 4px;
   display: inline-block;
-  background: #ffffff;
-  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.filter-label:has(.cb-input:focus-visible) .cb {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .cb.on {
   background: var(--ink);
   border-color: var(--ink);
+  position: relative;
 }
 
 .cb.on::after {
-  content: "";
+  content: '';
   position: absolute;
-  inset: 2px 5px 5px 5px;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
   border: solid #ffffff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
-.range {
-  height: 4px;
-  background: var(--sf2);
-  border-radius: 4px;
-  position: relative;
-  margin: 14px 6px 12px;
+.filter-label small {
+  margin-inline-start: auto;
+  color: var(--mu);
 }
 
-.range i {
-  position: absolute;
-  right: 10%;
-  left: 45%;
-  top: 0;
-  bottom: 0;
-  background: var(--ink);
-}
-
-.range i::before,
-.range i::after {
-  content: "";
-  position: absolute;
-  top: -6px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px var(--ink);
-}
-
-.range i::before {
-  right: -8px;
-}
-
-.range i::after {
-  left: -8px;
-}
-
-.rin {
+.price-inputs {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.rin div {
-  flex: 1;
-  height: 38px;
+.price-num-input {
+  width: 100%;
+  height: 36px;
   border: 1px solid var(--ln);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
+  border-radius: 6px;
+  padding: 0 8px;
   font-size: 13px;
-  background: #ffffff;
+  font-family: inherit;
+  outline: none;
+}
+
+.price-num-input:focus-visible {
+  outline: 2px solid var(--ink);
 }
 
 .tb {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--mu);
-}
-
-.sort-wrap {
-  position: relative;
-  height: 40px;
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-btn);
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  background: #ffffff;
-}
-
-.sort-select {
-  appearance: none;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  color: var(--ink);
-  outline: none;
-  cursor: pointer;
-  padding-left: 24px;
-}
-
-.sort-icon {
-  position: absolute;
-  left: 10px;
-  pointer-events: none;
-  color: var(--mu);
+  margin-bottom: 16px;
 }
 
 .grid.g4 {
@@ -690,67 +653,20 @@ const paginatedProducts = computed(() => {
   gap: 16px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .grid.g4 {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 768px) {
-  .lay {
-    grid-template-columns: 1fr;
-  }
-
-  .mobile-filter-btn {
-    display: inline-flex;
-  }
-
-  .flt {
-    display: none;
-  }
-
-  .flt.mobile-sheet {
-    display: block;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 20px 20px 0 0;
-    z-index: 1000;
-    overflow-y: auto;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
-    border: none;
-  }
-
-  .sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 999;
-  }
-
-  .sheet-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--ln);
-    font-size: 17px;
-  }
-
-  .sheet-apply {
-    padding: 16px 20px;
-    border-top: 1px solid var(--ln);
-    position: sticky;
-    bottom: 0;
-    background: #ffffff;
-  }
-
+@media (max-width: 600px) {
   .grid.g4 {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
+}
+
+.no-results {
+  padding: 40px 0;
 }
 </style>

@@ -2,35 +2,25 @@
   <div class="home-page">
     <!-- Hero Section: Main Banner Carousel + 2 Side Banners -->
     <section class="hero-grid in">
-      <div class="ban main">
-        <div class="art">
-          <BikeIllustration :color="currentSlide.bikeColor" :width="460" stroke="#4a4a4a" />
-        </div>
-        <div class="tx">
-          <h2>{{ currentSlide.title }}</h2>
-          <p>{{ currentSlide.desc }}</p>
-          <div class="hero-actions">
-            <button type="button" class="btn w" @click="handleHeroAction">
-              {{ currentSlide.btnPrimary }}
-            </button>
-            <RouterLink to="/booking" class="btn hero-outline-btn">
-              احجز التركيب
-            </RouterLink>
+      <HeroCarousel :slides="heroSlides" v-slot="{ currentSlide }">
+        <div class="ban main">
+          <div class="art">
+            <BikeIllustration :color="currentSlide.bikeColor" :width="460" stroke="#4a4a4a" />
+          </div>
+          <div class="tx">
+            <h2>{{ currentSlide.title }}</h2>
+            <p>{{ currentSlide.desc }}</p>
+            <div class="hero-actions">
+              <button type="button" class="btn w" @click="handleHeroAction">
+                {{ currentSlide.btnPrimary }}
+              </button>
+              <RouterLink to="/booking" class="btn hero-outline-btn">
+                احجز التركيب
+              </RouterLink>
+            </div>
           </div>
         </div>
-        <!-- Carousel Dots -->
-        <div class="dots" role="tablist" aria-label="شرائح العرض">
-          <button
-            v-for="(slide, idx) in heroSlides"
-            :key="idx"
-            type="button"
-            class="dot-btn"
-            :class="{ on: activeSlideIndex === idx }"
-            @click="activeSlideIndex = idx"
-            :aria-label="`شريحة ${idx + 1}`"
-          ></button>
-        </div>
-      </div>
+      </HeroCarousel>
 
       <!-- Side Banners -->
       <div class="side2">
@@ -48,7 +38,7 @@
         <div class="ban s">
           <div class="tx">
             <h3>موتوسيكلات مفحوصة</h3>
-            <p>22 موتوسيكل بتقرير فحص</p>
+            <p>{{ storeConfig.totalInspectedBikes }} موتوسيكل بتقرير فحص</p>
             <RouterLink to="/bikes">شوف المعروض</RouterLink>
           </div>
           <div class="art">
@@ -126,7 +116,10 @@
         <h2>الأكثر مبيعاً</h2>
         <RouterLink to="/c/oils" class="sh-more">عرض الكل</RouterLink>
       </div>
-      <div class="grid">
+      <div v-if="loading" class="grid">
+        <ProductCardSkeleton v-for="i in 5" :key="i" />
+      </div>
+      <div v-else class="grid">
         <ProductCard
           v-for="product in bestSellers"
           :key="product.id"
@@ -141,7 +134,10 @@
         <h2>عروض الأسبوع</h2>
         <RouterLink to="/c/oils?offer=true" class="sh-more">كل العروض</RouterLink>
       </div>
-      <div class="grid">
+      <div v-if="loading" class="grid">
+        <ProductCardSkeleton v-for="i in 5" :key="i" />
+      </div>
+      <div v-else class="grid">
         <ProductCard
           v-for="product in weeklyOffers"
           :key="product.id"
@@ -154,9 +150,12 @@
     <section class="sec in">
       <div class="sh">
         <h2>موتوسيكلات مستعملة مفحوصة</h2>
-        <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات (22)</RouterLink>
+        <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات ({{ storeConfig.totalInspectedBikes }})</RouterLink>
       </div>
-      <div class="grid g3">
+      <div v-if="loading" class="grid g3">
+        <BikeCardSkeleton v-for="i in 3" :key="i" />
+      </div>
+      <div v-else class="grid g3">
         <BikeCard
           v-for="bike in featuredBikes"
           :key="bike.id"
@@ -172,7 +171,7 @@
           <h2>احجز صيانة موتوسيكلك أونلاين</h2>
           <p>اختار الخدمة والميعاد، ويوصلك تأكيد على الواتساب. الدفع في الجراج.</p>
           <ul>
-            <li v-for="svc in serviceFeatures" :key="svc.title">
+            <li v-for="svc in storeConfig.serviceFeatures" :key="svc.title">
               <span>{{ svc.title }}</span>
               <span class="svc-price">{{ svc.price }}</span>
             </li>
@@ -188,7 +187,7 @@
     <!-- Trust Perks Bar -->
     <section class="in">
       <div class="trust">
-        <div v-for="t in trustItems" :key="t.title" class="trust-item">
+        <div v-for="t in storeConfig.trustItems" :key="t.title" class="trust-item">
           <AppIcon :name="t.icon" :size="30" :stroke-width="1.4" class="trust-icon" />
           <div class="trust-text">
             <b>{{ t.title }}</b>
@@ -201,30 +200,51 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { categories } from '@/data/categories.js'
-import { products } from '@/data/products.js'
-import { bikes } from '@/data/bikes.js'
+import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
 import { useCartStore } from '@/stores/cart.js'
 import ProductCard from '@/components/common/ProductCard.vue'
+import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
 import BikeCard from '@/components/common/BikeCard.vue'
+import BikeCardSkeleton from '@/components/common/BikeCardSkeleton.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
+import HeroCarousel from '@/components/common/HeroCarousel.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 
+const loading = ref(true)
+const allProducts = ref([])
+const allBikes = ref([])
+
+onMounted(async () => {
+  try {
+    const [prods, bks] = await Promise.all([
+      api.getProducts(),
+      api.getBikes()
+    ])
+    allProducts.value = prods
+    allBikes.value = bks
+  } catch (e) {
+    console.error('Failed to load homepage data:', e)
+  } finally {
+    loading.value = false
+  }
+})
+
 // Hero Carousel slides
 const heroSlides = [
   {
-    title: 'طقم صيانة الـ 15,000 كم بخصم 10%',
+    title: `طقم صيانة الـ 15,000 كم بخصم ${storeConfig.heroKitDiscount}`,
     desc: 'زيت موتول 7100 + فلتر أصلي + تيل Brembo. يوصلك البيت أو نركّبهولك في الجراج.',
-    btnPrimary: 'اطلب الطقم · 5,350 ج.م',
+    btnPrimary: `اطلب الطقم · ${storeConfig.heroKitPriceFormatted}`,
     bikeColor: '#9e2b25'
   },
   {
@@ -241,28 +261,19 @@ const heroSlides = [
   }
 ]
 
-const activeSlideIndex = ref(0)
-const currentSlide = computed(() => heroSlides[activeSlideIndex.value])
-
 const handleHeroAction = () => {
-  if (activeSlideIndex.value === 0) {
-    const p1 = products.find((p) => p.id === 'p1')
-    if (p1) cartStore.addItem(p1, 1)
-    router.push('/cart')
-  } else if (activeSlideIndex.value === 1) {
-    router.push('/c/oils')
-  } else {
-    router.push('/booking')
-  }
+  const p1 = allProducts.value.find((p) => p.id === 'p1')
+  if (p1) cartStore.addItem(p1, 1)
+  router.push('/cart')
 }
 
 // Finder State
 const selectedModel = ref(userStore.selectedBike || 'ZT350-T')
-const selectedYear = ref(2023)
+const selectedYear = ref(userStore.userBikeYear || 2023)
 const selectedCategory = ref('')
 
 const handleFinderSubmit = () => {
-  userStore.setSelectedBike(selectedModel.value)
+  userStore.setSelectedBike(selectedModel.value, selectedYear.value)
   const targetCategory = selectedCategory.value || 'oils'
   router.push({
     path: `/c/${targetCategory}`,
@@ -274,23 +285,21 @@ const handleFinderSubmit = () => {
 }
 
 // Data slices matching shop.html
-const bestSellers = computed(() => products.slice(0, 5))
-const weeklyOffers = computed(() => [products[0], products[2], products[4], products[9], products[7]])
-const featuredBikes = computed(() => bikes.slice(0, 3))
+const bestSellers = computed(() => {
+  return allProducts.value.slice(0, 5)
+})
 
-const serviceFeatures = [
-  { title: 'تغيير زيت وفلتر', price: '1,770 ج.م' },
-  { title: 'صيانة شاملة', price: '2,450 ج.م' },
-  { title: 'فحص قبل الشراء', price: '600 ج.م' },
-  { title: 'ضبط بلوف', price: '900 ج.م' }
-]
+const weeklyOffers = computed(() => {
+  const prods = allProducts.value
+  if (prods.length >= 8) {
+    return [prods[0], prods[2], prods[4], prods[9] || prods[1], prods[7]]
+  }
+  return prods.slice(0, 5)
+})
 
-const trustItems = [
-  { icon: 'truck', title: 'توصيل لكل المحافظات', desc: 'خلال 2-4 أيام عمل' },
-  { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
-  { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
-  { icon: 'ret', title: 'استرجاع خلال 14 يوم', desc: 'لو القطعة ما ركبتش' }
-]
+const featuredBikes = computed(() => {
+  return allBikes.value.slice(0, 3)
+})
 </script>
 
 <style scoped>
@@ -324,7 +333,7 @@ const trustItems = [
 
 .ban.main .art {
   position: absolute;
-  left: 20px;
+  inset-inline-start: 20px;
   bottom: 20px;
   pointer-events: none;
   z-index: 1;
@@ -363,31 +372,6 @@ const trustItems = [
   background: rgba(255, 255, 255, 0.1) !important;
 }
 
-.dots {
-  position: absolute;
-  bottom: 22px;
-  right: 56px;
-  display: flex;
-  gap: 6px;
-}
-
-.dot-btn {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.2s ease;
-}
-
-.dot-btn.on {
-  background: #ffffff;
-  width: 22px;
-  border-radius: 4px;
-}
-
 .side2 {
   display: grid;
   grid-template-rows: 1fr 1fr;
@@ -423,7 +407,7 @@ const trustItems = [
 
 .ban.s .art {
   position: absolute;
-  left: 14px;
+  inset-inline-start: 14px;
   bottom: 14px;
 }
 
@@ -459,30 +443,35 @@ const trustItems = [
   border-radius: var(--radius-btn);
   display: flex;
   align-items: center;
-  padding: 0 14px;
   background: #ffffff;
 }
 
 .finder-select {
   width: 100%;
-  appearance: none;
+  height: 100%;
   border: none;
-  background: transparent;
-  font-size: 14px;
-  color: var(--ink);
   outline: none;
+  background: transparent;
+  padding: 0 14px 0 32px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  appearance: none;
   cursor: pointer;
-  padding-left: 20px;
+}
+
+:dir(ltr) .finder-select {
+  padding: 0 32px 0 14px;
 }
 
 .field-icon {
   position: absolute;
-  left: 12px;
+  inset-inline-end: 14px;
   pointer-events: none;
   color: var(--mu);
 }
 
-/* Sections */
+/* Section styling */
 .sec {
   padding-top: 44px;
 }
@@ -520,20 +509,25 @@ const trustItems = [
 
 .cat-circle {
   text-align: center;
+  text-decoration: none;
+  color: var(--ink);
   font-size: 14px;
   font-weight: 700;
-  color: var(--ink);
-  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .cat-circle .im {
   aspect-ratio: 1;
+  width: 100%;
+  max-width: 100px;
   border-radius: 50%;
   background: var(--sf);
   display: grid;
   place-items: center;
   margin-bottom: 10px;
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .cat-circle:hover .im {
@@ -541,7 +535,7 @@ const trustItems = [
   background: var(--sf2);
 }
 
-/* Grids */
+/* Grids (Desktop 5 cols -> Tablet 3 cols -> Phone 2 cols) */
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -626,7 +620,7 @@ const trustItems = [
 }
 
 .trust-item + .trust-item {
-  border-right: 1px solid var(--ln);
+  border-inline-start: 1px solid var(--ln);
 }
 
 .trust-text b {
@@ -640,7 +634,7 @@ const trustItems = [
 }
 
 /* Responsive adjustments */
-@media (max-width: 1100px) {
+@media (max-width: 992px) {
   .hero-grid {
     grid-template-columns: 1fr;
   }
@@ -658,7 +652,7 @@ const trustItems = [
     grid-template-columns: repeat(2, 1fr);
   }
   .trust-item:nth-child(3) {
-    border-right: none;
+    border-inline-start: none;
   }
 }
 
@@ -678,9 +672,6 @@ const trustItems = [
   .ban.main .art {
     display: none;
   }
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .grid.g3 {
     grid-template-columns: 1fr;
   }
@@ -694,8 +685,22 @@ const trustItems = [
     grid-template-columns: 1fr;
   }
   .trust-item + .trust-item {
-    border-right: none;
+    border-inline-start: none;
     border-top: 1px solid var(--ln);
+  }
+}
+
+@media (max-width: 576px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .cats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .cat-circle {
+    font-size: 12px;
   }
 }
 </style>

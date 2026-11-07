@@ -37,11 +37,14 @@
 
     <!-- Footer (hidden on checkout) -->
     <AppFooter v-if="!isCheckoutPage" />
+
+    <!-- Global App Toast -->
+    <AppToast />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import AnnouncementBar from '@/components/layout/AnnouncementBar.vue'
@@ -49,10 +52,18 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import CategoryNav from '@/components/layout/CategoryNav.vue'
 import MobileDrawer from '@/components/layout/MobileDrawer.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import AppToast from '@/components/common/AppToast.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
 const isDrawerOpen = ref(false)
+
+watch(
+  () => route.fullPath,
+  () => {
+    isDrawerOpen.value = false
+  }
+)
 
 const isCheckoutPage = computed(() => route.path === '/checkout')
 const isOrderSuccessPage = computed(() => route.name === 'order-success')
