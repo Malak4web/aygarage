@@ -102,13 +102,48 @@ export const api = {
     return { ...found }
   },
 
+  async getUserOrders() {
+    await delay(50)
+    try {
+      const o = localStorage.getItem('ayg_orders')
+      if (o) storedOrders = JSON.parse(o)
+    } catch (e) {}
+    if (storedOrders.length === 0 && defaultUser.orders?.length > 0) {
+      return [...defaultUser.orders]
+    }
+    return [...storedOrders]
+  },
+
+  async getUserBookings() {
+    await delay(50)
+    let storedBookings = []
+    try {
+      const b = localStorage.getItem('ayg_bookings')
+      if (b) storedBookings = JSON.parse(b)
+    } catch (e) {}
+    if (storedBookings.length === 0 && defaultUser.bookings?.length > 0) {
+      return [...defaultUser.bookings]
+    }
+    return [...storedBookings]
+  },
+
   async createBooking(bookingData) {
     await delay(120)
-    const bookingId = 'BK-' + Math.floor(1000 + Math.random() * 9000)
-    return {
+    const bookingId = bookingData.id || ('BK-' + Math.floor(1000 + Math.random() * 9000))
+    const booking = {
       id: bookingId,
       status: 'مؤكد',
       ...bookingData
     }
+    let storedBookings = []
+    try {
+      const b = localStorage.getItem('ayg_bookings')
+      if (b) storedBookings = JSON.parse(b)
+    } catch (e) {}
+    storedBookings.unshift(booking)
+    try {
+      localStorage.setItem('ayg_bookings', JSON.stringify(storedBookings))
+    } catch (e) {}
+    return booking
   }
 }

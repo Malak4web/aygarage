@@ -2,6 +2,8 @@
   <div class="order-summary-box">
     <h3>ملخص الطلب</h3>
 
+    <slot name="items" />
+
     <div class="sum-row">
       <span>مجموع المنتجات</span>
       <b>{{ cartStore.subtotal.toLocaleString('en') }} ج.م</b>
@@ -48,12 +50,11 @@ const props = defineProps({
 const cartStore = useCartStore()
 
 const effectiveDeliveryFee = computed(() => {
-  if (props.deliveryMethod === 'pickup') return 0
-  return cartStore.deliveryFee
+  return cartStore.getDeliveryFee(props.deliveryMethod)
 })
 
 const computedTotal = computed(() => {
-  return Math.max(0, cartStore.subtotal - cartStore.discount + effectiveDeliveryFee.value)
+  return cartStore.getTotal(props.deliveryMethod)
 })
 </script>
 

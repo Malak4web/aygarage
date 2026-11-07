@@ -159,69 +159,53 @@
         </div>
       </div>
 
-      <!-- Right Column: Order Summary -->
+      <!-- Right Column: Order Summary (Item 4) -->
       <aside class="sum">
-        <h3>طلبك</h3>
-
-        <!-- Mini items list -->
-        <div class="mini-list">
-          <div
-            v-for="item in cartStore.items"
-            :key="item.lineId"
-            class="mini"
-          >
-            <div class="im">
-              <ProductIllustration
-                :type="item.product.type"
-                :color="item.product.color"
-                :image="item.product.image"
-                :width="40"
-              />
-              <span class="mini-qty">{{ item.qty }}</span>
+        <OrderSummary :delivery-method="deliveryMethod">
+          <template #items>
+            <!-- Mini items list -->
+            <div class="mini-list">
+              <div
+                v-for="item in cartStore.items"
+                :key="item.lineId"
+                class="mini"
+              >
+                <div class="im">
+                  <ProductIllustration
+                    :type="item.product.type"
+                    :color="item.product.color"
+                    :image="item.product.image"
+                    :width="40"
+                    :alt="item.product.name"
+                  />
+                  <span class="mini-qty">{{ item.qty }}</span>
+                </div>
+                <span class="mini-name">{{ item.product.name }}</span>
+                <b class="mini-price">
+                  {{ ((item.selectedOption?.price || item.product.price) * item.qty).toLocaleString('en') }}
+                </b>
+              </div>
             </div>
-            <span class="mini-name">{{ item.product.name }}</span>
-            <b class="mini-price">
-              {{ ((item.selectedOption?.price || item.product.price) * item.qty).toLocaleString('en') }}
-            </b>
-          </div>
-        </div>
+          </template>
 
-        <div class="dl" style="margin-top: 14px">
-          <span>المنتجات</span>
-          <b>{{ cartStore.subtotal.toLocaleString('en') }} ج.م</b>
-        </div>
+          <template #actions>
+            <div v-if="submitError" class="submit-error">
+              {{ submitError }}
+            </div>
 
-        <div v-if="cartStore.discount > 0" class="dl">
-          <span>الخصم</span>
-          <b class="discount-val">− {{ cartStore.discount.toLocaleString('en') }} ج.م</b>
-        </div>
+            <button
+              type="submit"
+              class="btn full confirm-btn"
+              :disabled="isSubmitting || cartStore.items.length === 0"
+            >
+              {{ isSubmitting ? 'جاري التأكيد...' : 'تأكيد الطلب' }}
+            </button>
 
-        <div class="dl">
-          <span>التوصيل</span>
-          <b v-if="actualDeliveryFee === 0" class="free-text">مجاناً</b>
-          <b v-else>{{ actualDeliveryFee }} ج.م</b>
-        </div>
-
-        <div class="dl tot">
-          <span>الإجمالي</span>
-          <b>{{ finalTotal.toLocaleString('en') }} ج.م</b>
-        </div>
-
-        <div v-if="submitError" class="submit-error">
-          {{ submitError }}
-        </div>
-
-        <button
-          type="submit"
-          class="btn full confirm-btn"
-          :disabled="isSubmitting || cartStore.items.length === 0"
-        >
-          {{ isSubmitting ? 'جاري التأكيد...' : 'تأكيد الطلب' }}
-        </button>
-
-        <div class="agree-text">
-          بالضغط على تأكيد الطلب انت موافق على شروط البيع وسياسة الاسترجاع.
-        </div>
+            <div class="agree-text">
+              بالضغط على تأكيد الطلب انت موافق على شروط البيع وسياسة الاسترجاع.
+            </div>
+          </template>
+        </OrderSummary>
       </aside>
     </form>
     <div style="height: 48px"></div>
@@ -236,6 +220,7 @@ import { useCartStore } from '@/stores/cart.js'
 import { useUserStore } from '@/stores/user.js'
 import { api } from '@/api/index.js'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
+import OrderSummary from '@/components/common/OrderSummary.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
@@ -270,15 +255,6 @@ const paymentMethod = ref('cod')
 const isSubmitting = ref(false)
 const submitError = ref('')
 
-const actualDeliveryFee = computed(() => {
-  if (deliveryMethod.value === 'pickup') return 0
-  return cartStore.deliveryFee
-})
-
-const finalTotal = computed(() => {
-  return Math.max(0, cartStore.subtotal - cartStore.discount + actualDeliveryFee.value)
-})
-
 const populateSavedAddress = () => {
   if (userStore.user?.address) {
     customerName.value = userStore.user.name || ''
@@ -307,12 +283,14 @@ const handleConfirmOrder = async () => {
   submitError.value = ''
 
   try {
+    const deliveryFeeNum = cartStore.getDeliveryFee(deliveryMethod.value)
+    const totalNum = cartStore.getTotal(deliveryMethod.value)
     const orderData = {
       items: [...cartStore.items],
-      totalNum: finalTotal.value,
+      totalNum,
       subtotalNum: cartStore.subtotal,
       discountNum: cartStore.discount,
-      deliveryFeeNum: actualDeliveryFee.value,
+      deliveryFeeNum,
       customer: {
         name: customerName.value,
         phone: customerPhone.value,

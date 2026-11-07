@@ -1,61 +1,60 @@
 <template>
   <div>
-    <!-- Desktop Sidebar -->
-    <aside class="flt desktop-sidebar">
+    <!-- Desktop Sidebar (Only rendered on desktop) -->
+    <aside v-if="isDesktop" class="flt desktop-sidebar">
       <slot />
     </aside>
 
-    <!-- Mobile Trigger Button (when placed in parent) -->
-    <!-- Mobile Bottom Sheet Dialog -->
-    <Transition name="fade">
-      <div
-        v-if="isOpen"
-        class="sheet-backdrop"
-        @click="$emit('close')"
-        role="presentation"
-      ></div>
-    </Transition>
+    <!-- Mobile Bottom Sheet Dialog (Only rendered on mobile when open) -->
+    <template v-else-if="isOpen">
+      <Transition name="fade">
+        <div
+          class="sheet-backdrop"
+          @click="$emit('close')"
+          role="presentation"
+        ></div>
+      </Transition>
 
-    <Transition name="slide-up">
-      <div
-        v-if="isOpen"
-        class="mobile-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="خيارات الفلترة"
-      >
-        <div class="sheet-head">
-          <h3>{{ title }}</h3>
-          <button
-            type="button"
-            class="close-sheet-btn"
-            @click="$emit('close')"
-            aria-label="إغلاق الفلاتر"
-          >
-            ✕
-          </button>
-        </div>
+      <Transition name="slide-up">
+        <div
+          class="mobile-sheet"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="title"
+        >
+          <div class="sheet-head">
+            <h3>{{ title }}</h3>
+            <button
+              type="button"
+              class="close-sheet-btn"
+              @click="$emit('close')"
+              aria-label="إغلاق الفلاتر"
+            >
+              ✕
+            </button>
+          </div>
 
-        <div class="sheet-body">
-          <slot />
-        </div>
+          <div class="sheet-body">
+            <slot />
+          </div>
 
-        <div class="sheet-actions">
-          <button
-            type="button"
-            class="btn full"
-            @click="$emit('close')"
-          >
-            تطبيق الفلاتر
-          </button>
+          <div class="sheet-actions">
+            <button
+              type="button"
+              class="btn full"
+              @click="$emit('close')"
+            >
+              تطبيق الفلاتر
+            </button>
+          </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { watch, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   isOpen: {
@@ -68,7 +67,26 @@ const props = defineProps({
   }
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
+
+const isDesktop = ref(typeof window !== 'undefined' ? window.innerWidth > 900 : true)
+
+const handleResize = () => {
+  if (typeof window !== 'undefined') {
+    isDesktop.value = window.innerWidth > 900
+  }
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && props.isOpen) {
+    emit('close')
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+  window.addEventListener('keydown', handleKeydown)
+})
 
 // Body scroll lock when sheet is open
 watch(
@@ -83,6 +101,8 @@ watch(
 )
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('keydown', handleKeydown)
   document.body.style.overflow = ''
 })
 </script>

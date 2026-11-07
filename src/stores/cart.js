@@ -8,7 +8,18 @@ export const useCartStore = defineStore('cart', {
     try {
       const stored = localStorage.getItem('ayg_cart')
       if (stored) {
-        savedItems = JSON.parse(stored)
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) {
+          savedItems = parsed
+            .filter((item) => item && item.product && item.product.id)
+            .map((item) => {
+              if (!item.lineId) {
+                const optId = item.selectedOption?.id || 'default'
+                item.lineId = `${item.product.id}_${optId}`
+              }
+              return item
+            })
+        }
       }
       const storedCoupon = localStorage.getItem('ayg_coupon')
       if (storedCoupon) {
@@ -66,6 +77,15 @@ export const useCartStore = defineStore('cart', {
   },
 
   actions: {
+    getDeliveryFee(method = 'home') {
+      if (this.items.length === 0 || method === 'pickup') return 0
+      return this.isFreeDelivery ? 0 : storeConfig.deliveryFee
+    },
+
+    getTotal(method = 'home') {
+      return Math.max(0, this.subtotal - this.discount + this.getDeliveryFee(method))
+    },
+
     persist() {
       try {
         localStorage.setItem('ayg_cart', JSON.stringify(this.items))
@@ -97,7 +117,8 @@ export const useCartStore = defineStore('cart', {
             price: product.price,
             oldPrice: product.oldPrice,
             image: product.image,
-            fits: product.fits || []
+            fits: product.fits || [],
+            stock: product.stock !== undefined ? product.stock : 99
           }
         })
       }
@@ -112,7 +133,8 @@ export const useCartStore = defineStore('cart', {
     updateQty(lineId, qty) {
       const item = this.items.find((i) => i.lineId === lineId)
       if (item) {
-        item.qty = Math.max(1, qty)
+        const maxStock = item.product?.stock !== undefined ? item.product.stock : 99
+        item.qty = Math.min(maxStock, Math.max(1, qty))
         this.persist()
       }
     },

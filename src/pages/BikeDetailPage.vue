@@ -64,7 +64,7 @@
         </div>
 
         <div class="bike-actions">
-          <RouterLink :to="`/booking?bike=${encodeURIComponent(bike.model)}`" class="btn">
+          <RouterLink :to="`/booking?bike=${encodeURIComponent(getBikeModelCode(bike.model))}`" class="btn">
             احجز معاينة في الجراج
           </RouterLink>
           <a :href="`https://wa.me/${storeConfig.whatsapp}`" target="_blank" rel="noopener" class="btn o">
@@ -138,8 +138,8 @@
       </div>
     </div>
 
-    <!-- Similar Bikes Row -->
-    <ProductRow title="موتوسيكلات مشابهة">
+    <!-- Similar Bikes Row (Item 15) -->
+    <ProductRow title="موتوسيكلات مشابهة" :columns="3">
       <BikeCard
         v-for="b in similarBikes"
         :key="b.id"
@@ -200,6 +200,12 @@ watch(
   },
   { immediate: true }
 )
+
+const getBikeModelCode = (modelName) => {
+  if (!modelName) return 'ZT350-T'
+  const matched = storeConfig.models.find((m) => modelName.includes(m))
+  return matched || modelName
+}
 
 const formattedPrice = computed(() => {
   if (!bike.value) return ''

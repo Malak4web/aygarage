@@ -1,12 +1,26 @@
 <template>
-  <div class="order-success-page in">
+  <div v-if="loading" class="order-success-page in">
+    <div class="success-card">
+      <p>جاري تحميل تفاصيل الطلب...</p>
+    </div>
+  </div>
+  <div v-else-if="notFound || !order" class="order-not-found in">
+    <EmptyState
+      icon="box"
+      title="الطلب ده مش موجود"
+      desc="اتأكد من رقم الطلب المكتوب في الرابط أو شوف طلباتك السابقة من صفحة الحساب."
+      action-label="الذهاب لطلباتي"
+      action-to="/account?tab=orders"
+    />
+  </div>
+  <div v-else class="order-success-page in">
     <div class="success-card">
       <div class="icon-circle">
         <AppIcon name="check" :size="36" :stroke-width="2.5" />
       </div>
 
       <h1>تم استلام طلبك بنجاح!</h1>
-      <p class="order-num">رقم الطلب: <b>#{{ $route.params.id }}</b></p>
+      <p class="order-num">رقم الطلب: <b>#{{ order.id }}</b></p>
       <p class="order-msg">
         شكراً لثقتك في جراج أبو يوسف. هيوصلك رسالة تأكيد بتفاصيل الشحن وميعاد التوصيل على الواتساب.
       </p>
@@ -54,11 +68,11 @@
       <div class="order-perks-box">
         <div class="perk-row">
           <AppIcon name="truck" :size="20" />
-          <span>التوصيل المتوقع: <b>خلال 2-4 أيام عمل</b></span>
+          <span>التوصيل المتوقع: <b>خلال {{ storeConfig.deliveryEstimateDays }}</b></span>
         </div>
         <div class="perk-row">
           <AppIcon name="shield" :size="20" />
-          <span>ضمان أصالة القطع واسترجاع 14 يوم</span>
+          <span>ضمان أصالة القطع واسترجاع {{ storeConfig.returnDays }} يوم</span>
         </div>
       </div>
 
@@ -77,17 +91,28 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
+import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
 const order = ref(null)
+const loading = ref(true)
+const notFound = ref(false)
 
 onMounted(async () => {
+  loading.value = true
+  notFound.value = false
   try {
     order.value = await api.getOrder(route.params.id)
+    if (!order.value) {
+      notFound.value = true
+    }
   } catch (e) {
-    console.warn('Could not fetch order:', e)
+    notFound.value = true
+  } finally {
+    loading.value = false
   }
 })
 </script>

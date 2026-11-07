@@ -55,7 +55,7 @@
                   مقاسات متعددة
                 </span>
                 <span v-else style="color: var(--mu)">
-                  مش متأكدين إنه يركب على موتوسيكلك
+                  مش متأكدين إنه يركب على موتوسيكلك، اسألنا
                 </span>
               </small>
             </div>
@@ -63,6 +63,7 @@
             <div class="line-qty">
               <QtyStepper
                 :model-value="item.qty"
+                :max="item.product?.stock !== undefined ? item.product.stock : 99"
                 @update:model-value="cartStore.updateQty(item.lineId, $event)"
                 height="40px"
               />

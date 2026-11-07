@@ -256,8 +256,8 @@ const breadcrumbItems = computed(() => [
 
 const userBikeYear = computed(() => userStore.userBikeYear)
 
-// Filter states - empty defaults per Item 8
-const filterOnlyFitting = ref(true)
+// Filter states - default fitting true when bike selected (Item 7)
+const filterOnlyFitting = ref(!!userStore.selectedBike)
 const selectedViscosity = ref('')
 const selectedBrand = ref('')
 const selectedOilType = ref('')
@@ -352,7 +352,7 @@ const handleRemoveChip = (chipId) => {
 }
 
 const resetFilters = () => {
-  filterOnlyFitting.value = false
+  filterOnlyFitting.value = !!userStore.selectedBike
   selectedViscosity.value = ''
   selectedBrand.value = ''
   selectedOilType.value = ''

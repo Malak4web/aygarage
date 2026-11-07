@@ -101,7 +101,8 @@ const discountPercentage = computed(() => {
 })
 
 const handleAddToCart = () => {
-  cartStore.addItem(props.product, 1)
+  const defaultOption = props.product.options && props.product.options.length > 0 ? props.product.options[0] : null
+  cartStore.addItem(props.product, 1, defaultOption)
 }
 </script>
 

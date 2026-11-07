@@ -11,7 +11,7 @@
             <h2>{{ currentSlide.title }}</h2>
             <p>{{ currentSlide.desc }}</p>
             <div class="hero-actions">
-              <button type="button" class="btn w" @click="handleHeroAction">
+              <button type="button" class="btn w" @click="handleHeroAction(currentSlide)">
                 {{ currentSlide.btnPrimary }}
               </button>
               <RouterLink to="/booking" class="btn hero-outline-btn">
@@ -245,26 +245,39 @@ const heroSlides = [
     title: `طقم صيانة الـ 15,000 كم بخصم ${storeConfig.heroKitDiscount}`,
     desc: 'زيت موتول 7100 + فلتر أصلي + تيل Brembo. يوصلك البيت أو نركّبهولك في الجراج.',
     btnPrimary: `اطلب الطقم · ${storeConfig.heroKitPriceFormatted}`,
-    bikeColor: '#9e2b25'
+    bikeColor: '#9e2b25',
+    action: 'kit'
   },
   {
     title: 'زيوت موتول التخليقية 100%',
     desc: 'حماية كاملة لمحرك موتوسيكلك في درجات الحرارة العالية وسلاسة فائقة في نقل السرعات.',
     btnPrimary: 'تسوّق الزيوت',
-    bikeColor: '#2d4f80'
+    bikeColor: '#2d4f80',
+    action: 'category',
+    category: 'oils'
   },
   {
     title: 'فحص شامل 120 نقطة قبل الشراء',
     desc: 'لا تشتري موتوسيكل مستعمل بدون تقرير فحص معتمد من مهندسي جراج أبو يوسف.',
     btnPrimary: 'احجز فحص فوري',
-    bikeColor: '#56634a'
+    bikeColor: '#56634a',
+    action: 'booking'
   }
 ]
 
-const handleHeroAction = () => {
-  const p1 = allProducts.value.find((p) => p.id === 'p1')
-  if (p1) cartStore.addItem(p1, 1)
-  router.push('/cart')
+const handleHeroAction = (slide) => {
+  if (slide?.action === 'category') {
+    router.push(`/c/${slide.category || 'oils'}`)
+  } else if (slide?.action === 'booking') {
+    router.push('/booking')
+  } else {
+    const p1 = allProducts.value.find((p) => p.id === 'p1')
+    if (p1) {
+      const opt = p1.options && p1.options.length > 0 ? p1.options[0] : null
+      cartStore.addItem(p1, 1, opt)
+    }
+    router.push('/cart')
+  }
 }
 
 // Finder State

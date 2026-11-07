@@ -278,7 +278,9 @@ const bookingError = ref('')
 onMounted(() => {
   if (route.query.bike) {
     bikeChoice.value = 'custom'
-    customModel.value = decodeURIComponent(route.query.bike)
+    const rawBike = decodeURIComponent(route.query.bike)
+    const matched = storeConfig.models.find((m) => rawBike.includes(m))
+    customModel.value = matched || rawBike
   }
 })
 
@@ -294,7 +296,7 @@ const handleConfirmBooking = async () => {
   if (!userStore.isAuthenticated) {
     return router.push({
       path: '/login',
-      query: { redirect: '/booking' }
+      query: { redirect: route.fullPath }
     })
   }
 
@@ -303,12 +305,7 @@ const handleConfirmBooking = async () => {
   bookingError.value = ''
 
   try {
-    const refNum = String(Math.floor(1000 + Math.random() * 9000))
-    bookingRef.value = refNum
-
-    // Store in user bookings
-    const newBooking = {
-      id: refNum,
+    const bookingPayload = {
       bike: selectedBikeTitle.value,
       service: selectedService.value.name,
       date: `${selectedDay.value.name} ${selectedDay.value.num} ${selectedDay.value.month}`,
@@ -317,13 +314,18 @@ const handleConfirmBooking = async () => {
       status: 'مؤكد'
     }
 
-    if (!userStore.user.bookings) {
-      userStore.user.bookings = []
+    const createdBooking = await api.createBooking(bookingPayload)
+    bookingRef.value = createdBooking.id
+
+    if (userStore.user) {
+      if (!userStore.user.bookings) {
+        userStore.user.bookings = []
+      }
+      userStore.user.bookings.unshift(createdBooking)
+      try {
+        localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
+      } catch (e) {}
     }
-    userStore.user.bookings.unshift(newBooking)
-    try {
-      localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
-    } catch (e) {}
 
     bookingConfirmed.value = true
   } catch (err) {
