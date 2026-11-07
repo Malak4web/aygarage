@@ -314,13 +314,20 @@ const trustItems = [
   background: #161616;
   color: #ffffff;
   padding: 40px 56px;
+  position: relative;
+}
+
+.ban.main .tx {
+  position: relative;
+  z-index: 2;
 }
 
 .ban.main .art {
   position: absolute;
-  left: 30px;
-  bottom: 30px;
+  left: 20px;
+  bottom: 20px;
   pointer-events: none;
+  z-index: 1;
 }
 
 .ban.main h2 {
@@ -342,6 +349,8 @@ const trustItems = [
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 3;
 }
 
 .hero-outline-btn {

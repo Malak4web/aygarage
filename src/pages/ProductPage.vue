@@ -70,10 +70,9 @@
           <AppIcon v-else name="shield" :size="22" :stroke-width="1.5" />
           <div>
             <b v-if="fitResult === true">يركب على موتوسيكلك {{ userStore.selectedBike }} · {{ userBikeYear }}</b>
-            <b v-else-if="fitResult === null">مقاسات متعددة</b>
             <b v-else>مش متأكدين إنه يركب على موتوسيكلك، اسألنا</b>
             <small v-if="fitResult === true && product.fitNote">{{ product.fitNote }}</small>
-            <small v-else-if="fitResult === false">اسأل الدعم أو راجع كتالوج الصيانة</small>
+            <small v-else>اسأل الدعم أو راجع كتالوج الصيانة</small>
           </div>
           <button type="button" class="change-bike-btn" @click="showBikePicker = true">
             غيّر
@@ -358,7 +357,7 @@ const fitResult = computed(() => {
 })
 
 const userBikeYear = computed(() => {
-  return userStore.user?.savedBikes?.[0]?.year || 2023
+  return userStore.userBikeYear
 })
 
 const breadcrumbItems = computed(() => {

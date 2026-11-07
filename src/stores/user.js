@@ -4,12 +4,16 @@ import { defaultUser } from '../data/user.js'
 export const useUserStore = defineStore('user', {
   state: () => {
     let savedBike = 'ZT350-T'
+    let savedBikeYear = 2023
     let isAuthed = false
     let currentUser = null
 
     try {
       const storedBike = localStorage.getItem('ayg_selected_bike')
       if (storedBike) savedBike = storedBike
+
+      const storedBikeYear = localStorage.getItem('ayg_selected_bike_year')
+      if (storedBikeYear) savedBikeYear = parseInt(storedBikeYear, 10) || 2023
 
       const storedAuth = localStorage.getItem('ayg_auth')
       if (storedAuth === 'true') {
@@ -24,22 +28,46 @@ export const useUserStore = defineStore('user', {
     return {
       user: currentUser,
       isAuthenticated: isAuthed,
-      selectedBike: savedBike
+      selectedBike: savedBike,
+      selectedBikeYear: savedBikeYear
     }
   },
 
   getters: {
     userName: (state) => (state.isAuthenticated && state.user ? state.user.name : ''),
-    userBikes: (state) => (state.isAuthenticated && state.user?.savedBikes ? state.user.savedBikes : [])
+    userBikes: (state) => (state.isAuthenticated && state.user?.savedBikes ? state.user.savedBikes : []),
+    userBikeYear: (state) => {
+      const matched = state.user?.savedBikes?.find((b) => b.model.includes(state.selectedBike))
+      if (matched?.year) return matched.year
+      if (state.user?.savedBikes?.[0]?.year) return state.user.savedBikes[0].year
+      return state.selectedBikeYear || 2023
+    }
   },
 
   actions: {
-    setSelectedBike(model) {
+    setSelectedBike(model, year = null) {
       this.selectedBike = model
       try {
         localStorage.setItem('ayg_selected_bike', model)
       } catch (e) {
         console.warn('Failed to save selected bike:', e)
+      }
+      if (year) {
+        this.selectedBikeYear = Number(year)
+        try {
+          localStorage.setItem('ayg_selected_bike_year', String(year))
+        } catch (e) {
+          console.warn('Failed to save selected bike year:', e)
+        }
+      }
+    },
+
+    setSelectedBikeYear(year) {
+      this.selectedBikeYear = Number(year)
+      try {
+        localStorage.setItem('ayg_selected_bike_year', String(year))
+      } catch (e) {
+        console.warn('Failed to save selected bike year:', e)
       }
     },
 

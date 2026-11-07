@@ -257,7 +257,7 @@ const breadcrumbItems = computed(() => [
   { label: categoryName.value }
 ])
 
-const userBikeYear = computed(() => userStore.user?.savedBikes?.[0]?.year || 2023)
+const userBikeYear = computed(() => userStore.userBikeYear)
 
 // Filter states - empty defaults per Item 8
 const filterOnlyFitting = ref(true)

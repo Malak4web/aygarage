@@ -46,8 +46,8 @@
             />
             <i></i>
             <span class="rad-body">
-              <b>Zontes {{ userStore.selectedBike }} · 2023</b>
-              <small>س ط ع 1234 · 12,400 كم</small>
+              <b>Zontes {{ userStore.selectedBike }} · {{ userStore.userBikeYear }}</b>
+              <small>{{ primaryBikeInfo }}</small>
             </span>
           </label>
 
@@ -238,6 +238,14 @@ const selectedBikeTitle = computed(() => {
     return userStore.selectedBike
   }
   return customModel.value
+})
+
+const primaryBikeInfo = computed(() => {
+  const b = userStore.user?.savedBikes?.[0]
+  if (b) {
+    return `${b.plate} · ${Number(b.odo).toLocaleString('en')} كم`
+  }
+  return 'الموتوسيكل الافتراضي'
 })
 
 const handleConfirmBooking = async () => {
