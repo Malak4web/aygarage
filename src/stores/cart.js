@@ -51,6 +51,10 @@ export const useCartStore = defineStore('cart', {
       return Math.max(0, storeConfig.freeDeliveryThreshold - this.subtotal)
     },
 
+    remainingForFreeDelivery() {
+      return this.freeDeliveryRemaining
+    },
+
     deliveryFee() {
       if (this.items.length === 0) return 0
       return this.isFreeDelivery ? 0 : storeConfig.deliveryFee

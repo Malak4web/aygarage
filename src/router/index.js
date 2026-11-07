@@ -29,7 +29,8 @@ const routes = [
   {
     path: '/checkout',
     name: 'checkout',
-    component: () => import('@/pages/CheckoutPage.vue')
+    component: () => import('@/pages/CheckoutPage.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/order/:id',
@@ -49,7 +50,8 @@ const routes = [
   {
     path: '/booking',
     name: 'booking',
-    component: () => import('@/pages/BookingPage.vue')
+    component: () => import('@/pages/BookingPage.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/account',

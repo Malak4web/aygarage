@@ -20,7 +20,7 @@
 
     <!-- Free delivery hint -->
     <div v-if="deliveryMethod !== 'pickup' && !cartStore.isFreeDelivery" class="delivery-hint">
-      فاضل <b>{{ cartStore.remainingForFreeDelivery.toLocaleString('en') }} ج.م</b> على التوصيل المجاني
+      فاضل <b>{{ cartStore.freeDeliveryRemaining.toLocaleString('en') }} ج.م</b> على التوصيل المجاني
     </div>
 
     <div class="sum-divider"></div>

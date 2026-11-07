@@ -229,7 +229,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { useCartStore } from '@/stores/cart.js'
