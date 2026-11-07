@@ -56,6 +56,16 @@ export function useModalTrap(isOpenRef, containerRef, onClose) {
     }
   }
 
+  const handleWindowResize = () => {
+    if (isOpenRef.value) {
+      const container = containerRef.value
+      if (container && !document.body.contains(container)) {
+        document.body.style.overflow = ''
+        if (typeof onClose === 'function') onClose()
+      }
+    }
+  }
+
   watch(
     () => isOpenRef.value,
     async (isOpen) => {
@@ -63,6 +73,7 @@ export function useModalTrap(isOpenRef, containerRef, onClose) {
         prevActiveElement = document.activeElement
         document.body.style.overflow = 'hidden'
         window.addEventListener('keydown', handleKeydown)
+        window.addEventListener('resize', handleWindowResize)
         await nextTick()
         const container = containerRef.value
         if (container) {
@@ -77,6 +88,7 @@ export function useModalTrap(isOpenRef, containerRef, onClose) {
       } else {
         document.body.style.overflow = ''
         window.removeEventListener('keydown', handleKeydown)
+        window.removeEventListener('resize', handleWindowResize)
         if (prevActiveElement && prevActiveElement.focus) {
           try {
             prevActiveElement.focus()
@@ -90,5 +102,6 @@ export function useModalTrap(isOpenRef, containerRef, onClose) {
   onUnmounted(() => {
     document.body.style.overflow = ''
     window.removeEventListener('keydown', handleKeydown)
+    window.removeEventListener('resize', handleWindowResize)
   })
 }

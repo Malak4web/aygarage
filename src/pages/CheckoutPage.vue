@@ -96,6 +96,7 @@
           <h3>طريقة الاستلام</h3>
           <div class="rad-group">
             <RadioCard
+              name="delivery"
               v-model="deliveryMethod"
               value="home"
               title="توصيل للبيت"
@@ -103,6 +104,7 @@
               :badge="cartStore.isFreeDelivery ? 'مجاناً' : `${storeConfig.deliveryFee} ج.م`"
             />
             <RadioCard
+              name="delivery"
               v-model="deliveryMethod"
               value="pickup"
               title="استلام من الجراج"
@@ -119,6 +121,7 @@
             <RadioCard
               v-for="pm in storeConfig.paymentMethods"
               :key="pm.id"
+              name="payment"
               v-model="paymentMethod"
               :value="pm.id"
               :title="pm.title"

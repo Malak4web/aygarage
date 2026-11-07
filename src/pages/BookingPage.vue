@@ -92,18 +92,16 @@
             <button type="button" class="btn sm o" @click="loadServices">إعادة المحاولة</button>
           </div>
           <div v-else class="svs">
-            <button
+            <RadioCard
               v-for="svc in serviceList"
               :key="svc.id"
-              type="button"
-              class="service-item"
-              :class="{ on: selectedService?.id === svc.id }"
-              :aria-pressed="selectedService?.id === svc.id"
-              @click="selectedService = svc"
-            >
-              <b>{{ svc.name }}</b>
-              <small>{{ svc.desc }}</small>
-            </button>
+              name="service"
+              :model-value="selectedService?.id"
+              :value="svc.id"
+              :title="svc.name"
+              :desc="svc.desc"
+              @update:model-value="selectedService = svc"
+            />
           </div>
         </div>
 

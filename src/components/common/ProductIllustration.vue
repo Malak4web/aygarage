@@ -2,7 +2,7 @@
   <img
     v-if="image"
     :src="image"
-    :alt="alt || type"
+    :alt="alt || ''"
     :width="width"
     class="prod-image"
   />
@@ -10,8 +10,9 @@
     v-else
     :width="width"
     viewBox="0 0 100 96"
-    :aria-label="alt || type"
-    role="img"
+    :aria-label="alt || undefined"
+    :role="alt ? 'img' : undefined"
+    :aria-hidden="!alt ? 'true' : undefined"
     class="prod-svg"
     v-html="svgContent"
   />

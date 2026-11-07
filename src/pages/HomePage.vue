@@ -31,7 +31,7 @@
             <RouterLink to="/c/helmets">تسوّق الخوذ</RouterLink>
           </div>
           <div class="art">
-            <ProductIllustration type="helmet" :width="120" />
+            <ProductIllustration type="helmet" :width="120" alt="" />
           </div>
         </div>
 
@@ -103,7 +103,7 @@
           class="cat-circle"
         >
           <div class="im">
-            <ProductIllustration :type="cat.icon" :width="80" />
+            <ProductIllustration :type="cat.icon" :width="80" alt="" />
           </div>
           <span class="cat-name">{{ cat.name }}</span>
         </RouterLink>

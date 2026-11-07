@@ -76,7 +76,12 @@ const sheetRef = ref(null)
 
 const handleResize = () => {
   if (typeof window !== 'undefined') {
-    isDesktop.value = window.innerWidth > 900
+    const desktop = window.innerWidth > 900
+    isDesktop.value = desktop
+    if (desktop && props.isOpen) {
+      emit('close')
+      document.body.style.overflow = ''
+    }
   }
 }
 
