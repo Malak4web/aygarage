@@ -14,6 +14,16 @@
         <ProductCardSkeleton v-for="i in 5" :key="i" />
       </div>
 
+      <div v-else-if="error">
+        <EmptyState
+          icon="search"
+          title="حدث خطأ في تحميل النتائج"
+          :description="error"
+          action-label="إعادة المحاولة"
+          @action="loadSearchResults"
+        />
+      </div>
+
       <div v-else-if="results.length === 0">
         <EmptyState
           icon="search"
@@ -46,16 +56,23 @@ import EmptyState from '@/components/common/EmptyState.vue'
 
 const route = useRoute()
 const loading = ref(true)
+const error = ref('')
 const allProducts = ref([])
 
-onMounted(async () => {
+const loadSearchResults = async () => {
+  loading.value = true
+  error.value = ''
   try {
     allProducts.value = await api.getProducts()
   } catch (e) {
-    allProducts.value = []
+    error.value = 'تعذر تحميل نتائج البحث'
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  loadSearchResults()
 })
 
 const searchQuery = computed(() => (route.query.q || '').trim())

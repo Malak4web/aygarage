@@ -256,23 +256,66 @@ const modelFamilies = computed(() => {
   }))
 })
 
-const kmOptions = [
-  { label: 'أقل من 5,000 كم', value: 'under5k', count: 2 },
-  { label: '5,000 – 20,000 كم', value: '5kTo20k', count: 3 },
-  { label: 'أكتر من 20,000 كم', value: 'over20k', count: 1 }
-]
+// Computed facet counts (Item 19)
+const kmOptions = computed(() => [
+  {
+    label: 'أقل من 5,000 كم',
+    value: 'under5k',
+    count: allBikes.value.filter((b) => (Number(b.km) || 0) < 5000).length
+  },
+  {
+    label: '5,000 – 20,000 كم',
+    value: '5kTo20k',
+    count: allBikes.value.filter((b) => {
+      const k = Number(b.km) || 0
+      return k >= 5000 && k <= 20000
+    }).length
+  },
+  {
+    label: 'أكتر من 20,000 كم',
+    value: 'over20k',
+    count: allBikes.value.filter((b) => (Number(b.km) || 0) > 20000).length
+  }
+])
 
-const scoreOptions = [
-  { label: '90 وأكتر', min: 90, count: 4 },
-  { label: '80 – 89', min: 80, count: 2 }
-]
+const scoreOptions = computed(() => [
+  {
+    label: '90 وأكتر',
+    min: 90,
+    count: allBikes.value.filter((b) => (b.inspectionScore || 0) >= 90).length
+  },
+  {
+    label: '80 – 89',
+    min: 80,
+    count: allBikes.value.filter((b) => {
+      const s = b.inspectionScore || 0
+      return s >= 80 && s < 90
+    }).length
+  }
+])
 
-const yearOptions = [
-  { label: '2024', value: 2024, count: 2 },
-  { label: '2023', value: 2023, count: 2 },
-  { label: '2022', value: 2022, count: 1 },
-  { label: '2021 وأقدم', value: 2021, count: 1 }
-]
+const yearOptions = computed(() => [
+  {
+    label: '2024',
+    value: 2024,
+    count: allBikes.value.filter((b) => b.year === 2024).length
+  },
+  {
+    label: '2023',
+    value: 2023,
+    count: allBikes.value.filter((b) => b.year === 2023).length
+  },
+  {
+    label: '2022',
+    value: 2022,
+    count: allBikes.value.filter((b) => b.year === 2022).length
+  },
+  {
+    label: '2021 وأقدم',
+    value: 2021,
+    count: allBikes.value.filter((b) => b.year <= 2021).length
+  }
+])
 
 const activeFilterChips = computed(() => {
   const chips = []
@@ -280,7 +323,7 @@ const activeFilterChips = computed(() => {
     chips.push({ id: `family-${f}`, label: f })
   })
   if (selectedKmRange.value) {
-    const k = kmOptions.find((opt) => opt.value === selectedKmRange.value)
+    const k = kmOptions.value.find((opt) => opt.value === selectedKmRange.value)
     if (k) chips.push({ id: 'km', label: k.label })
   }
   if (selectedMinScore.value > 0) {

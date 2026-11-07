@@ -37,22 +37,21 @@
 
           <div class="fl">
             <div class="fld">
-              <label>الاسم بالكامل</label>
-              <input
-                type="text"
+              <FormField
+                id="co-name"
+                label="الاسم بالكامل"
                 v-model="customerName"
-                class="form-input"
                 required
               />
             </div>
 
             <div class="fld">
-              <label>رقم الموبايل</label>
-              <input
+              <FormField
+                id="co-phone"
+                label="رقم الموبايل"
                 type="tel"
-                v-model="customerPhone"
                 dir="ltr"
-                class="form-input ltr-input"
+                v-model="customerPhone"
                 required
               />
             </div>
@@ -82,80 +81,50 @@
             </div>
 
             <div class="fld span-2">
-              <label>العنوان بالتفصيل</label>
-              <input
-                type="text"
+              <FormField
+                id="co-addr"
+                label="العنوان بالتفصيل"
                 v-model="addressDetails"
-                class="form-input"
                 required
               />
             </div>
           </div>
         </div>
 
-        <!-- 2. Delivery Method -->
+        <!-- 2. Delivery Method (RadioCard Item 22) -->
         <div class="box">
           <h3>طريقة الاستلام</h3>
-
-          <label
-            class="rad"
-            :class="{ on: deliveryMethod === 'home' }"
-          >
-            <input
-              type="radio"
+          <div class="rad-group">
+            <RadioCard
+              v-model="deliveryMethod"
               value="home"
-              v-model="deliveryMethod"
-              class="hidden-radio"
+              title="توصيل للبيت"
+              :desc="storeConfig.deliveryEstimate"
+              :badge="cartStore.isFreeDelivery ? 'مجاناً' : `${storeConfig.deliveryFee} ج.م`"
             />
-            <i></i>
-            <span class="rad-body">
-              <b>توصيل للبيت</b>
-              <small>{{ storeConfig.deliveryEstimate }}</small>
-            </span>
-            <span class="r">{{ cartStore.isFreeDelivery ? 'مجاناً' : `${storeConfig.deliveryFee} ج.م` }}</span>
-          </label>
-
-          <label
-            class="rad"
-            :class="{ on: deliveryMethod === 'pickup' }"
-          >
-            <input
-              type="radio"
+            <RadioCard
+              v-model="deliveryMethod"
               value="pickup"
-              v-model="deliveryMethod"
-              class="hidden-radio"
+              title="استلام من الجراج"
+              :desc="storeConfig.pickupTimes"
+              badge="مجاناً"
             />
-            <i></i>
-            <span class="rad-body">
-              <b>استلام من الجراج</b>
-              <small>{{ storeConfig.pickupTimes }}</small>
-            </span>
-            <span class="r">مجاناً</span>
-          </label>
+          </div>
         </div>
 
-        <!-- 3. Payment Method -->
+        <!-- 3. Payment Method (RadioCard Item 22) -->
         <div class="box">
           <h3>طريقة الدفع</h3>
-
-          <label
-            v-for="pm in storeConfig.paymentMethods"
-            :key="pm.id"
-            class="rad"
-            :class="{ on: paymentMethod === pm.id }"
-          >
-            <input
-              type="radio"
-              :value="pm.id"
+          <div class="rad-group">
+            <RadioCard
+              v-for="pm in storeConfig.paymentMethods"
+              :key="pm.id"
               v-model="paymentMethod"
-              class="hidden-radio"
+              :value="pm.id"
+              :title="pm.title"
+              :desc="pm.desc"
             />
-            <i></i>
-            <span class="rad-body">
-              <b>{{ pm.title }}</b>
-              <small>{{ pm.desc }}</small>
-            </span>
-          </label>
+          </div>
         </div>
       </div>
 
@@ -221,6 +190,8 @@ import { useUserStore } from '@/stores/user.js'
 import { api } from '@/api/index.js'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import OrderSummary from '@/components/common/OrderSummary.vue'
+import FormField from '@/components/common/FormField.vue'
+import RadioCard from '@/components/common/RadioCard.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()

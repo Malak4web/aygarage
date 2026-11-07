@@ -36,74 +36,69 @@
           <h3>1. الموتوسيكل</h3>
 
           <!-- Saved bikes list if user has any -->
-          <div v-if="userStore.userBikes && userStore.userBikes.length > 0">
-            <label
+          <div v-if="userStore.userBikes && userStore.userBikes.length > 0" class="rad-list">
+            <RadioCard
               v-for="b in userStore.userBikes"
               :key="b.id"
-              class="rad"
-              :class="{ on: bikeChoice === b.id }"
-            >
-              <input
-                type="radio"
-                :value="b.id"
-                v-model="bikeChoice"
-                class="hidden-radio"
-              />
-              <i></i>
-              <span class="rad-body">
-                <b>{{ b.model }} · {{ b.year }}</b>
-                <small>{{ b.plate }} · {{ Number(b.odo).toLocaleString('en') }} كم</small>
-              </span>
-            </label>
+              name="bike-choice"
+              v-model="bikeChoice"
+              :value="b.id"
+              :title="b.model + ' · ' + b.year"
+              :desc="b.plate + ' · ' + Number(b.odo).toLocaleString('en') + ' كم'"
+            />
           </div>
           <div v-else class="no-bikes-hint">
             معندكش موتوسيكلات مسجلة في حسابك، حدد بيانات موتوسيكلك في الأسفل:
           </div>
 
-          <label
-            class="rad"
-            :class="{ on: bikeChoice === 'custom' }"
-          >
-            <input
-              type="radio"
-              value="custom"
+          <div style="margin-top: 10px">
+            <RadioCard
+              name="bike-choice"
               v-model="bikeChoice"
-              class="hidden-radio"
+              value="custom"
+              title="موتوسيكل تاني"
+              desc="اكتب الموديل والعداد"
             />
-            <i></i>
-            <span class="rad-body">
-              <b>موتوسيكل تاني</b>
-              <small>اكتب الموديل والعداد</small>
-            </span>
-          </label>
+          </div>
 
           <div v-if="bikeChoice === 'custom'" class="custom-bike-inputs">
-            <select v-model="customModel" class="form-select-full" aria-label="موديل الموتوسيكل">
-              <option v-for="m in storeConfig.models" :key="m" :value="m">
-                {{ m }}
-              </option>
-            </select>
-            <input
-              type="number"
-              v-model.number="customOdo"
-              placeholder="قراءة العداد الحالية (كم)"
-              class="form-input-full"
-              aria-label="قراءة العداد الحالية"
-            />
+            <FormField label="موديل الموتوسيكل" id="booking-custom-model">
+              <select id="booking-custom-model" v-model="customModel" class="form-select-full">
+                <option v-for="m in storeConfig.models" :key="m" :value="m">
+                  {{ m }}
+                </option>
+              </select>
+            </FormField>
+            <FormField label="قراءة العداد الحالية (كم)" id="booking-custom-odo">
+              <input
+                id="booking-custom-odo"
+                type="number"
+                v-model.number="customOdo"
+                placeholder="مثال: 12000"
+                class="form-input-full"
+              />
+            </FormField>
           </div>
         </div>
 
         <!-- Step 2: Service Selection (Buttons with aria-pressed per Item 36) -->
         <div class="box">
           <h3>2. الخدمة</h3>
-          <div class="svs">
+          <div v-if="loadingServices" class="svs">
+            <div v-for="i in 4" :key="i" class="service-item" style="min-height: 80px; background: var(--sf); opacity: 0.6;"></div>
+          </div>
+          <div v-else-if="serviceError" style="padding: 16px 0; text-align: center;">
+            <p style="color: var(--sale); margin-bottom: 8px;">{{ serviceError }}</p>
+            <button type="button" class="btn sm o" @click="loadServices">إعادة المحاولة</button>
+          </div>
+          <div v-else class="svs">
             <button
               v-for="svc in serviceList"
               :key="svc.id"
               type="button"
               class="service-item"
-              :class="{ on: selectedService.id === svc.id }"
-              :aria-pressed="selectedService.id === svc.id"
+              :class="{ on: selectedService?.id === svc.id }"
+              :aria-pressed="selectedService?.id === svc.id"
               @click="selectedService = svc"
             >
               <b>{{ svc.name }}</b>
@@ -167,7 +162,7 @@
         </div>
         <div class="dl">
           <span>الخدمة</span>
-          <b>{{ selectedService.name }}</b>
+          <b>{{ selectedService?.name || '—' }}</b>
         </div>
         <div class="dl">
           <span>الميعاد</span>
@@ -179,7 +174,7 @@
         </div>
         <div class="dl">
           <span>التكلفة التقديرية</span>
-          <b>{{ selectedService.estimatedCost }}</b>
+          <b>{{ selectedService?.estimatedCost || '—' }}</b>
         </div>
 
         <div v-if="bookingError" class="submit-error">
@@ -189,7 +184,7 @@
         <button
           type="button"
           class="btn full confirm-btn"
-          :disabled="isSubmitting"
+          :disabled="isSubmitting || !selectedService"
           @click="handleConfirmBooking"
         >
           {{ isSubmitting ? 'جاري التأكيد...' : 'تأكيد الحجز' }}
@@ -209,6 +204,8 @@ import { services } from '@/data/services.js'
 import { useUserStore } from '@/stores/user.js'
 import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
+import FormField from '@/components/common/FormField.vue'
+import RadioCard from '@/components/common/RadioCard.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
@@ -225,8 +222,26 @@ const bikeChoice = ref(userStore.userBikes && userStore.userBikes.length > 0 ? u
 const customModel = ref('ZT350-T')
 const customOdo = ref('')
 
-const serviceList = services
-const selectedService = ref(services[0])
+const serviceList = ref(services ? [...services] : [])
+const selectedService = ref(services?.[0] || null)
+const loadingServices = ref(false)
+const serviceError = ref('')
+
+const loadServices = async () => {
+  loadingServices.value = true
+  serviceError.value = ''
+  try {
+    const list = await api.getServices()
+    serviceList.value = list
+    if (list.length > 0 && !selectedService.value) {
+      selectedService.value = list[0]
+    }
+  } catch (e) {
+    serviceError.value = 'تعذر تحميل قائمة الخدمات'
+  } finally {
+    loadingServices.value = false
+  }
+}
 
 // Item 25: Dynamically generate next 7 days from today
 const generateNext7Days = () => {
@@ -276,6 +291,7 @@ const isSubmitting = ref(false)
 const bookingError = ref('')
 
 onMounted(() => {
+  loadServices()
   if (route.query.bike) {
     bikeChoice.value = 'custom'
     const rawBike = decodeURIComponent(route.query.bike)

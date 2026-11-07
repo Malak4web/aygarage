@@ -3,10 +3,30 @@
     class="hero-carousel-wrap"
     @mouseenter="pauseAutoplay"
     @mouseleave="resumeAutoplay"
+    @focusin="pauseAutoplay"
+    @focusout="resumeAutoplay"
     @touchstart="handleTouchStart"
     @touchend="handleTouchEnd"
   >
     <slot :current-slide="slides[currentIndex]" :current-index="currentIndex" />
+
+    <!-- Prev / Next navigation arrows (Item 23) -->
+    <button
+      type="button"
+      class="carousel-nav-btn prev"
+      @click="prevSlide"
+      aria-label="الشريحة السابقة"
+    >
+      <AppIcon name="right" :size="20" />
+    </button>
+    <button
+      type="button"
+      class="carousel-nav-btn next"
+      @click="nextSlide"
+      aria-label="الشريحة التالية"
+    >
+      <AppIcon name="left" :size="20" />
+    </button>
 
     <!-- Navigation dots -->
     <div class="dots" role="tablist" aria-label="شرائح العرض">
@@ -25,6 +45,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import AppIcon from '@/components/common/AppIcon.vue'
 
 const props = defineProps({
   slides: {
@@ -139,6 +160,46 @@ defineExpose({
 }
 
 .dot-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(22, 22, 22, 0.65);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.hero-carousel-wrap:hover .carousel-nav-btn,
+.carousel-nav-btn:focus-visible {
+  opacity: 1;
+}
+
+.carousel-nav-btn.prev {
+  inset-inline-start: 16px;
+}
+
+.carousel-nav-btn.next {
+  inset-inline-end: 16px;
+}
+
+.carousel-nav-btn:hover {
+  background: rgba(22, 22, 22, 0.95);
+}
+
+.carousel-nav-btn:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
 }

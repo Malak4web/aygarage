@@ -22,30 +22,24 @@
 
       <!-- Login Form -->
       <form v-if="mode === 'login'" @submit.prevent="handleLogin" class="auth-form">
-        <div class="form-fld">
-          <label for="login-phone">رقم الموبايل</label>
-          <input
-            id="login-phone"
-            type="tel"
-            v-model="phone"
-            placeholder="010 1234 5678"
-            dir="ltr"
-            class="auth-input"
-            required
-          />
-        </div>
+        <FormField
+          id="login-phone"
+          label="رقم الموبايل"
+          type="tel"
+          dir="ltr"
+          v-model="phone"
+          placeholder="010 1234 5678"
+          required
+        />
 
-        <div class="form-fld">
-          <label for="login-pwd">كلمة المرور</label>
-          <input
-            id="login-pwd"
-            type="password"
-            v-model="password"
-            placeholder="••••••••"
-            class="auth-input"
-            required
-          />
-        </div>
+        <FormField
+          id="login-pwd"
+          label="كلمة المرور"
+          type="password"
+          v-model="password"
+          placeholder="••••••••"
+          required
+        />
 
         <button type="submit" class="btn full auth-btn">
           تسجيل الدخول
@@ -58,42 +52,32 @@
 
       <!-- Register Form -->
       <form v-else @submit.prevent="handleRegister" class="auth-form">
-        <div class="form-fld">
-          <label for="reg-name">الاسم بالكامل</label>
-          <input
-            id="reg-name"
-            type="text"
-            v-model="name"
-            placeholder="مثال: أحمد محمد"
-            class="auth-input"
-            required
-          />
-        </div>
+        <FormField
+          id="reg-name"
+          label="الاسم بالكامل"
+          v-model="name"
+          placeholder="مثال: أحمد محمد"
+          required
+        />
 
-        <div class="form-fld">
-          <label for="reg-phone">رقم الموبايل</label>
-          <input
-            id="reg-phone"
-            type="tel"
-            v-model="phone"
-            placeholder="010 1234 5678"
-            dir="ltr"
-            class="auth-input"
-            required
-          />
-        </div>
+        <FormField
+          id="reg-phone"
+          label="رقم الموبايل"
+          type="tel"
+          dir="ltr"
+          v-model="phone"
+          placeholder="010 1234 5678"
+          required
+        />
 
-        <div class="form-fld">
-          <label for="reg-pwd">كلمة المرور</label>
-          <input
-            id="reg-pwd"
-            type="password"
-            v-model="password"
-            placeholder="••••••••"
-            class="auth-input"
-            required
-          />
-        </div>
+        <FormField
+          id="reg-pwd"
+          label="كلمة المرور"
+          type="password"
+          v-model="password"
+          placeholder="••••••••"
+          required
+        />
 
         <div class="form-fld">
           <label for="reg-bike">موديل موتوسيكلك (اختياري)</label>
@@ -119,6 +103,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { useUserStore } from '@/stores/user.js'
 import { useToastStore } from '@/stores/toast.js'
+import FormField from '@/components/common/FormField.vue'
 
 const router = useRouter()
 const route = useRoute()

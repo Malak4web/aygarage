@@ -124,6 +124,23 @@ async function main() {
   console.log('Orders appearing in Account:', orderRows);
   if (orderRows === 0) throw new Error('Order does not appear in Account!');
 
+  // 10. Check booking flow
+  console.log('--- Testing Booking Flow (Item 9 & 22) ---');
+  await page.goto('http://localhost:5173/booking', { waitUntil: 'networkidle0' });
+  const confirmBookingBtn = await page.$('button.confirm-btn');
+  if (!confirmBookingBtn) throw new Error('Confirm booking button not found');
+  await confirmBookingBtn.click();
+  await page.waitForSelector('.confirmed-card', { timeout: 8000 });
+  const refText = await page.$eval('.ref-text', el => el.textContent.trim());
+  console.log('Booking confirmed successfully:', refText);
+
+  // 11. Check booking appears in Account > حجوزاتي
+  await page.goto('http://localhost:5173/account?tab=bookings', { waitUntil: 'networkidle0' });
+  await page.waitForSelector('tbody tr');
+  const bookingRows = await page.$$eval('tbody tr', els => els.length);
+  console.log('Bookings appearing in Account:', bookingRows);
+  if (bookingRows === 0) throw new Error('Booking does not appear in Account!');
+
   console.log('\n========================================');
   console.log(`TOTAL BROWSER CONSOLE ERRORS: ${consoleErrors.length}`);
   if (consoleErrors.length > 0) {

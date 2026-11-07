@@ -36,8 +36,22 @@
 
       <!-- Main Content Area -->
       <main class="acc-main">
-        <!-- 1. My Bikes Tab -->
-        <div v-if="activeTab === 'bikes'">
+        <div v-if="loading" style="padding: 40px; text-align: center; color: var(--mu);">
+          <p>جاري تحميل بيانات الحساب...</p>
+        </div>
+
+        <div v-else-if="accountError" style="padding: 24px 0;">
+          <EmptyState
+            title="تعذر تحميل بيانات الحساب"
+            :description="accountError"
+            action-label="إعادة المحاولة"
+            @action="loadAccountData"
+          />
+        </div>
+
+        <template v-else>
+          <!-- 1. My Bikes Tab -->
+          <div v-if="activeTab === 'bikes'">
           <div class="sec-head">
             <h1>موتوسيكلاتي</h1>
             <button type="button" class="btn o sm" @click="showAddBikeModal = true">
@@ -301,31 +315,27 @@
           <div class="box">
             <div class="fl">
               <div class="fld">
-                <label>الاسم</label>
-                <input type="text" v-model="settingsName" class="form-input" />
+                <FormField id="acc-name" label="الاسم" v-model="settingsName" />
               </div>
               <div class="fld">
-                <label>الموبايل</label>
-                <input type="text" v-model="settingsPhone" class="form-input" dir="ltr" />
+                <FormField id="acc-phone" label="الموبايل" type="tel" dir="ltr" v-model="settingsPhone" />
               </div>
             </div>
             <div class="fl" style="margin-top: 12px;">
               <div class="fld">
-                <label>المحافظة</label>
-                <select v-model="settingsGovernorate" class="form-select">
+                <label for="acc-gov">المحافظة</label>
+                <select id="acc-gov" v-model="settingsGovernorate" class="form-select">
                   <option v-for="gov in storeConfig.governorates" :key="gov.name" :value="gov.name">
                     {{ gov.name }}
                   </option>
                 </select>
               </div>
               <div class="fld">
-                <label>المنطقة</label>
-                <input type="text" v-model="settingsArea" class="form-input" />
+                <FormField id="acc-area" label="المنطقة" v-model="settingsArea" />
               </div>
             </div>
             <div class="fld" style="margin-top: 12px;">
-              <label>تفاصيل العنوان</label>
-              <input type="text" v-model="settingsStreet" class="form-input" />
+              <FormField id="acc-street" label="تفاصيل العنوان" v-model="settingsStreet" />
             </div>
 
             <div v-if="settingsSaved" class="success-banner">
@@ -337,6 +347,7 @@
             </button>
           </div>
         </div>
+        </template>
       </main>
     </div>
 
@@ -346,28 +357,26 @@
         <h3>إضافة موتوسيكل جديد لحسابك</h3>
         <form @submit.prevent="handleAddBike">
           <div class="form-group">
-            <label>الموديل</label>
-            <select v-model="newBikeModel" class="form-select-full">
+            <label for="bike-model">الموديل</label>
+            <select id="bike-model" v-model="newBikeModel" class="form-select-full">
               <option v-for="m in storeConfig.models" :key="m" :value="m">
                 {{ m }}
               </option>
             </select>
           </div>
           <div class="form-group">
-            <label>سنة الصنع</label>
-            <select v-model="newBikeYear" class="form-select-full">
+            <label for="bike-year">سنة الصنع</label>
+            <select id="bike-year" v-model="newBikeYear" class="form-select-full">
               <option v-for="y in storeConfig.years" :key="y" :value="y">
                 {{ y }}
               </option>
             </select>
           </div>
           <div class="form-group">
-            <label>رقم اللوحة</label>
-            <input type="text" v-model="newBikePlate" placeholder="مثال: س ط ع 1234" class="form-input-full" required />
+            <FormField id="bike-plate" label="رقم اللوحة" v-model="newBikePlate" placeholder="مثال: س ط ع 1234" required />
           </div>
           <div class="form-group">
-            <label>قراءة العداد (كم)</label>
-            <input type="number" v-model="newBikeOdo" placeholder="مثال: 5000" class="form-input-full" required />
+            <FormField id="bike-odo" label="قراءة العداد (كم)" type="number" v-model="newBikeOdo" placeholder="مثال: 5000" required />
           </div>
           <div class="modal-actions">
             <button type="submit" class="btn">حفظ الموتوسيكل</button>
@@ -380,18 +389,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { products } from '@/data/products.js'
 import { useUserStore } from '@/stores/user.js'
 import { useFavoritesStore } from '@/stores/favorites.js'
 import { useToastStore } from '@/stores/toast.js'
+import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
 import ProductRow from '@/components/common/ProductRow.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import FormField from '@/components/common/FormField.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
@@ -399,6 +410,35 @@ const router = useRouter()
 const userStore = useUserStore()
 const favStore = useFavoritesStore()
 const toastStore = useToastStore()
+
+const loading = ref(true)
+const accountError = ref('')
+const userBookings = ref([])
+const userOrders = ref([])
+const allProducts = ref([])
+
+const loadAccountData = async () => {
+  loading.value = true
+  accountError.value = ''
+  try {
+    const [bks, ords, prods] = await Promise.all([
+      api.getUserBookings(),
+      api.getUserOrders(),
+      api.getProducts()
+    ])
+    userBookings.value = bks
+    userOrders.value = ords
+    allProducts.value = prods
+  } catch (e) {
+    accountError.value = 'تعذر تحميل بيانات الحساب'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadAccountData()
+})
 
 const activeTab = ref(route.query.tab || 'bikes')
 
@@ -419,19 +459,11 @@ const tabs = [
 ]
 
 const favProducts = computed(() => {
-  return products.filter((p) => favStore.isFavorite(p.id))
-})
-
-const userBookings = computed(() => {
-  return userStore.user?.bookings || []
-})
-
-const userOrders = computed(() => {
-  return userStore.user?.orders || []
+  return allProducts.value.filter((p) => favStore.isFavorite(p.id))
 })
 
 const compatibleProducts = computed(() => {
-  return products.slice(0, 5)
+  return allProducts.value.slice(0, 5)
 })
 
 const defaultHistory = [

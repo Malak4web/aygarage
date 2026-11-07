@@ -110,6 +110,16 @@
       </div>
     </section>
 
+    <!-- Error State with Retry (Item 18) -->
+    <div v-if="error" class="in" style="padding: 24px 0">
+      <EmptyState
+        title="تعذر تحميل بيانات الصفحة"
+        :description="error"
+        action-label="إعادة المحاولة"
+        @action="loadHomeData"
+      />
+    </div>
+
     <!-- Best Sellers Row -->
     <section class="sec in">
       <div class="sh">
@@ -214,6 +224,7 @@ import BikeCardSkeleton from '@/components/common/BikeCardSkeleton.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import HeroCarousel from '@/components/common/HeroCarousel.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
@@ -221,10 +232,13 @@ const userStore = useUserStore()
 const cartStore = useCartStore()
 
 const loading = ref(true)
+const error = ref('')
 const allProducts = ref([])
 const allBikes = ref([])
 
-onMounted(async () => {
+const loadHomeData = async () => {
+  loading.value = true
+  error.value = ''
   try {
     const [prods, bks] = await Promise.all([
       api.getProducts(),
@@ -233,10 +247,14 @@ onMounted(async () => {
     allProducts.value = prods
     allBikes.value = bks
   } catch (e) {
-    console.error('Failed to load homepage data:', e)
+    error.value = 'تعذر تحميل بيانات الصفحة الرئيسية'
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  loadHomeData()
 })
 
 // Hero Carousel slides

@@ -62,5 +62,12 @@ export const storeConfig = {
     { icon: 'ret', title: 'استرجاع خلال 14 يوم', desc: 'لو القطعة ما ركبتش' }
   ],
   pickupTimes: 'جاهز النهارده بعد 3 العصر',
-  deliveryEstimate: 'يوصلك الخميس 12 نوفمبر'
+  get deliveryEstimate() {
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
+    const dayName = d.toLocaleDateString('ar-EG', { weekday: 'long' })
+    const dayNum = d.getDate()
+    const monthName = d.toLocaleDateString('ar-EG', { month: 'long' })
+    return `يوصلك ${dayName} ${dayNum} ${monthName}`
+  }
 }
