@@ -10,6 +10,7 @@ use App\Models\ProductOption;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class OrderTest extends TestCase
@@ -19,6 +20,7 @@ class OrderTest extends TestCase
     protected User $userA;
     protected User $userB;
     protected Product $product;
+    protected Category $category;
 
     protected function setUp(): void
     {
@@ -27,11 +29,18 @@ class OrderTest extends TestCase
         Setting::create(['key' => 'delivery_fee', 'value' => 60]);
         Setting::create(['key' => 'free_delivery_threshold', 'value' => 3000]);
         Setting::create(['key' => 'delivery_days_count', 'value' => 3]);
+        Setting::create([
+            'key' => 'governorates',
+            'value' => [
+                ['name' => 'القاهرة', 'areas' => ['مدينة نصر', 'مصر الجديدة']],
+                ['name' => 'الجيزة', 'areas' => ['الدقي', 'المهندسين']],
+            ],
+        ]);
 
         $this->userA = User::factory()->create(['phone' => '01011111111']);
         $this->userB = User::factory()->create(['phone' => '01022222222']);
 
-        $category = Category::create([
+        $this->category = Category::create([
             'slug' => 'oils',
             'name' => 'زيوت وفلاتر',
             'icon' => 'oil',
@@ -43,7 +52,7 @@ class OrderTest extends TestCase
             'name' => 'منتج اختباري',
             'brand' => 'TestBrand',
             'sku' => 'SKU-001',
-            'category_id' => $category->id,
+            'category_id' => $this->category->id,
             'type' => 'oil',
             'price' => 500,
             'stock' => 5,
@@ -63,7 +72,6 @@ class OrderTest extends TestCase
 
         $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
             'items' => [
-                // Client sends a fake unit_price of 100, but DB has 500
                 ['productId' => $this->product->id, 'qty' => 2, 'unit_price' => 100],
             ],
             'name' => 'عميل تجريبي',
@@ -79,13 +87,9 @@ class OrderTest extends TestCase
         $response->assertStatus(201);
         $order = $response->json('data');
 
-        // Subtotal must be 500 * 2 = 1000, NOT 100 * 2 = 200
         $this->assertEquals(1000, $order['subtotal']);
-        // Discount 10% = 100
         $this->assertEquals(100, $order['discount']);
-        // Delivery fee for subtotal < 3000 is 60
         $this->assertEquals(60, $order['deliveryFee']);
-        // Total = 1000 - 100 + 60 = 960
         $this->assertEquals(960, $order['totalNum']);
     }
 
@@ -110,7 +114,6 @@ class OrderTest extends TestCase
 
     public function test_free_delivery_threshold(): void
     {
-        // 7 units * 500 = 3500 >= 3000 threshold
         $this->product->update(['stock' => 10]);
 
         $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
@@ -164,7 +167,6 @@ class OrderTest extends TestCase
 
     public function test_order_above_stock_is_rejected(): void
     {
-        // Product stock is 5
         $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
             'items' => [
                 ['productId' => $this->product->id, 'qty' => 6],
@@ -176,8 +178,7 @@ class OrderTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['items']);
-        // Product stock remains 5
+        $response->assertJsonValidationErrors(['items.0.qty']);
         $this->assertEquals(5, $this->product->fresh()->stock);
     }
 
@@ -194,7 +195,6 @@ class OrderTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-        // Product stock decremented from 5 to 3
         $this->assertEquals(3, $this->product->fresh()->stock);
     }
 
@@ -202,7 +202,6 @@ class OrderTest extends TestCase
     {
         $this->product->update(['stock' => 1]);
 
-        // First order requests the last unit (1)
         $firstOrder = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
             'items' => [
                 ['productId' => $this->product->id, 'qty' => 1],
@@ -215,7 +214,6 @@ class OrderTest extends TestCase
         $firstOrder->assertStatus(201);
         $this->assertEquals(0, $this->product->fresh()->stock);
 
-        // Second order for the same unit must fail
         $secondOrder = $this->actingAs($this->userB, 'sanctum')->postJson('/api/orders', [
             'items' => [
                 ['productId' => $this->product->id, 'qty' => 1],
@@ -226,12 +224,11 @@ class OrderTest extends TestCase
             'payment_method' => 'pickup',
         ]);
         $secondOrder->assertStatus(422);
-        $secondOrder->assertJsonValidationErrors(['items']);
+        $secondOrder->assertJsonValidationErrors(['items.0.qty']);
     }
 
     public function test_user_ownership_user_a_cannot_view_user_b_order(): void
     {
-        // User B places an order
         $createResponse = $this->actingAs($this->userB, 'sanctum')->postJson('/api/orders', [
             'items' => [
                 ['productId' => $this->product->id, 'qty' => 1],
@@ -245,12 +242,254 @@ class OrderTest extends TestCase
         $createResponse->assertStatus(201);
         $orderNumber = $createResponse->json('data.number');
 
-        // User B can view their own order
         $viewByB = $this->actingAs($this->userB, 'sanctum')->getJson("/api/me/orders/{$orderNumber}");
         $viewByB->assertStatus(200);
 
-        // User A gets 404 when querying User B's order
         $viewByA = $this->actingAs($this->userA, 'sanctum')->getJson("/api/me/orders/{$orderNumber}");
         $viewByA->assertStatus(404);
+    }
+
+    public function test_invalid_option_returns_422(): void
+    {
+        $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1, 'optionCode' => 'bogus'],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['items.0.optionCode']);
+    }
+
+    public function test_product_with_options_requires_valid_option(): void
+    {
+        ProductOption::create([
+            'product_id' => $this->product->id,
+            'code' => '1l',
+            'label' => '1 لتر',
+            'price' => 520,
+        ]);
+
+        // 1. Missing optionCode
+        $resMissing = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+        $resMissing->assertStatus(422);
+        $resMissing->assertJsonValidationErrors(['items.0.optionCode']);
+
+        // 2. Bogus optionCode
+        $resBogus = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1, 'optionCode' => 'bogus'],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+        $resBogus->assertStatus(422);
+        $resBogus->assertJsonValidationErrors(['items.0.optionCode']);
+
+        // 3. Valid optionCode
+        $resValid = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1, 'optionCode' => '1l'],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+        $resValid->assertStatus(201);
+        $this->assertEquals(520, $resValid->json('data.totalNum'));
+    }
+
+    public function test_inactive_product_returns_422(): void
+    {
+        $this->product->update(['is_active' => false]);
+
+        $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_array_inputs_return_422_never_500(): void
+    {
+        // productId as array
+        $res1 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => ['x'], 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+        $res1->assertStatus(422);
+
+        // optionCode as array
+        $res2 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'optionCode' => ['a'], 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+        $res2->assertStatus(422);
+
+        // qty as non-integer string
+        $res3 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 'abc'],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+        ]);
+        $res3->assertStatus(422);
+    }
+
+    public function test_payment_method_other_than_cod_or_pickup_returns_422(): void
+    {
+        $resCard = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'home',
+            'payment_method' => 'card',
+            'governorate' => 'القاهرة',
+            'area' => 'مدينة نصر',
+            'street' => 'شارع الثورة',
+        ]);
+        $resCard->assertStatus(422);
+        $resCard->assertJsonValidationErrors(['payment_method']);
+
+        $resVodafone = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'home',
+            'payment_method' => 'vodafone',
+            'governorate' => 'القاهرة',
+            'area' => 'مدينة نصر',
+            'street' => 'شارع الثورة',
+        ]);
+        $resVodafone->assertStatus(422);
+        $resVodafone->assertJsonValidationErrors(['payment_method']);
+    }
+
+    public function test_mismatched_delivery_and_payment_method_returns_422(): void
+    {
+        // home delivery with pickup payment
+        $res1 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'home',
+            'payment_method' => 'pickup',
+            'governorate' => 'القاهرة',
+            'area' => 'مدينة نصر',
+            'street' => 'شارع الثورة',
+        ]);
+        $res1->assertStatus(422);
+        $res1->assertJsonValidationErrors(['payment_method']);
+
+        // pickup delivery with cod payment
+        $res2 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'cod',
+        ]);
+        $res2->assertStatus(422);
+        $res2->assertJsonValidationErrors(['payment_method']);
+    }
+
+    public function test_normal_percent_coupon_on_orders(): void
+    {
+        Coupon::create([
+            'code' => 'SAVE10',
+            'type' => 'percent',
+            'value' => 10,
+            'min_subtotal' => 200,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+            'coupon_code' => 'SAVE10',
+        ]);
+
+        $response->assertStatus(201);
+        $order = $response->json('data');
+
+        // Product is 500, 10% of 500 = 50
+        $this->assertEquals(50, $order['discount']);
+        $this->assertEquals(450, $order['totalNum']);
+    }
+
+    public function test_percent_coupon_capped_at_100_percent(): void
+    {
+        Coupon::create([
+            'code' => 'SUPER150',
+            'type' => 'percent',
+            'value' => 150,
+            'min_subtotal' => 0,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/orders', [
+            'items' => [
+                ['productId' => $this->product->id, 'qty' => 1],
+            ],
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'pickup',
+            'coupon_code' => 'SUPER150',
+        ]);
+
+        $response->assertStatus(201);
+        $order = $response->json('data');
+
+        // Discount is capped at subtotal (500), cannot exceed 500
+        $this->assertEquals(500, $order['discount']);
+        $this->assertEquals(0, $order['totalNum']);
     }
 }

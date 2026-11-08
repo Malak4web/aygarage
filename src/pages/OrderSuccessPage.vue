@@ -67,7 +67,7 @@
             مقر الاستلام: <b>جراج أبو يوسف، فرع مصر القديمة</b>
           </div>
           <div v-else-if="order.customer?.address">
-            العنوان: <b>{{ order.customer.address }}، {{ order.customer.area }}</b>
+            العنوان: <b>{{ order.customer.address }}، {{ order.customer.area }}{{ order.customer.governorate ? `، ${order.customer.governorate}` : '' }}</b>
           </div>
         </div>
       </div>

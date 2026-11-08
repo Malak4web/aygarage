@@ -71,6 +71,6 @@ class CouponTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-            ->assertJson(['message' => 'الحد الأدنى لتفعيل هذا الكود هو 1000 ج.م']);
+            ->assertJson(['message' => 'الكوبون محتاج طلب بـ 1000 ج.م على الأقل']);
     }
 }

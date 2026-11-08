@@ -24,7 +24,7 @@ class CouponController extends Controller
 
         if ($coupon->min_subtotal > 0 && $subtotal < $coupon->min_subtotal) {
             return response()->json([
-                'message' => "الحد الأدنى لتفعيل هذا الكود هو {$coupon->min_subtotal} ج.م",
+                'message' => "الكوبون محتاج طلب بـ {$coupon->min_subtotal} ج.م على الأقل",
             ], 422);
         }
 
@@ -35,6 +35,8 @@ class CouponController extends Controller
             'code' => $coupon->code,
             'type' => $coupon->type,
             'value' => $coupon->value,
+            'minSubtotal' => $coupon->min_subtotal,
+            'min_subtotal' => $coupon->min_subtotal,
             'discount' => $discount,
             'message' => 'تم تطبيق كود الخصم بنجاح',
         ]);

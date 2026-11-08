@@ -8,7 +8,6 @@ use App\Http\Resources\OrderResource;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\ProductOption;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,8 +20,9 @@ class OrderController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $orders = $request->user()->orders()
-            ->with(['items.product.images', 'items.product.category'])
-            ->latest('id')
+            ->with(['items.product.images'])
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
 
         return OrderResource::collection($orders);
@@ -31,7 +31,7 @@ class OrderController extends Controller
     public function show(Request $request, string $number): JsonResponse|OrderResource
     {
         $order = $request->user()->orders()
-            ->with(['items.product.images', 'items.product.category'])
+            ->with(['items.product.images'])
             ->where(function ($q) use ($number) {
                 $q->where('number', $number)
                     ->orWhere('id', $number);
@@ -71,8 +71,9 @@ class OrderController extends Controller
             }
             $productKeys = array_values(array_unique($productKeys));
 
-            // Lock products for update in order to prevent race conditions and deadlocks
-            $products = Product::whereIn('id', $productKeys)
+            // Lock products for update and eager-load options in one query
+            $products = Product::with('options')
+                ->whereIn('id', $productKeys)
                 ->orWhereIn('slug', $productKeys)
                 ->orderBy('id')
                 ->lockForUpdate()
@@ -111,7 +112,7 @@ class OrderController extends Controller
                 $requiredStockPerProduct[$product->id] = ($requiredStockPerProduct[$product->id] ?? 0) + $qty;
             }
 
-            // Verify stock availability
+            // Verify stock availability: send one clean message per item line
             $stockErrors = [];
             foreach ($requiredStockPerProduct as $prodId => $totalReqQty) {
                 $product = $products->firstWhere('id', $prodId);
@@ -123,9 +124,6 @@ class OrderController extends Controller
                             $stockErrors["items.{$idx}.qty"] = $stockMsg;
                         }
                     }
-                    if (!isset($stockErrors['items'])) {
-                        $stockErrors['items'] = $stockMsg;
-                    }
                 }
             }
 
@@ -133,13 +131,7 @@ class OrderController extends Controller
                 throw ValidationException::withMessages($stockErrors);
             }
 
-            // Decrement stock for each product
-            foreach ($requiredStockPerProduct as $prodId => $totalReqQty) {
-                $product = $products->firstWhere('id', $prodId);
-                $product->decrement('stock', $totalReqQty);
-            }
-
-            // Calculate item lines and subtotal from DB prices
+            // Validate options & calculate item lines and subtotal from DB prices
             $orderItemsData = [];
             $subtotal = 0;
 
@@ -151,13 +143,28 @@ class OrderController extends Controller
                 $unitPrice = $product->price;
                 $nameSnapshot = $product->name;
 
-                if ($optionCode) {
-                    $option = ProductOption::where('product_id', $product->id)
-                        ->where('code', $optionCode)
-                        ->first();
-                    if ($option) {
-                        $unitPrice = $option->price;
-                        $nameSnapshot .= " ({$option->label})";
+                $hasOptions = $product->options && $product->options->isNotEmpty();
+                if ($hasOptions) {
+                    if (empty($optionCode)) {
+                        throw ValidationException::withMessages([
+                            "items.{$idx}.optionCode" => "يرجى اختيار أحد الخيارات المتاحة للمنتج {$product->name}",
+                        ]);
+                    }
+
+                    $option = $product->options->firstWhere('code', $optionCode);
+                    if (!$option) {
+                        throw ValidationException::withMessages([
+                            "items.{$idx}.optionCode" => 'الاختيار ده مش متاح',
+                        ]);
+                    }
+
+                    $unitPrice = $option->price;
+                    $nameSnapshot .= " ({$option->label})";
+                } else {
+                    if (!empty($optionCode)) {
+                        throw ValidationException::withMessages([
+                            "items.{$idx}.optionCode" => 'الاختيار ده مش متاح',
+                        ]);
                     }
                 }
 
@@ -174,25 +181,36 @@ class OrderController extends Controller
                 ];
             }
 
+            // Decrement stock for each product
+            foreach ($requiredStockPerProduct as $prodId => $totalReqQty) {
+                $product = $products->firstWhere('id', $prodId);
+                $product->decrement('stock', $totalReqQty);
+            }
+
             // Coupon calculation
             $couponCode = $request->input('coupon_code');
             $discount = 0;
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
-                if (!$coupon || !$coupon->isValidFor($subtotal)) {
+                if (!$coupon || !$coupon->is_active || ($coupon->expires_at && $coupon->expires_at->isPast())) {
                     throw ValidationException::withMessages([
                         'coupon_code' => 'كود الخصم غير صحيح أو منتهي الصلاحية',
+                    ]);
+                }
+                if ($coupon->min_subtotal > 0 && $subtotal < $coupon->min_subtotal) {
+                    throw ValidationException::withMessages([
+                        'coupon_code' => "الكوبون محتاج طلب بـ {$coupon->min_subtotal} ج.م على الأقل",
                     ]);
                 }
                 $discount = $coupon->calculateDiscount($subtotal);
             }
 
-            // Delivery fee calculation
+            // Delivery fee calculation using Setting::get()
             $deliveryMethod = $request->input('delivery_method');
             $deliveryFee = 0;
             if ($deliveryMethod === 'home') {
-                $deliveryFeeSetting = (int) (Setting::where('key', 'delivery_fee')->value('value') ?? 60);
-                $freeThresholdSetting = (int) (Setting::where('key', 'free_delivery_threshold')->value('value') ?? 3000);
+                $deliveryFeeSetting = (int) Setting::get('delivery_fee', 60);
+                $freeThresholdSetting = (int) Setting::get('free_delivery_threshold', 3000);
                 $deliveryFee = ($subtotal >= $freeThresholdSetting) ? 0 : $deliveryFeeSetting;
             }
 
@@ -204,7 +222,7 @@ class OrderController extends Controller
             $nextNumber = (string) max(1043, ((int) $maxNum) + 1);
 
             // Delivery date calculation from settings
-            $deliveryDays = (int) (Setting::where('key', 'delivery_days_count')->value('value') ?? 3);
+            $deliveryDays = (int) Setting::get('delivery_days_count', 3);
             $deliveryDate = now()->addDays($deliveryDays)->format('Y-m-d');
 
             $user = $request->user();
@@ -236,7 +254,7 @@ class OrderController extends Controller
             return $order;
         });
 
-        $order->load(['items.product.images', 'items.product.category']);
+        $order->load(['items.product.images']);
 
         return (new OrderResource($order))
             ->response()

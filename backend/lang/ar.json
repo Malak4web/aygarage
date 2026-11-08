@@ -1,0 +1,6 @@
+{
+  ":message (and :count more error)": ":message (وخطأ آخر)",
+  ":message (and :count more errors)": ":message (و :count أخطاء أخرى)",
+  "The items field is required.": "سلة المشتريات مطلوبة.",
+  "The given data was invalid.": "البيانات المقدمة غير صالحة."
+}

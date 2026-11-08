@@ -79,13 +79,14 @@ export const useCartStore = defineStore('cart', {
     discount(state) {
       if (!state.couponCode) return 0
       if (state.appliedCoupon) {
+        const minSub = state.appliedCoupon.min_subtotal || state.appliedCoupon.minSubtotal || 0
+        if (minSub > 0 && this.subtotal < minSub) {
+          return 0
+        }
         if (state.appliedCoupon.type === 'percent') {
           return Math.round(this.subtotal * (state.appliedCoupon.value / 100))
         }
         return Math.min(state.appliedCoupon.value, this.subtotal)
-      }
-      if (state.couponCode.trim().toUpperCase() === 'ZONTES10') {
-        return Math.round(this.subtotal * 0.1)
       }
       return 0
     },
@@ -229,6 +230,7 @@ export const useCartStore = defineStore('cart', {
           this.items = this.items.filter((i) => !linesToRemove.has(i.lineId))
         }
 
+        this.checkCouponMinSubtotal()
         this.persist()
       } catch (e) {
         this.isRefreshError = true
@@ -303,11 +305,13 @@ export const useCartStore = defineStore('cart', {
 
     removeItem(lineId) {
       this.items = this.items.filter((i) => i.lineId !== lineId)
+      this.checkCouponMinSubtotal()
       this.persist()
     },
 
     removeBySlug(slug) {
       this.items = this.items.filter((i) => i.slug !== slug && i.product?.slug !== slug)
+      this.checkCouponMinSubtotal()
       this.persist()
     },
 
@@ -316,7 +320,19 @@ export const useCartStore = defineStore('cart', {
       if (item) {
         const maxStock = item.product?.stock !== undefined ? item.product.stock : 99
         item.qty = Math.min(maxStock, Math.max(1, qty))
+        this.checkCouponMinSubtotal()
         this.persist()
+      }
+    },
+
+    checkCouponMinSubtotal() {
+      if (this.appliedCoupon) {
+        const minSub = this.appliedCoupon.min_subtotal || this.appliedCoupon.minSubtotal || 0
+        if (minSub > 0 && this.subtotal < minSub) {
+          this.couponCode = ''
+          this.appliedCoupon = null
+          this.couponError = `الكوبون محتاج طلب بـ ${minSub} ج.م على الأقل`
+        }
       }
     },
 

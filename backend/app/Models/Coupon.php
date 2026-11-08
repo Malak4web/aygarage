@@ -52,7 +52,9 @@ class Coupon extends Model
         }
 
         if ($this->type === 'percent') {
-            return (int) round($subtotal * ($this->value / 100));
+            $cappedPercent = min(100, max(0, $this->value));
+            $disc = (int) round($subtotal * ($cappedPercent / 100));
+            return min($disc, $subtotal);
         }
 
         return min($this->value, $subtotal);

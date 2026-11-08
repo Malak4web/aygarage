@@ -181,7 +181,7 @@
                 id="cart-coupon-input"
                 type="text"
                 v-model="couponInput"
-                placeholder="كود الخصم (جرب ZONTES10)"
+                placeholder="كود الخصم"
                 class="coupon-input"
               />
               <button type="button" class="btn o sm coupon-btn" @click="applyCoupon">
@@ -192,7 +192,7 @@
               {{ cartStore.couponError }}
             </div>
             <div v-else-if="cartStore.couponCode" class="coupon-msg ok">
-              تم تطبيق كود الخصم {{ cartStore.couponCode }} (10%)
+              تم تطبيق كود الخصم {{ cartStore.couponCode }} {{ cartStore.appliedCoupon?.type === 'percent' ? `(${cartStore.appliedCoupon.value}%)` : (cartStore.appliedCoupon?.value ? `(${cartStore.appliedCoupon.value} ج.م)` : '') }}
             </div>
 
             <RouterLink to="/checkout" class="btn full checkout-btn">

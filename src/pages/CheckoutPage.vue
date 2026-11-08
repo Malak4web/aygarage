@@ -120,7 +120,7 @@
           <h3>طريقة الدفع</h3>
           <div class="rad-group">
             <RadioCard
-              v-for="pm in storeConfig.paymentMethods"
+              v-for="pm in filteredPaymentMethods"
               :key="pm.id"
               name="payment"
               v-model="paymentMethod"
@@ -139,35 +139,57 @@
             <!-- Mini items list -->
             <div class="mini-list">
               <div
-                v-for="item in cartStore.items"
+                v-for="(item, idx) in cartStore.items"
                 :key="item.lineId"
-                class="mini"
+                class="mini-wrap"
               >
-                <template v-if="item.product">
-                  <div class="im">
-                    <ProductIllustration
-                      :type="item.product?.type"
-                      :color="item.product?.color"
-                      :image="item.product?.image"
-                      :width="40"
-                      :alt="item.product?.name"
-                    />
-                    <span class="mini-qty">{{ item.qty }}</span>
-                  </div>
-                  <span class="mini-name">{{ item.product?.name }}</span>
-                  <b class="mini-price">
-                    {{ (((item.selectedOption?.price || item.product?.price || item.seenPrice || 0) * item.qty)).toLocaleString('en') }}
-                  </b>
-                </template>
-                <template v-else>
-                  <div class="im skeleton-box" style="width: 40px; height: 40px; border-radius: 6px; background: var(--sf);">
-                    <span class="mini-qty">{{ item.qty }}</span>
-                  </div>
-                  <span class="mini-name" style="color: var(--mu);">جاري التحميل...</span>
-                  <b class="mini-price">
-                    {{ (((item.seenPrice || 0) * item.qty)).toLocaleString('en') }}
-                  </b>
-                </template>
+                <div class="mini">
+                  <template v-if="item.product">
+                    <div class="im">
+                      <ProductIllustration
+                        :type="item.product?.type"
+                        :color="item.product?.color"
+                        :image="item.product?.image"
+                        :width="40"
+                        :alt="item.product?.name"
+                      />
+                      <span class="mini-qty">{{ item.qty }}</span>
+                    </div>
+                    <span class="mini-name">{{ item.product?.name }}</span>
+                    <b class="mini-price">
+                      {{ (((item.selectedOption?.price || item.product?.price || item.seenPrice || 0) * item.qty)).toLocaleString('en') }}
+                    </b>
+                  </template>
+                  <template v-else>
+                    <div class="im skeleton-box" style="width: 40px; height: 40px; border-radius: 6px; background: var(--sf);">
+                      <span class="mini-qty">{{ item.qty }}</span>
+                    </div>
+                    <span class="mini-name" style="color: var(--mu);">جاري التحميل...</span>
+                    <b class="mini-price">
+                      {{ (((item.seenPrice || 0) * item.qty)).toLocaleString('en') }}
+                    </b>
+                  </template>
+                </div>
+                <!-- Line Stock Error & Action Button -->
+                <div v-if="lineErrors[idx]" class="line-stock-error">
+                  <span class="stock-err-msg">{{ lineErrors[idx].message }}</span>
+                  <button
+                    v-if="lineErrors[idx].availableStock > 0"
+                    type="button"
+                    class="btn-fix-stock"
+                    @click="fixLineQty(item.lineId, idx, lineErrors[idx].availableStock)"
+                  >
+                    عدّل الكمية للمتاح ({{ lineErrors[idx].availableStock }})
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="btn-fix-stock remove"
+                    @click="removeLineItem(item.lineId, idx)"
+                  >
+                    شيل من السلة
+                  </button>
+                </div>
               </div>
             </div>
           </template>
@@ -246,6 +268,36 @@ const deliveryMethod = ref('home')
 const paymentMethod = ref('cod')
 const isSubmitting = ref(false)
 const submitError = ref('')
+const lineErrors = ref({})
+
+const filteredPaymentMethods = computed(() => {
+  if (deliveryMethod.value === 'home') {
+    return (storeConfig.paymentMethods || []).filter((pm) => pm.id === 'cod')
+  }
+  return (storeConfig.paymentMethods || []).filter((pm) => pm.id === 'pickup')
+})
+
+watch(
+  deliveryMethod,
+  (val) => {
+    if (val === 'home') paymentMethod.value = 'cod'
+    else if (val === 'pickup') paymentMethod.value = 'pickup'
+  },
+  { immediate: true }
+)
+
+const fixLineQty = (lineId, idx, available) => {
+  cartStore.updateQty(lineId, available)
+  delete lineErrors.value[idx]
+}
+
+const removeLineItem = (lineId, idx) => {
+  cartStore.removeItem(lineId)
+  delete lineErrors.value[idx]
+  if (cartStore.items.length === 0) {
+    router.replace('/cart')
+  }
+}
 
 const populateSavedAddress = () => {
   if (userStore.user?.address) {
@@ -293,6 +345,7 @@ const handleConfirmOrder = async () => {
   if (isSubmitting.value) return
   isSubmitting.value = true
   submitError.value = ''
+  lineErrors.value = {}
 
   try {
     const orderData = {
@@ -319,7 +372,30 @@ const handleConfirmOrder = async () => {
     cartStore.clearCart()
     router.push(`/order/${createdOrder.number || createdOrder.id}`)
   } catch (error) {
-    submitError.value = error?.message || 'حدث خطأ أثناء تأكيد الطلب، يرجى المحاولة مرة أخرى.'
+    if (error?.status === 422 && error.errors) {
+      const newErrors = {}
+      for (const [key, msg] of Object.entries(error.errors)) {
+        const match = key.match(/^items\.(\d+)/)
+        if (match) {
+          const idx = parseInt(match[1])
+          const strMsg = Array.isArray(msg) ? msg[0] : String(msg)
+          const availMatch = strMsg.match(/المتاح:\s*(\d+)/)
+          const availableStock = availMatch ? parseInt(availMatch[1]) : 0
+          newErrors[idx] = {
+            message: strMsg,
+            availableStock
+          }
+        }
+      }
+      lineErrors.value = newErrors
+      if (Object.keys(newErrors).length === 0) {
+        submitError.value = error.message
+      } else {
+        submitError.value = ''
+      }
+    } else {
+      submitError.value = error?.message || 'حدث خطأ أثناء تأكيد الطلب، يرجى المحاولة مرة أخرى.'
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -557,14 +633,56 @@ const handleConfirmOrder = async () => {
   flex-direction: column;
 }
 
+.mini-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
 .mini {
   display: grid;
   grid-template-columns: 56px 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--ln);
   font-size: 13.5px;
+}
+
+.line-stock-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fdf2f2;
+  border: 1px solid #f8b4b4;
+  color: #c81e1e;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.stock-err-msg {
+  font-weight: 600;
+  flex: 1;
+}
+
+.btn-fix-stock {
+  background: #ffffff;
+  border: 1px solid #c81e1e;
+  color: #c81e1e;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-fix-stock:hover {
+  background: #c81e1e;
+  color: #ffffff;
 }
 
 .mini .im {

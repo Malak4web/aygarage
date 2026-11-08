@@ -24,7 +24,7 @@ Route::get('/products/{slug}/reviews', [ProductController::class, 'reviews']);
 Route::get('/bikes', [BikeController::class, 'index']);
 Route::get('/bikes/{slug}', [BikeController::class, 'show']);
 Route::get('/services', [ServiceController::class, 'index']);
-Route::post('/coupons/check', [CouponController::class, 'check']);
+Route::post('/coupons/check', [CouponController::class, 'check'])->middleware('throttle:10,1');
 
 // Public Auth & Lead Generation (Separate rate limiters per IP)
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:register');
