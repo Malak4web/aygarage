@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SellRequest extends Model
 {
@@ -25,5 +26,10 @@ class SellRequest extends Model
             'year' => 'integer',
             'km' => 'integer',
         ];
+    }
+
+    public function bikeModel(): BelongsTo
+    {
+        return $this->belongsTo(BikeModel::class, 'bike_model_code', 'code');
     }
 }

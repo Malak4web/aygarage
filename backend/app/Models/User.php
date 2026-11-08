@@ -4,13 +4,16 @@ namespace App\Models;
 
 use App\Support\Phone;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, HasName
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -19,6 +22,7 @@ class User extends Authenticatable
         'phone',
         'email',
         'password',
+        'role',
     ];
 
     protected $hidden = [
@@ -47,6 +51,16 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->name ?? $this->phone;
+    }
+
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
@@ -65,6 +79,11 @@ class User extends Authenticatable
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function serviceRecords(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(ServiceRecord::class, UserBike::class, 'user_id', 'user_bike_id');
     }
 
     public function favorites(): HasMany

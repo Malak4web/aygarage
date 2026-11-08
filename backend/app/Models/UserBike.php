@@ -20,6 +20,7 @@ class UserBike extends Model
         'odometer',
         'next_service_km',
         'license_until',
+        'last_visit_at',
         'color',
     ];
 
@@ -29,12 +30,18 @@ class UserBike extends Model
             'year' => 'integer',
             'odometer' => 'integer',
             'next_service_km' => 'integer',
+            'last_visit_at' => 'date:Y-m-d',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bikeModel(): BelongsTo
+    {
+        return $this->belongsTo(BikeModel::class, 'bike_model_code', 'code');
     }
 
     public function serviceRecords(): HasMany

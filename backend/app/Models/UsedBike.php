@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UsedBike extends Model
@@ -40,6 +41,11 @@ class UsedBike extends Model
             'sold_count' => 'integer',
             'specs' => 'array',
         ];
+    }
+
+    public function bikeModel(): BelongsTo
+    {
+        return $this->belongsTo(BikeModel::class, 'bike_model_code', 'code');
     }
 
     public function inspections(): HasMany
