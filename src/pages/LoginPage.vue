@@ -53,7 +53,7 @@
         </button>
 
         <button type="button" class="btn o full whatsapp-btn" @click="handleWhatsAppCode">
-          ادخل بكود على الواتساب
+          ادخل بكود على الواتساب (قريباً)
         </button>
       </form>
 

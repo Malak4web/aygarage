@@ -66,7 +66,7 @@
               aria-label="اختيار موديل الموتوسيكل"
             >
               <option v-for="m in storeConfig.models" :key="m" :value="m">
-                {{ m }}{{ m === userStore.selectedBike ? ` · ${userBikeYear}` : '' }}
+                {{ m }}{{ (m === userStore.selectedBike && userBikeYear) ? ` · ${userBikeYear}` : '' }}
               </option>
             </select>
             <AppIcon name="down" :size="14" class="sel-icon" />
@@ -206,7 +206,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
@@ -423,7 +423,9 @@ const onFilterChanged = () => {
   if (currentPage.value !== 1) {
     isResettingPage = true
     currentPage.value = 1
-    isResettingPage = false
+    nextTick(() => {
+      isResettingPage = false
+    })
   }
   fetchProducts()
 }

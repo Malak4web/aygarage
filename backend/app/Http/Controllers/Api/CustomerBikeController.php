@@ -12,7 +12,7 @@ class CustomerBikeController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $bikes = $request->user()->bikes()->with('serviceRecords')->get();
+        $bikes = $request->user()->bikes()->with('latestServiceRecord')->get();
 
         return response()->json(UserBikeResource::collection($bikes));
     }

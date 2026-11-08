@@ -49,6 +49,17 @@
           </span>
         </div>
 
+        <!-- Refresh Error Banner -->
+        <div v-if="cartStore.isRefreshError" class="cart-refresh-banner">
+          <div class="refresh-err-msg">
+            <AppIcon name="alert-triangle" :size="20" />
+            <span>تعذر تحديث السلة. تأكد من اتصال الإنترنت أو حالة الخادم.</span>
+          </div>
+          <button type="button" class="btn o sm" @click="cartStore.refreshCart()">
+            إعادة المحاولة
+          </button>
+        </div>
+
         <!-- Lines -->
         <div class="lines-list">
           <template v-if="cartStore.isRefreshing && !hasLoadedItems">
@@ -118,11 +129,29 @@
               </template>
 
               <template v-else>
-                <div class="im skeleton-box"></div>
-                <div class="line-info">
-                  <div class="skeleton-bar title-bar"></div>
-                  <div class="skeleton-bar sub-bar"></div>
+                <div class="im fallback-im">
+                  <AppIcon name="box" :size="32" />
                 </div>
+                <div class="line-info">
+                  <b>{{ item.slug }}</b>
+                  <small style="color: var(--sale);">
+                    تعذر تحديث تفاصيل المنتج
+                  </small>
+                </div>
+                <div class="line-qty">
+                  <span>{{ item.qty }}x</span>
+                </div>
+                <b class="line-total">
+                  {{ ((item.seenPrice || 0) * item.qty).toLocaleString('en') }} ج.م
+                </b>
+                <button
+                  type="button"
+                  class="line-remove"
+                  @click="cartStore.removeBySlug(item.slug || item.product?.slug || item.lineId)"
+                  aria-label="حذف المنتج من السلة"
+                >
+                  <AppIcon name="x" :size="18" />
+                </button>
               </template>
             </div>
           </template>
@@ -398,6 +427,36 @@ const companionProducts = computed(() => {
   display: grid;
   place-items: center;
   padding: 4px;
+}
+
+.cart-refresh-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--sf);
+  border: 1px solid var(--sale);
+  border-radius: var(--radius-card);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.refresh-err-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sale);
+}
+
+.fallback-im {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sf);
+  border-radius: 8px;
+  color: var(--mu);
 }
 
 .line-remove:hover {

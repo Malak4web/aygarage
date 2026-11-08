@@ -25,6 +25,17 @@ class UpdateMeRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'الاسم مطلوب',
+            'email.email' => 'البريد الإلكتروني غير صحيح',
+            'email.unique' => 'البريد الإلكتروني مسجل لمستخدم آخر',
+            'current_password.required_with' => 'كلمة المرور الحالية مطلوبة لتغيير كلمة المرور',
+            'new_password.min' => 'كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف',
+        ];
+    }
+
     protected function failedValidation(Validator $validator)
     {
         $response = response()->json([

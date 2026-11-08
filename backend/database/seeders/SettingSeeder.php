@@ -38,9 +38,7 @@ class SettingSeeder extends Seeder
             'years' => [2026, 2025, 2024, 2023, 2022, 2021, 2020],
             'payment_methods' => [
                 ['id' => 'cod', 'title' => 'كاش عند الاستلام', 'desc' => 'ادفع للمندوب لما الطلب يوصل'],
-                ['id' => 'card', 'title' => 'كارت بنكي', 'desc' => 'Visa · Mastercard · Meeza'],
-                ['id' => 'vodafone', 'title' => 'فودافون كاش', 'desc' => 'هيوصلك طلب دفع على رقمك'],
-                ['id' => 'instapay', 'title' => 'InstaPay', 'desc' => 'تحويل لحساب الجراج'],
+                ['id' => 'pickup', 'title' => 'الدفع عند الاستلام في الجراج', 'desc' => 'استلم طلبك وادفع كاش في مقر الجراج'],
             ],
             'governorates' => [
                 [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,6 +10,16 @@ class UserBikeResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $latestRecord = $this->latestServiceRecord;
+        $lastVisitDate = null;
+        $lastVisitFormatted = null;
+
+        if ($latestRecord && $latestRecord->date) {
+            $parsedDate = Carbon::parse($latestRecord->date);
+            $lastVisitDate = $parsedDate->toDateString();
+            $lastVisitFormatted = $parsedDate->locale('ar')->isoFormat('D MMMM YYYY');
+        }
+
         return [
             'id' => (string) $this->id,
             'dbId' => $this->id,
@@ -21,12 +32,12 @@ class UserBikeResource extends JsonResource
             'odo' => (int) $this->odometer,
             'nextServiceKm' => (int) $this->next_service_km,
             'nextService' => (int) $this->next_service_km,
-            'licenseUntil' => $this->license_until,
-            'license' => $this->license_until ?: '2027',
+            'licenseUntil' => $this->license_until ?: null,
+            'license' => $this->license_until ?: null,
             'color' => $this->color,
             'col' => $this->color ?: '#2e2e2e',
-            'lastVisitAt' => $this->last_visit_at,
-            'lastVisit' => $this->last_visit_at ? date('Y-m-d', strtotime($this->last_visit_at)) : 'لا توجد زيارات سابقة',
+            'lastVisitAt' => $lastVisitDate,
+            'lastVisit' => $lastVisitFormatted,
         ];
     }
 }

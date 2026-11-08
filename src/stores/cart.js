@@ -52,6 +52,7 @@ export const useCartStore = defineStore('cart', {
       couponCode: savedCoupon,
       couponError: '',
       isRefreshing: false,
+      isRefreshError: false,
       alerts: []
     }
   },
@@ -140,6 +141,7 @@ export const useCartStore = defineStore('cart', {
     async refreshCart() {
       if (this.isRefreshing || this.items.length === 0) return
       this.isRefreshing = true
+      this.isRefreshError = false
 
       try {
         const slugs = [...new Set(this.items.map((i) => i.slug || i.product?.slug).filter(Boolean))]
@@ -209,6 +211,7 @@ export const useCartStore = defineStore('cart', {
 
         this.persist()
       } catch (e) {
+        this.isRefreshError = true
         console.warn('Cart refresh failed:', e)
       } finally {
         // Item 5: Reset isRefreshing in finally
@@ -280,6 +283,11 @@ export const useCartStore = defineStore('cart', {
 
     removeItem(lineId) {
       this.items = this.items.filter((i) => i.lineId !== lineId)
+      this.persist()
+    },
+
+    removeBySlug(slug) {
+      this.items = this.items.filter((i) => i.slug !== slug && i.product?.slug !== slug)
       this.persist()
     },
 

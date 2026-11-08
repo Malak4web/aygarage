@@ -240,7 +240,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
@@ -494,7 +494,9 @@ const onFilterChanged = () => {
   if (currentPage.value !== 1) {
     isResettingPage = true
     currentPage.value = 1
-    isResettingPage = false
+    nextTick(() => {
+      isResettingPage = false
+    })
   }
   fetchBikes()
 }

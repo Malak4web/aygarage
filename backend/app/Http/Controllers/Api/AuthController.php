@@ -105,9 +105,15 @@ class AuthController extends Controller
                 ], 422);
             }
             $user->password = $request->input('new_password');
-        }
+            $user->save();
 
-        $user->save();
+            $currentTokenId = $request->user()->currentAccessToken()?->id;
+            if ($currentTokenId) {
+                $user->tokens()->where('id', '!=', $currentTokenId)->delete();
+            }
+        } else {
+            $user->save();
+        }
 
         return response()->json([
             'user' => new UserResource($user->load(['addresses', 'bikes'])),

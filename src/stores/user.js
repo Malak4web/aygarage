@@ -5,7 +5,7 @@ import { useFavoritesStore } from './favorites.js'
 export const useUserStore = defineStore('user', {
   state: () => {
     let savedBike = 'ZT350-T'
-    let savedBikeYear = 2023
+    let savedBikeYear = null
     let token = null
 
     try {
@@ -13,7 +13,7 @@ export const useUserStore = defineStore('user', {
       if (storedBike) savedBike = storedBike
 
       const storedBikeYear = localStorage.getItem('ayg_selected_bike_year')
-      if (storedBikeYear) savedBikeYear = parseInt(storedBikeYear, 10) || 2023
+      if (storedBikeYear) savedBikeYear = parseInt(storedBikeYear, 10) || null
 
       token = localStorage.getItem('ayg_token')
     } catch (e) {
@@ -34,10 +34,10 @@ export const useUserStore = defineStore('user', {
     userName: (state) => (state.isAuthenticated && state.user ? state.user.name : ''),
     userBikes: (state) => (state.isAuthenticated && state.user?.savedBikes ? state.user.savedBikes : []),
     userBikeYear: (state) => {
+      if (!state.selectedBike) return null
       const matched = state.user?.savedBikes?.find((b) => b.model?.includes(state.selectedBike) || b.bikeModelCode === state.selectedBike)
       if (matched?.year) return matched.year
-      if (state.user?.savedBikes?.[0]?.year) return state.user.savedBikes[0].year
-      return state.selectedBikeYear || 2023
+      return state.selectedBikeYear || null
     }
   },
 
@@ -201,6 +201,17 @@ export const useUserStore = defineStore('user', {
       if (this.user?.savedBikes) {
         this.user.savedBikes = this.user.savedBikes.filter((b) => b.id != bikeId && b.dbId != bikeId)
       }
+    },
+
+    async updateBike(bikeId, bikeData) {
+      const updated = await api.updateUserBike(bikeId, bikeData)
+      if (this.user?.savedBikes) {
+        const idx = this.user.savedBikes.findIndex((b) => b.id == bikeId || b.dbId == bikeId)
+        if (idx !== -1) {
+          this.user.savedBikes[idx] = updated
+        }
+      }
+      return updated
     },
 
     async updateProfile(profileData) {

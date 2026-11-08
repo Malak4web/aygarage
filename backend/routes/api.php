@@ -23,10 +23,10 @@ Route::get('/bikes', [BikeController::class, 'index']);
 Route::get('/bikes/{slug}', [BikeController::class, 'show']);
 Route::get('/services', [ServiceController::class, 'index']);
 
-// Public Auth & Lead Generation
-Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
-Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
-Route::post('/sell-requests', [SellRequestController::class, 'store']);
+// Public Auth & Lead Generation (Separate rate limiters per IP)
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:register');
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/sell-requests', [SellRequestController::class, 'store'])->middleware('throttle:5,1');
 
 // Authenticated Customer API
 Route::middleware('auth:sanctum')->group(function () {

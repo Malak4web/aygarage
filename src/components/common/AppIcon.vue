@@ -56,7 +56,9 @@ const icons = {
   left: '<path d="M15 18l-6-6 6-6"/>',
   'chevron-right': '<path d="M9 18l6-6-6-6"/>',
   'chevron-left': '<path d="M15 18l-6-6 6-6"/>',
-  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'
+  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+  'alert-triangle': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'
 }
 
 const pathD = computed(() => icons[props.name] || '')
