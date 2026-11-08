@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BikeController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\BookingSlotController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\CustomerAddressController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SellRequestController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\ServiceRecordController;
 use App\Http\Controllers\Api\SettingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +27,7 @@ Route::get('/products/{slug}/reviews', [ProductController::class, 'reviews']);
 Route::get('/bikes', [BikeController::class, 'index']);
 Route::get('/bikes/{slug}', [BikeController::class, 'show']);
 Route::get('/services', [ServiceController::class, 'index']);
+Route::get('/booking/slots', [BookingSlotController::class, 'index']);
 Route::post('/coupons/check', [CouponController::class, 'check'])->middleware('throttle:10,1');
 
 // Public Auth & Lead Generation (Separate rate limiters per IP)
@@ -58,4 +62,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me/orders', [OrderController::class, 'index']);
     Route::get('/me/orders/{number}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store']);
+
+    // Bookings
+    Route::get('/me/bookings', [BookingController::class, 'index']);
+    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::post('/me/bookings/{number}/cancel', [BookingController::class, 'cancel']);
+
+    // Service Records
+    Route::get('/me/service-records', [ServiceRecordController::class, 'index']);
 });

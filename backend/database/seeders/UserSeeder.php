@@ -137,6 +137,7 @@ class UserSeeder extends Seeder
                     'time' => '11:00',
                     'price_snapshot' => $oilService->price,
                     'status' => 'confirmed',
+                    'phone' => '01012345678',
                     'notes' => 'صيانة دورية للـ 15 ألف',
                 ]
             );

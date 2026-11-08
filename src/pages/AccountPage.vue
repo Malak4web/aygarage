@@ -197,17 +197,30 @@
                       <th>الميعاد</th>
                       <th>الحالة</th>
                       <th style="text-align: end">التكلفة</th>
+                      <th style="text-align: center">إجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="bkg in userBookings" :key="bkg.id">
-                      <td>#{{ bkg.id }}</td>
+                    <tr v-for="bkg in userBookings" :key="bkg.id || bkg.number">
+                      <td>#{{ bkg.number || bkg.id }}</td>
                       <td><b>{{ bkg.bike }}</b></td>
                       <td>{{ bkg.service }}</td>
                       <td>{{ bkg.date }} · {{ bkg.time }}</td>
-                      <td><span class="tg">{{ bkg.status }}</span></td>
+                      <td><span class="tg" :class="{ 'tg-cancel': bkg.rawStatus === 'cancelled' }">{{ bkg.status }}</span></td>
                       <td style="text-align: end">
                         {{ bkg.cost || (typeof bkg.price === 'number' ? (bkg.price > 0 ? `${bkg.price.toLocaleString('en')} ج.م` : 'حسب الفحص') : '—') }}
+                      </td>
+                      <td style="text-align: center">
+                        <button
+                          v-if="bkg.canCancel"
+                          type="button"
+                          class="btn o sm danger-btn"
+                          :disabled="cancellingBookingId === (bkg.number || bkg.id)"
+                          @click="handleCancelBooking(bkg.number || bkg.id)"
+                        >
+                          {{ cancellingBookingId === (bkg.number || bkg.id) ? 'جاري الإلغاء...' : 'إلغاء' }}
+                        </button>
+                        <span v-else style="color: var(--mu); font-size: 13px;">—</span>
                       </td>
                     </tr>
                   </tbody>
@@ -616,6 +629,30 @@ const loadAccountData = async () => {
     accountError.value = 'تعذر تحميل بيانات الحساب'
   } finally {
     loading.value = false
+  }
+}
+
+const cancellingBookingId = ref(null)
+const handleCancelBooking = async (number) => {
+  if (!confirm('هل أنت متأكد من رغبتك في إلغاء هذا الحجز؟')) return
+  cancellingBookingId.value = number
+  try {
+    const updated = await api.cancelBooking(number)
+    toastStore.show('تم إلغاء الحجز بنجاح', 'success')
+    const idx = userBookings.value.findIndex((b) => (b.number || b.id) === number)
+    if (idx !== -1) {
+      if (updated && updated.status) {
+        userBookings.value[idx] = updated
+      } else {
+        userBookings.value[idx].status = 'ملغي'
+        userBookings.value[idx].rawStatus = 'cancelled'
+        userBookings.value[idx].canCancel = false
+      }
+    }
+  } catch (err) {
+    toastStore.show(err?.message || 'تعذر إلغاء الحجز، يرجى المحاولة لاحقاً', 'error')
+  } finally {
+    cancellingBookingId.value = null
   }
 }
 

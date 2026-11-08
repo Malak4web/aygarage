@@ -22,6 +22,7 @@ class Booking extends Model
         'time',
         'price_snapshot',
         'status',
+        'phone',
         'notes',
     ];
 

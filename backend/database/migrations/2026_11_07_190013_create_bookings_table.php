@@ -17,9 +17,10 @@ return new class extends Migration
             $table->integer('odometer')->nullable();
             $table->foreignId('service_id')->constrained('services')->restrictOnDelete();
             $table->date('date');
-            $table->time('time'); // HH:MM (24h)
+            $table->string('time', 10); // HH:MM
             $table->integer('price_snapshot')->nullable();
             $table->string('status')->default('pending')->index(); // 'pending', 'confirmed', 'done', 'cancelled'
+            $table->string('phone')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 

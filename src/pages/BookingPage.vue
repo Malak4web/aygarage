@@ -195,7 +195,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { useUserStore } from '@/stores/user.js'
@@ -291,19 +291,61 @@ const currentMonthLabel = computed(() => {
   return now.toLocaleDateString('ar-EG-u-nu-latn', { month: 'long', year: 'numeric' })
 })
 
-const timeSlots = [
-  { val: '11:00 ص' },
-  { val: '12:00 م', off: true },
-  { val: '1:00 م' },
-  { val: '2:00 م' },
-  { val: '3:00 م' },
-  { val: '4:00 م' },
-  { val: '5:00 م', off: true },
-  { val: '6:00 م' },
-  { val: '7:00 م' },
-  { val: '8:00 م' }
+const defaultTimeSlots = [
+  { val: '11:00 ص', time: '11:00' },
+  { val: '12:00 م', time: '12:00', off: true },
+  { val: '1:00 م', time: '13:00' },
+  { val: '2:00 م', time: '14:00' },
+  { val: '3:00 م', time: '15:00' },
+  { val: '4:00 م', time: '16:00' },
+  { val: '5:00 م', time: '17:00', off: true },
+  { val: '6:00 م', time: '18:00' },
+  { val: '7:00 م', time: '19:00' },
+  { val: '8:00 م', time: '20:00' }
 ]
+const timeSlots = ref([...defaultTimeSlots])
 const selectedTime = ref('2:00 م')
+
+const loadingSlots = ref(false)
+const loadSlots = async (dateStr) => {
+  if (!dateStr) return
+  loadingSlots.value = true
+  try {
+    const res = await api.getSlots(dateStr)
+    const list = Array.isArray(res) ? res : (res?.data || [])
+    if (list.length > 0) {
+      timeSlots.value = list.map((s) => ({
+        val: s.label || s.val || s.time,
+        time: s.time,
+        off: !!s.off,
+        available: !!s.available
+      }))
+
+      // If current selection is off or not in list, select first available
+      const current = timeSlots.value.find((s) => s.val === selectedTime.value || s.time === selectedTime.value)
+      if (!current || current.off) {
+        const firstAvail = timeSlots.value.find((s) => !s.off)
+        if (firstAvail) {
+          selectedTime.value = firstAvail.val
+        }
+      }
+    }
+  } catch (err) {
+    // Keep fallback slots
+  } finally {
+    loadingSlots.value = false
+  }
+}
+
+watch(
+  () => selectedDay.value?.dateString,
+  (newDate) => {
+    if (newDate) {
+      loadSlots(newDate)
+    }
+  },
+  { immediate: true }
+)
 
 const bookingConfirmed = ref(false)
 const bookingRef = ref('')
@@ -353,17 +395,16 @@ const handleConfirmBooking = async () => {
 
   try {
     const bookingPayload = {
-      bike: selectedBikeTitle.value,
-      service: selectedService.value.name,
-      date: `${selectedDay.value.name} ${selectedDay.value.num} ${selectedDay.value.month}`,
+      service_id: selectedService.value.id,
+      user_bike_id: bikeChoice.value !== 'custom' ? bikeChoice.value : null,
+      custom_model: bikeChoice.value === 'custom' ? customModel.value : null,
+      odometer: bikeChoice.value === 'custom' ? (customOdo.value ? Number(customOdo.value) : null) : null,
+      date: selectedDay.value.dateString,
       time: selectedTime.value,
-      price: selectedService.value.price,
-      cost: selectedService.value.priceFormatted,
-      status: 'مؤكد'
     }
 
     const createdBooking = await api.createBooking(bookingPayload)
-    bookingRef.value = createdBooking.id
+    bookingRef.value = createdBooking.number || createdBooking.id
 
     if (userStore.user) {
       if (!userStore.user.bookings) {
@@ -377,7 +418,7 @@ const handleConfirmBooking = async () => {
       sessionStorage.removeItem('ayg_pending_booking')
     } catch (e) {}
   } catch (err) {
-    bookingError.value = 'حدث خطأ أثناء حجز الموعد، برجاء المحاولة لاحقاً.'
+    bookingError.value = err?.message || 'حدث خطأ أثناء حجز الموعد، برجاء المحاولة لاحقاً.'
   } finally {
     isSubmitting.value = false
   }

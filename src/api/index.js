@@ -85,8 +85,6 @@ async function request(endpoint, options = {}) {
   return responseText ? JSON.parse(responseText) : null
 }
 
-// Stored bookings fallback for booking phase 5
-
 export const api = {
   // --- Settings ---
   async getSettings() {
@@ -183,9 +181,17 @@ export const api = {
     return await request('/services')
   },
 
+  // --- Booking Slots ---
+  async getSlots(date) {
+    const res = await request(`/booking/slots?date=${encodeURIComponent(date)}`)
+    return res?.data || res || []
+  },
+
   // --- Service History (Account) ---
-  async getServiceHistory() {
-    return []
+  async getServiceHistory(bikeId) {
+    const query = bikeId ? `?bikeId=${encodeURIComponent(bikeId)}` : ''
+    const res = await request(`/me/service-records${query}`)
+    return res?.data || res || []
   },
 
   // --- User / Auth (Phase 3) ---
@@ -325,26 +331,22 @@ export const api = {
   },
 
   async getUserBookings() {
-    // Until Phase 5 bookings API is implemented
-    return []
+    const res = await request('/me/bookings')
+    return res?.data || res || []
   },
 
   async createBooking(bookingData) {
-    const bookingId = bookingData.id || ('BK-' + Math.floor(1000 + Math.random() * 9000))
-    const booking = {
-      id: bookingId,
-      status: 'مؤكد',
-      ...bookingData
-    }
-    let storedBookings = []
-    try {
-      const b = localStorage.getItem('ayg_bookings')
-      if (b) storedBookings = JSON.parse(b)
-    } catch (e) {}
-    storedBookings.unshift(booking)
-    try {
-      localStorage.setItem('ayg_bookings', JSON.stringify(storedBookings))
-    } catch (e) {}
-    return booking
+    const res = await request('/bookings', {
+      method: 'POST',
+      body: JSON.stringify(bookingData)
+    })
+    return res?.data || res
+  },
+
+  async cancelBooking(number) {
+    const res = await request(`/me/bookings/${encodeURIComponent(number)}/cancel`, {
+      method: 'POST'
+    })
+    return res?.data || res
   }
 }
