@@ -1,5 +1,7 @@
 import { defaultUser } from '../data/user.js'
 import { serviceHistory } from '../data/serviceHistory.js'
+import router from '@/router/index.js'
+import { useUserStore } from '@/stores/user.js'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -16,13 +18,34 @@ async function request(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers
+    })
+  } catch (netErr) {
+    const error = new Error('تعذر الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت.')
+    error.status = 0
+    error.errors = {}
+    throw error
+  }
 
   if (response.status === 401) {
     localStorage.removeItem('ayg_token')
+    try {
+      const userStore = useUserStore()
+      if (typeof userStore?.logout === 'function') {
+        userStore.logout()
+      } else if (userStore?.user) {
+        userStore.user = null
+      }
+    } catch (_) {}
+
+    const currentPath = router?.currentRoute?.value?.fullPath || (typeof window !== 'undefined' ? window.location.pathname : '')
+    if (currentPath && !currentPath.startsWith('/login') && router) {
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`)
+    }
   }
 
   if (!response.ok) {
@@ -34,7 +57,15 @@ async function request(endpoint, options = {}) {
     const message = errorData?.message || `خطأ في الاتصال بالخادم (${response.status})`
     const error = new Error(message)
     error.status = response.status
-    error.errors = errorData?.errors || {}
+
+    // Item 13: turn 422 responses into { field: firstMessage } for the forms
+    const formattedErrors = {}
+    if (errorData?.errors && typeof errorData.errors === 'object') {
+      for (const [key, val] of Object.entries(errorData.errors)) {
+        formattedErrors[key] = Array.isArray(val) ? val[0] : String(val)
+      }
+    }
+    error.errors = formattedErrors
     throw error
   }
 

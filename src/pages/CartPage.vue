@@ -167,6 +167,7 @@ onMounted(async () => {
   try {
     allProducts.value = await api.getProducts({ bestSeller: true, perPage: 5 })
   } catch (e) {}
+  await cartStore.refreshCart()
 })
 
 const breadcrumbItems = [

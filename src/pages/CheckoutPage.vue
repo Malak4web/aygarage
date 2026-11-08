@@ -203,7 +203,8 @@ const route = useRoute()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 
-onMounted(() => {
+onMounted(async () => {
+  await cartStore.refreshCart()
   if (cartStore.items.length === 0) {
     router.replace('/cart')
   }

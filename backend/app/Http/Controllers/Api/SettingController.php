@@ -14,6 +14,9 @@ class SettingController extends Controller
         $raw = Setting::pluck('value', 'key')->all();
 
         $deliveryDaysCount = (int) ($raw['delivery_days_count'] ?? 3);
+        $deliveryEstimateDays = $raw['delivery_estimate_days'] ?? '2-4 أيام عمل';
+        $returnDays = (int) ($raw['return_days'] ?? 14);
+
         $targetDate = Carbon::now()->addDays($deliveryDaysCount)->locale('ar');
         $dayName = $targetDate->isoFormat('dddd');
         $dayNum = $targetDate->isoFormat('D');
@@ -21,6 +24,21 @@ class SettingController extends Controller
         $deliveryEstimate = "يوصلك {$dayName} {$dayNum} {$monthName}";
 
         $heroKitPrice = (int) ($raw['hero_kit_price'] ?? 5350);
+
+        // Item 16: Dynamically format trust items from returnDays and deliveryEstimateDays
+        $trustItems = $raw['trust_items'] ?? [];
+        if (is_array($trustItems)) {
+            foreach ($trustItems as &$item) {
+                if (isset($item['icon'])) {
+                    if ($item['icon'] === 'truck') {
+                        $item['desc'] = "خلال {$deliveryEstimateDays}";
+                    } elseif ($item['icon'] === 'ret') {
+                        $item['title'] = "استرجاع خلال {$returnDays} يوم";
+                    }
+                }
+            }
+            unset($item);
+        }
 
         $data = [
             'name' => $raw['store_name'] ?? 'جراج أبو يوسف',
@@ -32,9 +50,9 @@ class SettingController extends Controller
             'deliveryFee' => (int) ($raw['delivery_fee'] ?? 60),
             'freeDeliveryThreshold' => (int) ($raw['free_delivery_threshold'] ?? 3000),
             'deliveryDaysCount' => $deliveryDaysCount,
-            'deliveryEstimateDays' => $raw['delivery_estimate_days'] ?? '2-4 أيام عمل',
+            'deliveryEstimateDays' => $deliveryEstimateDays,
             'deliveryEstimate' => $deliveryEstimate,
-            'returnDays' => (int) ($raw['return_days'] ?? 14),
+            'returnDays' => $returnDays,
             'returnPolicyNote' => $raw['return_policy_note'] ?? '',
             'totalInspectedBikes' => (int) ($raw['total_inspected_bikes'] ?? 22),
             'defaultInstallmentMonthly' => (int) ($raw['default_installment_monthly'] ?? 10200),
@@ -46,7 +64,7 @@ class SettingController extends Controller
             'paymentMethods' => $raw['payment_methods'] ?? [],
             'governorates' => $raw['governorates'] ?? [],
             'serviceFeatures' => $raw['service_features'] ?? [],
-            'trustItems' => $raw['trust_items'] ?? [],
+            'trustItems' => $trustItems,
             'pickupTimes' => $raw['pickup_times'] ?? 'جاهز النهارده بعد 3 العصر',
             'bookingSlots' => $raw['booking_slots'] ?? [],
             'bookingCapacityPerSlot' => (int) ($raw['booking_capacity_per_slot'] ?? 2),
