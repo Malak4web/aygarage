@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductOption;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
@@ -35,6 +36,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK', 'ZT350-D', 'ZT703'],
                 'fit_note' => 'محتاج 3 لتر لكل تغيير زيت',
+                'created_at' => Carbon::parse('2026-01-10 10:00:00'),
                 'options' => [
                     ['code' => '1l', 'label' => '1 لتر', 'price' => 1450, 'old_price' => 1650, 'sort' => 1],
                     ['code' => '4l', 'label' => '4 لتر · 5,400', 'price' => 5400, 'old_price' => 6000, 'sort' => 2],
@@ -70,6 +72,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => ['ZT350-T', 'ZT350-GK', 'ZT350-D'],
                 'fit_note' => 'فلتر أصلي من التوكيل مباشرة',
+                'created_at' => Carbon::parse('2026-02-15 11:30:00'),
                 'options' => [],
                 'description' => 'فلتر زيت أصلي مخصص لمحركات Zontes 350cc لضمان أعلى كفاءة تنقية وحماية طلمبة الزيت والمحرك من الرواسب المعدنية الدقيقة.',
                 'specs' => [
@@ -100,6 +103,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X'],
                 'fit_note' => 'متوافق مع كاليبر Brembo الأمامي الأصلي',
+                'created_at' => Carbon::parse('2026-03-01 14:00:00'),
                 'options' => [],
                 'description' => 'تيل فرامل أمامي سيراميك من بريمبو يوفر استجابة فرملة دقيقة وقوية بدون تآكل سريع للطنبورة ومقاوم لدرجات الحرارة العالية.',
                 'specs' => [
@@ -130,6 +134,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => [],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-04-12 16:20:00'),
                 'options' => [],
                 'description' => 'خوذة كاملة معتمدة ECE 22.06 من LS2، خفيفة الوزن ومريحة مع فتحات تهوية ديناميكية وبطانة داخلية قابلة للفك والغسيل.',
                 'specs' => [
@@ -160,6 +165,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-02-20 09:15:00'),
                 'options' => [],
                 'description' => 'جنزير ياباني أصلي فئة VX3 بحلقات X-Ring لعمر تشغيلي أطول ومقاومة عالية للتمدد في السرعات العالية.',
                 'specs' => [
@@ -189,6 +195,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK', 'ZT125-U'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-05-01 13:45:00'),
                 'options' => [],
                 'description' => 'شمعة إشعال إيريديوم أصلية تمنح شرارة كهربائية فائقة الدقة وثبات في دوران المحرك مع استهلاك وقود مثالي.',
                 'specs' => [
@@ -218,6 +225,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => [],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-03-10 11:00:00'),
                 'options' => [],
                 'description' => 'قفاز صيفي شبكي عالي التهوية مع واقي مفاصل متطور وتدعيمات جلدية في باطن اليد ومناسب للتحكم في شاشات اللمس.',
                 'specs' => [
@@ -247,6 +255,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => ['ZT350-T', 'ZT350-GK', 'ZT350-D'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-01-05 08:30:00'),
                 'options' => [],
                 'description' => 'بطارية جل محكمة الغلق لا تحتاج لأي صيانة، تمنح أمبير تشغيل عالي جداً حتى في أبرد أيام الشتاء.',
                 'specs' => [
@@ -277,6 +286,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'نص تخليقي',
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-04-20 15:10:00'),
                 'options' => [],
                 'description' => 'زيت تكنوسينثيز معزز بالإستر لتحسين أداء الجير وحماية المحرك في فترات الصيف الحارة والرحلات الطويلة.',
                 'specs' => [
@@ -307,6 +317,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => null,
                 'fits' => ['ZT350-T', 'ZT310-X'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-02-01 17:00:00'),
                 'options' => [],
                 'description' => 'إطار سياحي رياضي من بيريللي يمنح ثباتاً استثنائياً على الطرق المبتلة والجافة وعمراً افتراضياً طويلاً في السفر.',
                 'specs' => [
@@ -336,6 +347,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-05-10 12:00:00'),
                 'options' => [],
                 'description' => null,
                 'specs' => ['اللزوجة' => '10W-40', 'النوع' => 'تخليقي 100%'],
@@ -361,6 +373,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-01-25 14:30:00'),
                 'options' => [],
                 'description' => null,
                 'specs' => ['اللزوجة' => '10W-40', 'النوع' => 'تخليقي 100%'],
@@ -386,6 +399,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT350-GK'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-04-05 10:45:00'),
                 'options' => [],
                 'description' => null,
                 'specs' => ['اللزوجة' => '10W-40', 'النوع' => 'تخليقي 100%'],
@@ -411,6 +425,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT310-X'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-03-15 16:15:00'),
                 'options' => [],
                 'description' => null,
                 'specs' => ['اللزوجة' => '15W-50', 'النوع' => 'تخليقي 100%'],
@@ -436,6 +451,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT703', 'ZT350-GK'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-02-28 13:00:00'),
                 'options' => [],
                 'description' => null,
                 'specs' => ['اللزوجة' => '10W-40', 'النوع' => 'تخليقي بالكامل - حلبات سباق'],
@@ -461,6 +477,7 @@ class ProductSeeder extends Seeder
                 'oil_type' => 'تخليقي 100%',
                 'fits' => ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT125-U'],
                 'fit_note' => null,
+                'created_at' => Carbon::parse('2026-03-22 15:30:00'),
                 'options' => [],
                 'description' => null,
                 'specs' => ['اللزوجة' => '10W-40', 'النوع' => 'تخليقي 100%'],
@@ -475,10 +492,15 @@ class ProductSeeder extends Seeder
             unset($pData['category_slug']);
             $pData['category_id'] = $categories[$categorySlug];
 
+            $createdAt = $pData['created_at'];
+
             $product = Product::updateOrCreate(
                 ['slug' => $pData['slug']],
                 $pData
             );
+
+            $product->created_at = $createdAt;
+            $product->save();
 
             // create options
             foreach ($options as $opt) {

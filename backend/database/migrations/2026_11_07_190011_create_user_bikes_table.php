@@ -18,7 +18,6 @@ return new class extends Migration
             $table->integer('odometer')->default(0);
             $table->integer('next_service_km')->default(0);
             $table->string('license_until')->nullable();
-            $table->string('last_visit_at')->nullable();
             $table->string('color')->nullable();
             $table->timestamps();
         });

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('number')->unique(); // '1042'
-            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('status')->default('new')->index(); // 'new', 'preparing', 'shipped', 'ready_for_pickup', 'delivered', 'cancelled'
             $table->integer('subtotal');
             $table->integer('discount')->default(0);

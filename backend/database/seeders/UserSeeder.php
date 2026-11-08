@@ -20,28 +20,32 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // 1. Admin User
-        $adminPassword = env('SEED_ADMIN_PASSWORD', 'admin123456');
-        $admin = User::updateOrCreate(
-            ['phone' => '01000000001'],
-            [
-                'name' => 'أبو يوسف (المدير)',
-                'email' => 'admin@aygarage.com',
-                'password' => Hash::make($adminPassword),
-                'role' => 'admin',
-            ]
-        );
+        $adminPassword = env('SEED_ADMIN_PASSWORD');
+        if (empty($adminPassword)) {
+            throw new \RuntimeException('SEED_ADMIN_PASSWORD is missing in .env. Please set it before seeding.');
+        }
+
+        $admin = User::firstOrNew(['phone' => '01000000001']);
+        $admin->forceFill([
+            'name' => 'أبو يوسف (المدير)',
+            'email' => 'admin@aygarage.com',
+            'password' => Hash::make($adminPassword),
+            'role' => 'admin',
+        ])->save();
 
         // 2. Demo Customer Karim
-        $demoPassword = env('SEED_DEMO_PASSWORD', '123456');
-        $karim = User::updateOrCreate(
-            ['phone' => '01012345678'],
-            [
-                'name' => 'كريم محمود',
-                'email' => 'karim@aygarage.com',
-                'password' => Hash::make($demoPassword),
-                'role' => 'customer',
-            ]
-        );
+        $demoPassword = env('SEED_DEMO_PASSWORD');
+        if (empty($demoPassword)) {
+            throw new \RuntimeException('SEED_DEMO_PASSWORD is missing in .env. Please set it before seeding.');
+        }
+
+        $karim = User::firstOrNew(['phone' => '01012345678']);
+        $karim->forceFill([
+            'name' => 'كريم محمود',
+            'email' => 'karim@aygarage.com',
+            'password' => Hash::make($demoPassword),
+            'role' => 'customer',
+        ])->save();
 
         // Karim's Address
         Address::updateOrCreate(
@@ -69,7 +73,6 @@ class UserSeeder extends Seeder
                 'odometer' => 12400,
                 'next_service_km' => 15000,
                 'license_until' => 'مارس 2027',
-                'last_visit_at' => '12 أكتوبر',
                 'color' => '#9e2b25',
             ]
         );
@@ -131,7 +134,7 @@ class UserSeeder extends Seeder
                     'user_bike_id' => $bike->id,
                     'service_id' => $oilService->id,
                     'date' => Carbon::now()->addDays(5)->format('Y-m-d'),
-                    'time' => '11:30 ص',
+                    'time' => '11:00',
                     'price_snapshot' => $oilService->price,
                     'status' => 'confirmed',
                     'notes' => 'صيانة دورية للـ 15 ألف',

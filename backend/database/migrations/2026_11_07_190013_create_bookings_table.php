@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('user_bike_id')->nullable()->constrained('user_bikes')->nullOnDelete();
             $table->string('custom_model')->nullable();
             $table->integer('odometer')->nullable();
-            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
+            $table->foreignId('service_id')->constrained('services')->restrictOnDelete();
             $table->date('date');
             $table->string('time'); // e.g. '11:00 AM' or '3:00 العصر'
             $table->integer('price_snapshot')->nullable();

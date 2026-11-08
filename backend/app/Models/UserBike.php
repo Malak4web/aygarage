@@ -20,8 +20,11 @@ class UserBike extends Model
         'odometer',
         'next_service_km',
         'license_until',
-        'last_visit_at',
         'color',
+    ];
+
+    protected $appends = [
+        'last_visit_at',
     ];
 
     protected function casts(): array
@@ -46,5 +49,20 @@ class UserBike extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function latestServiceRecord()
+    {
+        return $this->hasOne(ServiceRecord::class)->latestOfMany('date');
+    }
+
+    public function getLastVisitAtAttribute(): ?string
+    {
+        $latest = $this->latestServiceRecord;
+        if (!$latest || !$latest->date) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($latest->date)->locale('ar')->isoFormat('D MMMM');
     }
 }

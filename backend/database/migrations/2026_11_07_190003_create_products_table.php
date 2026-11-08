@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('brand');
             $table->string('sku')->index();
-            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained('categories')->restrictOnDelete();
             $table->string('type')->index(); // 'oil', 'filter', 'brake', etc.
             $table->string('color')->nullable();
             $table->integer('price');

@@ -51,4 +51,9 @@ class UsedBike extends Model
     {
         return $this->hasMany(UsedBikeImage::class)->orderBy('sort');
     }
+
+    public function serviceRecords(): HasMany
+    {
+        return $this->hasMany(UsedBikeServiceRecord::class)->orderBy('date', 'desc');
+    }
 }
