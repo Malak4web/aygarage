@@ -42,6 +42,49 @@ class Order extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (Order $order) {
+            if ($order->isDirty('status')) {
+                $oldStatus = $order->getOriginal('status');
+                $newStatus = $order->status;
+
+                // When transitioning to cancelled: return stock
+                if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+                        foreach ($order->items as $item) {
+                            if ($item->product_id) {
+                                Product::where('id', $item->product_id)->increment('stock', $item->qty);
+                            }
+                        }
+                    });
+                }
+
+                // When transitioning BACK from cancelled: check and decrement
+                if ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+                        foreach ($order->items as $item) {
+                            if ($item->product_id) {
+                                $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
+                                if ($product && $product->stock < $item->qty) {
+                                    throw \Illuminate\Validation\ValidationException::withMessages([
+                                        'status' => "لا يمكن إعادة تفعيل الطلب لأن كمية المنتج '{$product->name}' غير كافية في المخزون (المتبقي: {$product->stock}).",
+                                    ]);
+                                }
+                            }
+                        }
+
+                        foreach ($order->items as $item) {
+                            if ($item->product_id) {
+                                Product::where('id', $item->product_id)->decrement('stock', $item->qty);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

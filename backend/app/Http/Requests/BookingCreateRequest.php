@@ -98,8 +98,14 @@ class BookingCreateRequest extends FormRequest
             $time = $this->input('time');
             if (is_string($time)) {
                 $slots = Setting::get('booking_slots', []);
+                if (is_string($slots)) {
+                    $slots = json_decode($slots, true);
+                }
+                if (!is_array($slots)) {
+                    $slots = [];
+                }
                 $matchedSlot = collect($slots)->first(function ($s) use ($time) {
-                    return $s['time'] === $time || (isset($s['label']) && $s['label'] === $time);
+                    return is_array($s) && (($s['time'] ?? '') === $time || ($s['label'] ?? '') === $time);
                 });
 
                 if (!$matchedSlot || !empty($matchedSlot['off'])) {

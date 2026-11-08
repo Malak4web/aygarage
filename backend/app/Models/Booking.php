@@ -35,6 +35,23 @@ class Booking extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Booking $booking) {
+            if (empty($booking->number)) {
+                $booking->number = 'BK-TEMP-' . (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+
+        static::created(function (Booking $booking) {
+            if (str_starts_with($booking->number, 'BK-TEMP-')) {
+                $booking->updateQuietly([
+                    'number' => 'BK-' . (1042 + $booking->id),
+                ]);
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
+use App\Models\Setting;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -36,21 +37,32 @@ class OrderForm
                         'paid' => 'تم الدفع بنجاح',
                     ])
                     ->required(),
-                Select::make('delivery_method')
+                TextInput::make('delivery_method')
                     ->label('طريقة الاستلام')
-                    ->options([
-                        'home' => 'توصيل للمنزل',
-                        'pickup' => 'استلام من الجراج',
-                    ])
-                    ->required(),
+                    ->formatStateUsing(fn ($state) => $state === 'home' ? 'توصيل للمنزل' : 'استلام من الجراج')
+                    ->disabled()
+                    ->dehydrated(false),
                 Select::make('payment_method')
                     ->label('طريقة الدفع')
-                    ->options([
-                        'cod' => 'دفع عند الاستلام',
-                        'vodafone' => 'فودافون كاش',
-                        'instapay' => 'إنستاباي',
-                        'card' => 'بطاقة بنكية',
-                    ])
+                    ->options(function () {
+                        $methods = Setting::get('payment_methods') ?? [];
+                        $opts = [];
+                        if (is_array($methods)) {
+                            foreach ($methods as $m) {
+                                if (is_array($m) && isset($m['id'])) {
+                                    $opts[$m['id']] = $m['title'] ?? $m['id'];
+                                }
+                            }
+                        }
+                        $defaults = [
+                            'cod' => 'دفع عند الاستلام',
+                            'pickup' => 'الدفع عند الاستلام في الجراج',
+                            'vodafone' => 'فودافون كاش',
+                            'instapay' => 'إنستاباي',
+                            'card' => 'بطاقة بنكية',
+                        ];
+                        return array_merge($defaults, $opts);
+                    })
                     ->required(),
                 DatePicker::make('delivery_date')
                     ->label('تاريخ التسليم المتوقع')
@@ -71,40 +83,58 @@ class OrderForm
                     ->columnSpanFull(),
                 TextInput::make('subtotal')
                     ->label('المجموع الفرعي (ج.م)')
-                    ->numeric(),
+                    ->numeric()
+                    ->disabled()
+                    ->dehydrated(false),
                 TextInput::make('discount')
                     ->label('الخصم (ج.م)')
-                    ->numeric(),
+                    ->numeric()
+                    ->disabled()
+                    ->dehydrated(false),
                 TextInput::make('coupon_code')
-                    ->label('كوبون الخصم المستعمل'),
+                    ->label('كوبون الخصم المستعمل')
+                    ->disabled()
+                    ->dehydrated(false),
                 TextInput::make('delivery_fee')
                     ->label('مصاريف الشحن (ج.م)')
-                    ->numeric(),
+                    ->numeric()
+                    ->disabled()
+                    ->dehydrated(false),
                 TextInput::make('total')
                     ->label('الإجمالي النهائي (ج.م)')
                     ->numeric()
-                    ->required(),
+                    ->disabled()
+                    ->dehydrated(false),
                 Repeater::make('items')
                     ->relationship('items')
-                    ->label('منتجات الطلب')
+                    ->label('منتجات الطلب (للقراءة فقط)')
+                    ->addable(false)
+                    ->deletable(false)
+                    ->reorderable(false)
                     ->schema([
                         TextInput::make('name_snapshot')
                             ->label('المنتج')
-                            ->required(),
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('option_code')
-                            ->label('الخيار / الحجم'),
+                            ->label('الخيار / الحجم')
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('unit_price')
                             ->label('سعر القطعة (ج.م)')
                             ->numeric()
-                            ->required(),
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('qty')
                             ->label('الكمية')
                             ->numeric()
-                            ->required(),
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('line_total')
                             ->label('الإجمالي (ج.م)')
                             ->numeric()
-                            ->required(),
+                            ->disabled()
+                            ->dehydrated(false),
                     ])
                     ->columns(5)
                     ->collapsible()

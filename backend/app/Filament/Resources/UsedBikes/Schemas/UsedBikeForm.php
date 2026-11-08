@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UsedBikes\Schemas;
 
 use App\Models\BikeModel;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -105,11 +106,16 @@ class UsedBikeForm
                 Repeater::make('images')
                     ->relationship('images')
                     ->label('صور الموتوسيكل')
+                    ->orderColumn('sort')
                     ->schema([
-                        TextInput::make('path')
-                            ->label('مسار / رابط الصورة')
-                            ->required()
-                            ->placeholder('/images/bikes/... أو رابط خارجي'),
+                        FileUpload::make('path')
+                            ->label('الصورة')
+                            ->image()
+                            ->maxSize(2048)
+                            ->disk('public')
+                            ->directory('bikes')
+                            ->visibility('public')
+                            ->required(),
                         TextInput::make('sort')
                             ->label('الترتيب')
                             ->numeric()

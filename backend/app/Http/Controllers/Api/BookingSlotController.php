@@ -34,6 +34,12 @@ class BookingSlotController extends Controller
         ];
 
         $slots = Setting::get('booking_slots', $defaultSlots);
+        if (is_string($slots)) {
+            $slots = json_decode($slots, true);
+        }
+        if (!is_array($slots)) {
+            $slots = $defaultSlots;
+        }
         $capacity = (int) Setting::get('booking_capacity_per_slot', 2);
 
         $bookings = Booking::whereDate('date', $dateStr)
@@ -50,6 +56,9 @@ class BookingSlotController extends Controller
         $result = [];
 
         foreach ($slots as $slot) {
+            if (!is_array($slot) || empty($slot['time'])) {
+                continue;
+            }
             $slotTime = substr($slot['time'], 0, 5);
             try {
                 $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$slotTime}", 'Africa/Cairo');

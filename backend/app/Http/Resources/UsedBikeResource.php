@@ -13,7 +13,7 @@ class UsedBikeResource extends JsonResource
     {
         $images = $this->images->map(function ($img) {
             $path = $img->path;
-            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
                 return $path;
             }
             return Storage::disk('public')->url($path);

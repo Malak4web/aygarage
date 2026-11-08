@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\BikeModel;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -119,11 +120,16 @@ class ProductForm
                 Repeater::make('images')
                     ->relationship('images')
                     ->label('صور المنتج')
+                    ->orderColumn('sort')
                     ->schema([
-                        TextInput::make('path')
-                            ->label('مسار / رابط الصورة')
-                            ->required()
-                            ->placeholder('/images/products/... أو رابط خارجي'),
+                        FileUpload::make('path')
+                            ->label('الصورة')
+                            ->image()
+                            ->maxSize(2048)
+                            ->disk('public')
+                            ->directory('products')
+                            ->visibility('public')
+                            ->required(),
                         TextInput::make('sort')
                             ->label('الترتيب')
                             ->numeric()

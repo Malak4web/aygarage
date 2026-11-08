@@ -83,20 +83,7 @@ class BookingController extends Controller
             $service = Service::where('id', $serviceId)->orWhere('code', $serviceId)->firstOrFail();
             $priceSnapshot = $service->price;
 
-            // Sequential number generator (BK-XXXX) with uniqueness guarantee
-            $lastBooking = Booking::lockForUpdate()->orderByDesc('id')->first();
-            $lastNum = 1042;
-            if ($lastBooking && preg_match('/BK-(\d+)/', $lastBooking->number, $m)) {
-                $lastNum = max($lastNum, intval($m[1]));
-            }
-            $candidate = $lastNum + 1;
-            while (Booking::where('number', 'BK-' . $candidate)->exists()) {
-                $candidate++;
-            }
-            $number = 'BK-' . $candidate;
-
             return Booking::create([
-                'number' => $number,
                 'user_id' => $request->user()->id,
                 'user_bike_id' => $request->input('user_bike_id'),
                 'custom_model' => $request->input('custom_model'),
