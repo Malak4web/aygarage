@@ -35,6 +35,12 @@ class ProductController extends Controller
             });
         }
 
+        // Filter by specific slugs (Review 3 Item 7)
+        if ($request->filled('slugs')) {
+            $slugs = is_array($request->query('slugs')) ? $request->query('slugs') : [$request->query('slugs')];
+            $query->whereIn('slug', $slugs);
+        }
+
         // Filter by bike model: exact match in JSON array or universal product (Review 3 Item 2)
         if ($request->filled('model')) {
             $model = $request->query('model');
@@ -172,7 +178,7 @@ class ProductController extends Controller
 
         // If pagination is requested or default
         if ($request->filled('perPage') || $request->filled('page')) {
-            $perPage = min(48, max(1, (int) $request->query('perPage', 12)));
+            $perPage = min(50, max(1, (int) $request->query('perPage', 12)));
             $paginator = $query->paginate($perPage);
 
             return response()->json([

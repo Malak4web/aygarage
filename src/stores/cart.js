@@ -51,7 +51,8 @@ export const useCartStore = defineStore('cart', {
       items: savedItems,
       couponCode: savedCoupon,
       couponError: '',
-      isRefreshing: false
+      isRefreshing: false,
+      alerts: []
     }
   },
 
@@ -122,68 +123,97 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
+    addAlert(text, type = 'info') {
+      if (!this.alerts.some((a) => a.text === text)) {
+        this.alerts.push({ id: Date.now() + Math.random(), text, type })
+      }
+    },
+
+    dismissAlert(index) {
+      this.alerts.splice(index, 1)
+    },
+
+    clearAlerts() {
+      this.alerts = []
+    },
+
     async refreshCart() {
       if (this.isRefreshing || this.items.length === 0) return
       this.isRefreshing = true
-      const toastStore = useToastStore()
-      const newItems = []
 
-      for (const item of this.items) {
-        const slug = item.slug || item.product?.slug
-        if (!slug) continue
+      try {
+        const slugs = [...new Set(this.items.map((i) => i.slug || i.product?.slug).filter(Boolean))]
+        if (slugs.length === 0) return
 
-        try {
-          const freshProd = await api.getProductBySlug(slug)
+        // Item 7: One request per cart line (GET /products?slugs[]=...&perPage=50)
+        const res = await api.getProducts({ slugs, perPage: 50 })
+        const productsList = Array.isArray(res) ? res : (res.data || [])
+        const productMap = new Map(productsList.map((p) => [p.slug, p]))
+
+        const linesToRemove = new Set()
+
+        for (const item of this.items) {
+          const slug = item.slug || item.product?.slug
+          const freshProd = productMap.get(slug)
+
+          // Item 4: Out of stock or missing product
           if (!freshProd || freshProd.stock <= 0) {
-            if (toastStore) {
-              toastStore.show(`نفدت كمية ${freshProd?.name || item.product?.name || slug} من المخزن`, 'warning')
-            }
-            continue // Out of stock: item removed from cart
+            linesToRemove.add(item.lineId)
+            const pName = freshProd?.name || item.product?.name || slug
+            this.addAlert(`${pName} نفد من المخزن واتشال من السلة`, 'warning')
+            continue
           }
 
           let freshOpt = null
-          if (item.optionCode && freshProd.options && freshProd.options.length > 0) {
-            freshOpt = freshProd.options.find((o) => o.code === item.optionCode || o.id === item.optionCode) || freshProd.options[0]
+          if (item.optionCode) {
+            if (freshProd.options && freshProd.options.length > 0) {
+              freshOpt = freshProd.options.find((o) => o.code === item.optionCode || o.id === item.optionCode)
+              // Item 6: A missing option code should NOT silently become options[0]
+              if (!freshOpt) {
+                linesToRemove.add(item.lineId)
+                this.addAlert(`الخيار المحدد لـ ${freshProd.name} لم يعد متاحاً واتشال من السلة`, 'warning')
+                continue
+              }
+            } else {
+              linesToRemove.add(item.lineId)
+              this.addAlert(`الخيار المحدد لـ ${freshProd.name} لم يعد متاحاً واتشال من السلة`, 'warning')
+              continue
+            }
           }
 
-          const oldPrice = item.selectedOption?.price || item.product?.price
+          // Item 3 & 4: Compare against seenPrice
+          const oldPrice = item.seenPrice || item.selectedOption?.price || item.product?.price
           const newPrice = freshOpt?.price || freshProd.price
 
-          if (oldPrice && oldPrice !== newPrice && toastStore) {
-            toastStore.show(`تغير سعر ${freshProd.name} إلى ${newPrice.toLocaleString('en')} ج.م`, 'info')
+          if (oldPrice && oldPrice !== newPrice) {
+            this.addAlert(`تغير سعر ${freshProd.name} من ${oldPrice.toLocaleString('en')} إلى ${newPrice.toLocaleString('en')} ج.م`, 'info')
+            item.seenPrice = newPrice
+          } else if (!item.seenPrice) {
+            item.seenPrice = newPrice
           }
 
-          let qty = item.qty
-          if (qty > freshProd.stock) {
-            qty = freshProd.stock
-            if (toastStore) {
-              toastStore.show(`تم تعديل كمية ${freshProd.name} إلى المتاح بالمخزن (${freshProd.stock})`, 'info')
-            }
+          // Adjust qty if exceeds current stock
+          if (item.qty > freshProd.stock) {
+            item.qty = freshProd.stock
+            this.addAlert(`تم تعديل كمية ${freshProd.name} إلى المتاح بالمخزن (${freshProd.stock})`, 'info')
           }
 
-          newItems.push({
-            slug: freshProd.slug,
-            optionCode: freshOpt?.code || null,
-            lineId: `${freshProd.slug}_${freshOpt?.code || 'default'}`,
-            qty,
-            product: freshProd,
-            selectedOption: freshOpt
-          })
-        } catch (e) {
-          // If product API error (e.g. 404), remove or keep existing
-          if (e?.status === 404) {
-            if (toastStore) {
-              toastStore.show(`المنتج ${item.product?.name || slug} لم يعد متاحاً بالمتجر`, 'warning')
-            }
-          } else {
-            newItems.push(item)
-          }
+          // Item 5: Update line in-place so edits made during refresh are preserved
+          item.product = freshProd
+          item.selectedOption = freshOpt
         }
-      }
 
-      this.items = newItems
-      this.persist()
-      this.isRefreshing = false
+        if (linesToRemove.size > 0) {
+          this.items = this.items.filter((i) => !linesToRemove.has(i.lineId))
+        }
+
+        this.persist()
+      } catch (e) {
+        console.warn('Cart refresh failed:', e)
+      } finally {
+        // Item 5: Reset isRefreshing in finally
+        this.isRefreshing = false
+      }
     },
 
     addItem(product, qty = 1, selectedOption = null) {

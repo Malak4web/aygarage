@@ -50,8 +50,10 @@ class ProductIndexRequest extends FormRequest
             'onSale' => ['nullable', 'boolean'],
             'bestSeller' => ['nullable', 'boolean'],
             'weeklyOffer' => ['nullable', 'boolean'],
+            'slugs' => ['nullable'],
+            'slugs.*' => ['string', 'max:100'],
             'sort' => ['nullable', 'string', 'in:new,newest,price_asc,price-asc,price_desc,price-desc,rating,best,bestseller'],
-            'perPage' => ['nullable', 'integer', 'min:1', 'max:48'],
+            'perPage' => ['nullable', 'integer', 'min:1', 'max:50'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
     }

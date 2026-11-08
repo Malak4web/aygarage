@@ -17,6 +17,27 @@
       <div class="cart-items">
         <h1 class="cart-title">السلة ({{ cartStore.items.length }} منتجات)</h1>
 
+        <!-- Cart Alerts / Notifications Box (Review 3 Item 4) -->
+        <div v-if="cartStore.alerts && cartStore.alerts.length > 0" class="cart-alerts">
+          <div
+            v-for="(alert, idx) in cartStore.alerts"
+            :key="alert.id || idx"
+            class="cart-alert-item"
+            :class="alert.type || 'info'"
+          >
+            <AppIcon :name="alert.type === 'warning' ? 'alert-triangle' : 'info'" :size="18" />
+            <span class="alert-text">{{ alert.text }}</span>
+            <button
+              type="button"
+              class="alert-close"
+              @click="cartStore.dismissAlert(idx)"
+              aria-label="إغلاق التنبيه"
+            >
+              <AppIcon name="x" :size="14" />
+            </button>
+          </div>
+        </div>
+
         <!-- Free Delivery Banner -->
         <div class="free-del-banner" :class="{ 'free-achieved': cartStore.isFreeDelivery }">
           <AppIcon :name="cartStore.isFreeDelivery ? 'check' : 'truck'" :size="18" />
@@ -227,6 +248,55 @@ const companionProducts = computed(() => {
 .cart-title {
   font-size: 28px;
   margin: 0 0 4px;
+}
+
+.cart-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 6px;
+}
+
+.cart-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.cart-alert-item.info {
+  background: var(--sf);
+  color: var(--ink);
+  border: 1px solid var(--ln);
+}
+
+.cart-alert-item.warning {
+  background: #fdf2f2;
+  color: #9e2b25;
+  border: 1px solid #f8d7da;
+}
+
+.alert-text {
+  flex: 1;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+}
+
+.alert-close:hover {
+  opacity: 1;
 }
 
 .free-del-banner {
