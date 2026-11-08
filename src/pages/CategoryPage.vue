@@ -2,7 +2,19 @@
   <div class="category-page">
     <Breadcrumbs :items="breadcrumbItems" />
 
-    <div class="lhd in">
+    <!-- Error State with Retry (Item 2) -->
+    <div v-if="error" class="in" style="padding: 40px 0;">
+      <EmptyState
+        icon="alert"
+        title="حدث خطأ في تحميل المنتجات"
+        :description="error"
+        action-label="إعادة المحاولة"
+        @action="fetchProducts"
+      />
+    </div>
+
+    <template v-else>
+      <div class="lhd in">
       <div>
         <h1>{{ categoryName }}</h1>
         <p>{{ filteredProducts.length }} منتج</p>
@@ -188,6 +200,7 @@
         />
       </main>
     </div>
+    </template>
   </div>
 </template>
 

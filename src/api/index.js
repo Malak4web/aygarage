@@ -91,10 +91,9 @@ export const api = {
     return await request(`/products/${encodeURIComponent(slug)}`)
   },
 
-  async getReviews(productSlug = 'motul-7100-10w40') {
-    let slug = productSlug
-    if (slug === 'p1') slug = 'motul-7100-10w40'
-    return await request(`/products/${encodeURIComponent(slug)}/reviews`)
+  async getReviews(productSlug) {
+    if (!productSlug) return []
+    return await request(`/products/${encodeURIComponent(productSlug)}/reviews`)
   },
 
   // --- Bikes ---

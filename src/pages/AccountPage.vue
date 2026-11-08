@@ -477,6 +477,9 @@ const favProducts = computed(() => {
 })
 
 const compatibleProducts = computed(() => {
+  if (userStore.selectedBike) {
+    return allProducts.value.filter((p) => doesFit(p, userStore.selectedBike) !== false).slice(0, 5)
+  }
   return allProducts.value.slice(0, 5)
 })
 

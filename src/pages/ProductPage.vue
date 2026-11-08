@@ -16,8 +16,19 @@
     </div>
   </div>
 
-  <!-- Not found state -->
-  <div v-else-if="!product" class="not-found-page in">
+  <!-- Error state with retry (Item 2) -->
+  <div v-else-if="error" class="error-page in" style="padding: 40px 0;">
+    <EmptyState
+      icon="alert"
+      title="تعذر الاتصال بالخادم"
+      :description="error"
+      action-label="إعادة المحاولة"
+      @action="loadProductData"
+    />
+  </div>
+
+  <!-- Not found state (404 only) -->
+  <div v-else-if="notFound || !product" class="not-found-page in">
     <EmptyState
       icon="box"
       title="المنتج غير موجود"
@@ -32,9 +43,28 @@
     <Breadcrumbs :items="breadcrumbItems" />
 
     <div class="pdp in">
-      <!-- Gallery: Thumbs + Big image -->
+      <!-- Gallery: Thumbs + Big image (Item 4) -->
       <div class="gal">
-        <div class="th">
+        <div class="th" v-if="galleryImages.length > 1">
+          <button
+            v-for="(imgSrc, idx) in galleryImages"
+            :key="idx"
+            type="button"
+            class="thumb-btn"
+            :class="{ on: activeThumb === idx }"
+            @click="activeThumb = idx"
+            :aria-label="`صورة المنتج ${idx + 1}`"
+          >
+            <ProductIllustration
+              :type="product.type"
+              :color="idx === 1 ? '#7d1a14' : product.color"
+              :image="imgSrc"
+              :width="50"
+              :alt="product.name"
+            />
+          </button>
+        </div>
+        <div class="th" v-else-if="!galleryImages.length">
           <button
             v-for="(_, idx) in 4"
             :key="idx"
@@ -57,7 +87,7 @@
           <ProductIllustration
             :type="product.type"
             :color="activeThumb === 1 ? '#7d1a14' : product.color"
-            :image="product.image"
+            :image="currentGalleryImage"
             :width="360"
             :alt="product.name"
           />
@@ -316,6 +346,8 @@ const cartStore = useCartStore()
 const toastStore = useToastStore()
 
 const loading = ref(true)
+const error = ref('')
+const notFound = ref(false)
 const product = ref(null)
 const companionProducts = ref([])
 const categoriesList = ref([])
@@ -339,26 +371,57 @@ const productTabs = computed(() => [
   { id: 'fit', label: 'الموديلات المتوافقة' }
 ])
 
+const galleryImages = computed(() => {
+  if (product.value?.images && product.value.images.length > 0) {
+    return product.value.images
+  }
+  if (product.value?.image) {
+    return [product.value.image]
+  }
+  return []
+})
+
+const currentGalleryImage = computed(() => {
+  if (galleryImages.value.length > 0) {
+    return galleryImages.value[activeThumb.value] || galleryImages.value[0]
+  }
+  return product.value?.image || null
+})
+
 const loadProductData = async () => {
   loading.value = true
+  error.value = ''
+  notFound.value = false
+  const slug = route.params.slug
   try {
-    const slug = route.params.slug
-    const [p, all, cats, revs] = await Promise.all([
-      api.getProductBySlug(slug),
-      api.getProducts(),
-      api.getCategories(),
-      api.getReviews()
-    ])
+    const p = await api.getProductBySlug(slug)
     product.value = p
     selectedOption.value = p.options?.[0] ?? null
     activeTab.value = 'desc'
     activeThumb.value = 0
     quantity.value = 1
-    companionProducts.value = all.filter((prod) => prod.id !== p.id).slice(0, 5)
+    companionProducts.value = p.related || []
+  } catch (e) {
+    product.value = null
+    if (e?.status === 404) {
+      notFound.value = true
+    } else {
+      error.value = e?.message || 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً.'
+    }
+    loading.value = false
+    return
+  }
+
+  // Load reviews and categories separately (Item 2 & 1)
+  try {
+    const [cats, revs] = await Promise.all([
+      api.getCategories(),
+      api.getReviews(product.value.slug)
+    ])
     categoriesList.value = cats
     reviewsList.value = revs
   } catch (e) {
-    product.value = null
+    console.warn('Could not load reviews or categories', e)
   } finally {
     loading.value = false
   }

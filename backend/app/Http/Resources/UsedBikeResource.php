@@ -62,6 +62,7 @@ class UsedBikeResource extends JsonResource
             'status' => $this->status,
             'inspection' => $inspections,
             'serviceHistory' => $serviceHistory,
+            'image' => $images[0] ?? null,
             'images' => $images,
             'createdAt' => $this->created_at ? $this->created_at->format('Y-m-d') : null,
         ];

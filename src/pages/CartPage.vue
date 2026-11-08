@@ -165,7 +165,7 @@ const allProducts = ref([])
 
 onMounted(async () => {
   try {
-    allProducts.value = await api.getProducts()
+    allProducts.value = await api.getProducts({ bestSeller: true, perPage: 5 })
   } catch (e) {}
 })
 
@@ -185,9 +185,6 @@ const applyCoupon = () => {
 }
 
 const companionProducts = computed(() => {
-  if (allProducts.value.length >= 8) {
-    return [allProducts.value[5], allProducts.value[4], allProducts.value[7], allProducts.value[3], allProducts.value[6]]
-  }
   return allProducts.value.slice(0, 5)
 })
 </script>

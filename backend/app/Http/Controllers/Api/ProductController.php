@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductIndexRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ReviewResource;
 use App\Models\Product;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(ProductIndexRequest $request): JsonResponse
     {
         $query = Product::with(['category', 'options', 'images'])->where('is_active', true);
 
@@ -34,15 +35,10 @@ class ProductController extends Controller
             });
         }
 
-        // Filter by bike model (fits JSON array contains model code)
+        // Filter by bike model: exact match in JSON array (Item 11)
         if ($request->filled('model')) {
             $model = $request->query('model');
-            $query->where(function ($q) use ($model) {
-                $q->whereJsonContains('fits', $model)
-                  ->orWhereNull('fits')
-                  ->orWhere('fits', '[]')
-                  ->orWhere('fits', 'like', "%{$model}%");
-            });
+            $query->whereJsonContains('fits', $model);
         }
 
         // Filter by brand(s)
@@ -91,31 +87,37 @@ class ProductController extends Controller
             $query->where('is_weekly_offer', true);
         }
 
-        // Sorting
-        $sort = $request->query('sort', 'bestseller');
-        switch ($sort) {
-            case 'new':
-            case 'newest':
-                $query->orderBy('created_at', 'desc');
-                break;
-            case 'price_asc':
-            case 'price-asc':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_desc':
-            case 'price-desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'rating':
-                $query->orderBy('rating', 'desc')->orderBy('review_count', 'desc');
-                break;
-            case 'best':
-            case 'bestseller':
-            default:
-                $query->orderBy('is_best_seller', 'desc')
-                      ->orderBy('rating', 'desc')
-                      ->orderBy('sold_count', 'desc');
-                break;
+        // Sorting: default to id asc when no sort is specified (Item 5)
+        if ($request->filled('sort')) {
+            $sort = $request->query('sort');
+            switch ($sort) {
+                case 'new':
+                case 'newest':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'price_asc':
+                case 'price-asc':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                case 'price-desc':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'rating':
+                    $query->orderBy('rating', 'desc')->orderBy('review_count', 'desc');
+                    break;
+                case 'best':
+                case 'bestseller':
+                    $query->orderBy('is_best_seller', 'desc')
+                          ->orderBy('rating', 'desc')
+                          ->orderBy('sold_count', 'desc');
+                    break;
+                default:
+                    $query->orderBy('id', 'asc');
+                    break;
+            }
+        } else {
+            $query->orderBy('id', 'asc');
         }
 
         // Base query clone for facets for the current category scope
@@ -159,7 +161,7 @@ class ProductController extends Controller
 
         // If pagination is requested or default
         if ($request->filled('perPage') || $request->filled('page')) {
-            $perPage = (int) $request->query('perPage', 12);
+            $perPage = min(48, max(1, (int) $request->query('perPage', 12)));
             $paginator = $query->paginate($perPage);
 
             return response()->json([
@@ -214,7 +216,7 @@ class ProductController extends Controller
 
     public function reviews(string $slug): JsonResponse
     {
-        $product = Product::where('slug', $slug)->first();
+        $product = Product::where('slug', $slug)->where('is_active', true)->first();
         if (!$product) {
             return response()->json(['message' => 'المنتج غير موجود'], 404);
         }

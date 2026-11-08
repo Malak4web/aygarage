@@ -45,6 +45,7 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'specs' => $this->specs ?? (object)[],
             'options' => ProductOptionResource::collection($this->options),
+            'image' => $images[0] ?? null,
             'images' => $images,
             'createdAt' => $this->created_at ? $this->created_at->format('Y-m-d') : null,
         ];

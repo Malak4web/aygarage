@@ -120,59 +120,61 @@
       />
     </div>
 
-    <!-- Best Sellers Row -->
-    <section class="sec in">
-      <div class="sh">
-        <h2>الأكثر مبيعاً</h2>
-        <RouterLink to="/c/oils" class="sh-more">عرض الكل</RouterLink>
-      </div>
-      <div v-if="loading" class="grid">
-        <ProductCardSkeleton v-for="i in 5" :key="i" />
-      </div>
-      <div v-else class="grid">
-        <ProductCard
-          v-for="product in bestSellers"
-          :key="product.id"
-          :product="product"
-        />
-      </div>
-    </section>
+    <template v-else>
+      <!-- Best Sellers Row -->
+      <section class="sec in">
+        <div class="sh">
+          <h2>الأكثر مبيعاً</h2>
+          <RouterLink to="/c/oils" class="sh-more">عرض الكل</RouterLink>
+        </div>
+        <div v-if="loading" class="grid">
+          <ProductCardSkeleton v-for="i in 5" :key="i" />
+        </div>
+        <div v-else class="grid">
+          <ProductCard
+            v-for="product in bestSellers"
+            :key="product.id"
+            :product="product"
+          />
+        </div>
+      </section>
 
-    <!-- Weekly Offers Row -->
-    <section class="sec in">
-      <div class="sh">
-        <h2>عروض الأسبوع</h2>
-        <RouterLink to="/c/oils?offer=true" class="sh-more">كل العروض</RouterLink>
-      </div>
-      <div v-if="loading" class="grid">
-        <ProductCardSkeleton v-for="i in 5" :key="i" />
-      </div>
-      <div v-else class="grid">
-        <ProductCard
-          v-for="product in weeklyOffers"
-          :key="product.id"
-          :product="product"
-        />
-      </div>
-    </section>
+      <!-- Weekly Offers Row -->
+      <section class="sec in">
+        <div class="sh">
+          <h2>عروض الأسبوع</h2>
+          <RouterLink to="/c/oils?offer=true" class="sh-more">كل العروض</RouterLink>
+        </div>
+        <div v-if="loading" class="grid">
+          <ProductCardSkeleton v-for="i in 5" :key="i" />
+        </div>
+        <div v-else class="grid">
+          <ProductCard
+            v-for="product in weeklyOffers"
+            :key="product.id"
+            :product="product"
+          />
+        </div>
+      </section>
 
-    <!-- Used Bikes Row -->
-    <section class="sec in">
-      <div class="sh">
-        <h2>موتوسيكلات مستعملة مفحوصة</h2>
-        <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات ({{ storeConfig.totalInspectedBikes }})</RouterLink>
-      </div>
-      <div v-if="loading" class="grid g3">
-        <BikeCardSkeleton v-for="i in 3" :key="i" />
-      </div>
-      <div v-else class="grid g3">
-        <BikeCard
-          v-for="bike in featuredBikes"
-          :key="bike.id"
-          :bike="bike"
-        />
-      </div>
-    </section>
+      <!-- Used Bikes Row -->
+      <section class="sec in">
+        <div class="sh">
+          <h2>موتوسيكلات مستعملة مفحوصة</h2>
+          <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات ({{ storeConfig.totalInspectedBikes }})</RouterLink>
+        </div>
+        <div v-if="loading" class="grid g3">
+          <BikeCardSkeleton v-for="i in 3" :key="i" />
+        </div>
+        <div v-else class="grid g3">
+          <BikeCard
+            v-for="bike in featuredBikes"
+            :key="bike.id"
+            :bike="bike"
+          />
+        </div>
+      </section>
+    </template>
 
     <!-- Service Booking Section -->
     <section class="in">
@@ -234,21 +236,24 @@ const toastStore = useToastStore()
 
 const loading = ref(true)
 const error = ref('')
-const allProducts = ref([])
-const allBikes = ref([])
+const bestSellers = ref([])
+const weeklyOffers = ref([])
+const featuredBikes = ref([])
 const categories = ref([])
 
 const loadHomeData = async () => {
   loading.value = true
   error.value = ''
   try {
-    const [prods, bks, cats] = await Promise.all([
-      api.getProducts(),
-      api.getBikes(),
+    const [bests, offers, bks, cats] = await Promise.all([
+      api.getProducts({ bestSeller: true, perPage: 8 }),
+      api.getProducts({ weeklyOffer: true, perPage: 8 }),
+      api.getBikes({ sort: 'newest', perPage: 4 }),
       api.getCategories()
     ])
-    allProducts.value = prods
-    allBikes.value = bks
+    bestSellers.value = bests.slice(0, 5)
+    weeklyOffers.value = offers.slice(0, 5)
+    featuredBikes.value = bks.slice(0, 3)
     categories.value = cats
   } catch (e) {
     error.value = 'تعذر تحميل بيانات الصفحة الرئيسية'
@@ -261,8 +266,8 @@ onMounted(() => {
   loadHomeData()
 })
 
-// Hero Carousel slides
-const heroSlides = [
+// Hero Carousel slides - computed for reactivity on settings update (Item 16)
+const heroSlides = computed(() => [
   {
     title: `طقم صيانة الـ 15,000 كم بخصم ${storeConfig.heroKitDiscount}`,
     desc: 'زيت موتول 7100 + فلتر أصلي + تيل Brembo. يوصلك البيت أو نركّبهولك في الجراج.',
@@ -285,15 +290,20 @@ const heroSlides = [
     bikeColor: '#56634a',
     action: 'booking'
   }
-]
+])
 
-const handleHeroAction = (slide) => {
+const handleHeroAction = async (slide) => {
   if (slide?.action === 'category') {
     router.push(`/c/${slide.category || 'oils'}`)
   } else if (slide?.action === 'booking') {
     router.push('/booking')
   } else {
-    const p1 = allProducts.value.find((p) => p.id === 'p1')
+    let p1 = bestSellers.value.find((p) => p.slug === 'motul-7100-10w40' || p.id === 'p1')
+    if (!p1) {
+      try {
+        p1 = await api.getProductBySlug('motul-7100-10w40')
+      } catch (e) {}
+    }
     if (p1 && p1.stock <= 0) {
       toastStore.show('طقم الصيانة غير متوفر حالياً في المخزن', 'warning')
       return
@@ -326,23 +336,6 @@ const handleFinderSubmit = () => {
     }
   })
 }
-
-// Data slices matching shop.html
-const bestSellers = computed(() => {
-  return allProducts.value.slice(0, 5)
-})
-
-const weeklyOffers = computed(() => {
-  const prods = allProducts.value
-  if (prods.length >= 8) {
-    return [prods[0], prods[2], prods[4], prods[9] || prods[1], prods[7]]
-  }
-  return prods.slice(0, 5)
-})
-
-const featuredBikes = computed(() => {
-  return allBikes.value.slice(0, 3)
-})
 </script>
 
 <style scoped>

@@ -13,8 +13,19 @@
     </div>
   </div>
 
-  <!-- Not found state -->
-  <div v-else-if="!bike" class="not-found-page in">
+  <!-- Error state with retry (Item 2) -->
+  <div v-else-if="error" class="error-page in" style="padding: 40px 0;">
+    <EmptyState
+      icon="alert"
+      title="تعذر الاتصال بالخادم"
+      :description="error"
+      action-label="إعادة المحاولة"
+      @action="loadBikeData"
+    />
+  </div>
+
+  <!-- Not found state (404 only) -->
+  <div v-else-if="notFound || !bike" class="not-found-page in">
     <EmptyState
       icon="bike"
       title="الموتوسيكل غير موجود"
@@ -29,12 +40,25 @@
     <Breadcrumbs :items="breadcrumbItems" />
 
     <div class="bdp in">
-      <!-- Bike Gallery -->
+      <!-- Bike Gallery (Item 4) -->
       <div class="bike-gal">
         <div class="big">
-          <BikeIllustration :color="bike.col" :width="560" />
+          <img v-if="currentBikeImage" :src="currentBikeImage" :alt="bike.model" style="width: 100%; height: 100%; object-fit: cover;" />
+          <BikeIllustration v-else :color="bike.col" :width="560" />
         </div>
-        <div class="thr">
+        <div class="thr" v-if="bikeGalleryImages.length > 1">
+          <button
+            v-for="(_, i) in bikeGalleryImages"
+            :key="i"
+            type="button"
+            class="thumb-btn"
+            :class="{ on: activeThumb === i }"
+            :aria-pressed="activeThumb === i"
+            :aria-label="`صورة الموتوسيكل ${i + 1}`"
+            @click="activeThumb = i"
+          ></button>
+        </div>
+        <div class="thr" v-else-if="!bikeGalleryImages.length">
           <button
             v-for="(_, i) in 5"
             :key="i"
@@ -115,9 +139,9 @@
         <p>{{ bike.notes }}</p>
       </div>
 
-      <!-- Service History Content -->
+      <!-- Service History Content (Item 8) -->
       <div v-else-if="activeTab === 'history'" class="history-tab">
-        <table class="history-table">
+        <table class="history-table" v-if="bike.serviceHistory && bike.serviceHistory.length > 0">
           <thead>
             <tr>
               <th>التاريخ</th>
@@ -127,7 +151,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="h in (bike.serviceHistory || defaultHistory)" :key="h.date">
+            <tr v-for="h in bike.serviceHistory" :key="h.date">
               <td>{{ h.date }}</td>
               <td>{{ h.odo }}</td>
               <td>{{ h.service }}</td>
@@ -135,6 +159,9 @@
             </tr>
           </tbody>
         </table>
+        <div v-else class="empty-history" style="text-align: center; padding: 40px 16px; color: var(--mu);">
+          <p>مفيش سجل صيانة مسجل للموتوسيكل ده</p>
+        </div>
       </div>
     </div>
 
@@ -166,6 +193,8 @@ const route = useRoute()
 const toastStore = useToastStore()
 
 const loading = ref(true)
+const error = ref('')
+const notFound = ref(false)
 const bike = ref(null)
 const similarBikes = ref([])
 const activeThumb = ref(0)
@@ -177,17 +206,39 @@ const bikeTabs = [
   { id: 'history', label: 'سجل الصيانة' }
 ]
 
+const bikeGalleryImages = computed(() => {
+  if (bike.value?.images && bike.value.images.length > 0) {
+    return bike.value.images
+  }
+  if (bike.value?.image) {
+    return [bike.value.image]
+  }
+  return []
+})
+
+const currentBikeImage = computed(() => {
+  if (bikeGalleryImages.value.length > 0) {
+    return bikeGalleryImages.value[activeThumb.value] || bikeGalleryImages.value[0]
+  }
+  return bike.value?.image || null
+})
+
 const loadBikeData = async () => {
   loading.value = true
+  error.value = ''
+  notFound.value = false
   try {
     const slug = route.params.slug
     const b = await api.getBikeBySlug(slug)
     bike.value = b
-
-    const all = await api.getBikes()
-    similarBikes.value = all.filter((item) => item.id !== b.id).slice(0, 3)
+    similarBikes.value = b.similar || []
   } catch (e) {
     bike.value = null
+    if (e?.status === 404) {
+      notFound.value = true
+    } else {
+      error.value = e?.message || 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً.'
+    }
   } finally {
     loading.value = false
   }
@@ -226,12 +277,6 @@ const breadcrumbItems = computed(() => [
   { label: 'موتوسيكلات للبيع', to: '/bikes' },
   { label: `${bike.value?.model || ''} ${bike.value?.year || ''}` }
 ])
-
-const defaultHistory = [
-  { date: '12 أكتوبر 2026', odo: '12,000 كم', service: 'تغيير زيت + فلتر', tech: 'أبو يوسف' },
-  { date: '5 يوليو 2026', odo: '9,300 كم', service: 'تيل فرامل أمامي وخلفي', tech: 'محمد' },
-  { date: '20 مارس 2026', odo: '6,000 كم', service: 'صيانة شاملة', tech: 'أبو يوسف' }
-]
 
 const handleDownloadReport = () => {
   toastStore.show(`جاري تحميل تقرير الفحص المعتمد لموتوسيكل ${bike.value?.model || ''} (120 نقطة) بصيغة PDF.`, 'info')
