@@ -1,4 +1,6 @@
-export const storeConfig = {
+import { reactive } from 'vue'
+
+export const storeConfig = reactive({
   name: 'جراج أبو يوسف',
   nameEn: 'Abu Yousef Garage',
   tagline: 'ZONTES SPECIALIST',
@@ -56,21 +58,18 @@ export const storeConfig = {
     { title: 'فحص قبل الشراء', price: '600 ج.م' },
     { title: 'ضبط بلوف', price: '900 ج.م' }
   ],
-  get trustItems() {
-    return [
-      { icon: 'truck', title: 'توصيل لكل المحافظات', desc: `خلال ${this.deliveryEstimateDays}` },
-      { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
-      { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
-      { icon: 'ret', title: `استرجاع خلال ${this.returnDays} يوم`, desc: 'لو القطعة ما ركبتش' }
-    ]
-  },
+  trustItems: [
+    { icon: 'truck', title: 'توصيل لكل المحافظات', desc: 'خلال 2-4 أيام عمل' },
+    { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
+    { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
+    { icon: 'ret', title: 'استرجاع خلال 14 يوم', desc: 'لو القطعة ما ركبتش' }
+  ],
   pickupTimes: 'جاهز النهارده بعد 3 العصر',
-  get deliveryEstimate() {
-    const d = new Date()
-    d.setDate(d.getDate() + (this.deliveryDaysCount || 3))
-    const dayName = d.toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' })
-    const dayNum = d.getDate()
-    const monthName = d.toLocaleDateString('ar-EG-u-nu-latn', { month: 'long' })
-    return `يوصلك ${dayName} ${dayNum} ${monthName}`
+  deliveryEstimate: 'يوصلك 2-4 أيام عمل'
+})
+
+export function updateStoreConfig(newValues) {
+  if (newValues && typeof newValues === 'object') {
+    Object.assign(storeConfig, newValues)
   }
 }

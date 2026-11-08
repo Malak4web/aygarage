@@ -1,14 +1,47 @@
-import { products } from '../data/products.js'
-import { bikes } from '../data/bikes.js'
-import { categories } from '../data/categories.js'
-import { services } from '../data/services.js'
-import { serviceHistory } from '../data/serviceHistory.js'
-import { defaultReviews } from '../data/reviews.js'
 import { defaultUser } from '../data/user.js'
+import { serviceHistory } from '../data/serviceHistory.js'
 
-// Helper to simulate network latency if needed, default fast for crisp UI
-const delay = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms))
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
+async function request(endpoint, options = {}) {
+  const url = `${API_BASE}/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`
+  const headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    ...options.headers
+  }
+
+  const token = localStorage.getItem('ayg_token')
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  })
+
+  if (response.status === 401) {
+    localStorage.removeItem('ayg_token')
+  }
+
+  if (!response.ok) {
+    let errorData = null
+    try {
+      errorData = await response.json()
+    } catch (_) {}
+
+    const message = errorData?.message || `خطأ في الاتصال بالخادم (${response.status})`
+    const error = new Error(message)
+    error.status = response.status
+    error.errors = errorData?.errors || {}
+    throw error
+  }
+
+  return response.json()
+}
+
+// Stored orders & bookings fallback for orders/booking phases 4 & 5
 let storedOrders = []
 try {
   const o = localStorage.getItem('ayg_orders')
@@ -16,67 +49,102 @@ try {
 } catch (e) {}
 
 export const api = {
-  async getCategories() {
-    await delay()
-    return [...categories]
+  // --- Settings ---
+  async getSettings() {
+    return await request('/settings')
   },
 
-  async getProducts(filterFn) {
-    await delay()
-    if (typeof filterFn === 'function') {
-      return products.filter(filterFn)
+  // --- Categories ---
+  async getCategories() {
+    return await request('/categories')
+  },
+
+  // --- Products ---
+  async getProducts(filterOrParams) {
+    let queryParams = ''
+    if (filterOrParams && typeof filterOrParams === 'object' && typeof filterOrParams !== 'function') {
+      const searchParams = new URLSearchParams()
+      for (const [k, v] of Object.entries(filterOrParams)) {
+        if (v !== undefined && v !== null && v !== '') {
+          if (Array.isArray(v)) {
+            v.forEach((item) => searchParams.append(`${k}[]`, item))
+          } else {
+            searchParams.append(k, v)
+          }
+        }
+      }
+      queryParams = '?' + searchParams.toString()
     }
-    return [...products]
+
+    const res = await request(`/products${queryParams}`)
+    let list = Array.isArray(res) ? res : (res.data || [])
+    if (res.meta) list.meta = res.meta
+    if (res.facets) list.facets = res.facets
+
+    if (typeof filterOrParams === 'function') {
+      return list.filter(filterOrParams)
+    }
+    return list
   },
 
   async getProductBySlug(slug) {
-    await delay()
-    const product = products.find((p) => p.slug === slug)
-    if (!product) {
-      throw new Error(`المنتج غير موجود: ${slug}`)
-    }
-    return { ...product }
+    return await request(`/products/${encodeURIComponent(slug)}`)
   },
 
-  async getBikes(filterFn) {
-    await delay()
-    if (typeof filterFn === 'function') {
-      return bikes.filter(filterFn)
+  async getReviews(productSlug = 'motul-7100-10w40') {
+    let slug = productSlug
+    if (slug === 'p1') slug = 'motul-7100-10w40'
+    return await request(`/products/${encodeURIComponent(slug)}/reviews`)
+  },
+
+  // --- Bikes ---
+  async getBikes(filterOrParams) {
+    let queryParams = ''
+    if (filterOrParams && typeof filterOrParams === 'object' && typeof filterOrParams !== 'function') {
+      const searchParams = new URLSearchParams()
+      for (const [k, v] of Object.entries(filterOrParams)) {
+        if (v !== undefined && v !== null && v !== '') {
+          if (Array.isArray(v)) {
+            v.forEach((item) => searchParams.append(`${k}[]`, item))
+          } else {
+            searchParams.append(k, v)
+          }
+        }
+      }
+      queryParams = '?' + searchParams.toString()
     }
-    return [...bikes]
+
+    const res = await request(`/bikes${queryParams}`)
+    let list = Array.isArray(res) ? res : (res.data || [])
+    if (res.meta) list.meta = res.meta
+    if (res.facets) list.facets = res.facets
+
+    if (typeof filterOrParams === 'function') {
+      return list.filter(filterOrParams)
+    }
+    return list
   },
 
   async getBikeBySlug(slug) {
-    await delay()
-    const bike = bikes.find((b) => b.slug === slug)
-    if (!bike) {
-      throw new Error(`الموتوسيكل غير موجود: ${slug}`)
-    }
-    return { ...bike }
+    return await request(`/bikes/${encodeURIComponent(slug)}`)
   },
 
+  // --- Services ---
   async getServices() {
-    await delay()
-    return [...services]
+    return await request('/services')
   },
 
+  // --- Service History (Account) ---
   async getServiceHistory() {
-    await delay()
     return [...serviceHistory]
   },
 
-  async getReviews(productId) {
-    await delay()
-    return [...defaultReviews]
-  },
-
+  // --- User / Auth (Phases 3 & 4 will migrate to real Sanctum endpoints) ---
   async getUser() {
-    await delay()
     return { ...defaultUser }
   },
 
   async createOrder(orderData) {
-    await delay(120)
     const orderId = String(Math.floor(1000 + Math.random() * 9000))
     const totalNum = typeof orderData.totalNum === 'number' ? orderData.totalNum : 0
     const order = {
@@ -103,7 +171,6 @@ export const api = {
   },
 
   async getOrder(id) {
-    await delay(50)
     try {
       const o = localStorage.getItem('ayg_orders')
       if (o) storedOrders = JSON.parse(o)
@@ -116,7 +183,6 @@ export const api = {
   },
 
   async getUserOrders() {
-    await delay(50)
     try {
       const o = localStorage.getItem('ayg_orders')
       if (o) storedOrders = JSON.parse(o)
@@ -145,7 +211,6 @@ export const api = {
   },
 
   async getUserBookings() {
-    await delay(50)
     let storedBookings = []
     try {
       const b = localStorage.getItem('ayg_bookings')
@@ -175,7 +240,6 @@ export const api = {
   },
 
   async createBooking(bookingData) {
-    await delay(120)
     const bookingId = bookingData.id || ('BK-' + Math.floor(1000 + Math.random() * 9000))
     const booking = {
       id: bookingId,

@@ -44,9 +44,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
-import { storeConfig } from '@/config/store.js'
+import { api } from '@/api'
+import { storeConfig, updateStoreConfig } from '@/config/store.js'
 import AnnouncementBar from '@/components/layout/AnnouncementBar.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import CategoryNav from '@/components/layout/CategoryNav.vue'
@@ -54,6 +55,15 @@ import MobileDrawer from '@/components/layout/MobileDrawer.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import AppToast from '@/components/common/AppToast.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
+
+onMounted(async () => {
+  try {
+    const live = await api.getSettings()
+    if (live) updateStoreConfig(live)
+  } catch (e) {
+    // Keep fallback values in storeConfig
+  }
+})
 
 const route = useRoute()
 const isDrawerOpen = ref(false)
