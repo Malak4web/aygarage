@@ -63,11 +63,9 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                \Filament\Actions\DeleteAction::make()
+                    ->hidden(fn ($record) => $record->id === auth()->id() || ($record->role === 'admin' && \App\Models\User::where('role', 'admin')->count() <= 1)),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->toolbarActions([]);
     }
 }

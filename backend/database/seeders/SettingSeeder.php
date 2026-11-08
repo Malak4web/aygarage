@@ -84,6 +84,7 @@ class SettingSeeder extends Seeder
                 ['time' => '20:00', 'label' => '8:00 م',  'off' => false],
             ],
             'booking_capacity_per_slot' => 2,
+            'booking_days_ahead' => 30,
         ];
 
         foreach ($settings as $key => $val) {

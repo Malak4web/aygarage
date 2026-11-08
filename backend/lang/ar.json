@@ -4,5 +4,8 @@
   ":message (and :count more error)": ":message (وخطأ تاني)",
   ":message (and :count more errors)": ":message (و :count أخطاء تانية)",
   "The items field is required.": "سلة المشتريات مطلوبة.",
-  "The given data was invalid.": "البيانات المقدمة غير صالحة."
+  "The given data was invalid.": "البيانات المقدمة غير صالحة.",
+  "filament-forms::components.repeater.reordering.position": "الترتيب",
+  "Position": "الترتيب",
+  "Slug": "الرابط المخصص"
 }

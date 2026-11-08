@@ -18,7 +18,7 @@ class LowStockProductsTable extends TableWidget
     {
         return $table
             ->heading('تنبيه: منتجات قاربت على النفاد (المخزون 3 قطع أو أقل)')
-            ->query(fn (): Builder => Product::query()->where('stock', '<=', 3)->orderBy('stock', 'asc'))
+            ->query(fn (): Builder => Product::query()->where('is_active', true)->where('stock', '<=', 3)->orderBy('stock', 'asc'))
             ->columns([
                 TextColumn::make('name')
                     ->label('المنتج')
@@ -29,7 +29,7 @@ class LowStockProductsTable extends TableWidget
                     ->label('القسم'),
                 TextColumn::make('price')
                     ->label('السعر')
-                    ->money('EGP'),
+                    ->formatStateUsing(fn ($state) => number_format((int) $state) . ' ج.م'),
                 TextColumn::make('stock')
                     ->label('الرصيد المتبقي')
                     ->badge()

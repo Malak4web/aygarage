@@ -21,9 +21,11 @@ class ProductForm
                 TextInput::make('name')
                     ->label('اسم المنتج')
                     ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn ($state, $set, $operation) => $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null)
                     ->maxLength(255),
                 TextInput::make('slug')
-                    ->label('Slug')
+                    ->label('الرابط المخصص (Slug)')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
@@ -47,13 +49,18 @@ class ProductForm
                 TextInput::make('price')
                     ->label('السعر (ج.م)')
                     ->numeric()
+                    ->minValue(0)
+                    ->helperText('السعر الأساسي بيظهر في الكارت، وأسعار الأحجام من الخيارات بالأسفل')
                     ->required(),
                 TextInput::make('old_price')
                     ->label('السعر قبل الخصم (ج.م)')
-                    ->numeric(),
+                    ->numeric()
+                    ->minValue(0)
+                    ->gt('price'),
                 TextInput::make('stock')
                     ->label('المخزون')
                     ->numeric()
+                    ->minValue(0)
                     ->default(0)
                     ->required(),
                 TextInput::make('badge')
@@ -98,6 +105,7 @@ class ProductForm
                     ->schema([
                         TextInput::make('code')
                             ->label('الكود (مثل 1l, 4l)')
+                            ->distinct()
                             ->required(),
                         TextInput::make('label')
                             ->label('اسم الخيار (مثل 1 لتر)')
@@ -105,10 +113,12 @@ class ProductForm
                         TextInput::make('price')
                             ->label('السعر (ج.م)')
                             ->numeric()
+                            ->minValue(0)
                             ->required(),
                         TextInput::make('old_price')
                             ->label('السعر قبل الخصم')
-                            ->numeric(),
+                            ->numeric()
+                            ->minValue(0),
                         TextInput::make('sort')
                             ->label('الترتيب')
                             ->numeric()

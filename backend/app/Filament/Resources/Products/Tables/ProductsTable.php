@@ -33,11 +33,11 @@ class ProductsTable
                     ->sortable(),
                 TextColumn::make('price')
                     ->label('السعر')
-                    ->money('EGP')
+                    ->formatStateUsing(fn ($state) => number_format((int) $state) . ' ج.م')
                     ->sortable(),
                 TextColumn::make('old_price')
                     ->label('قبل الخصم')
-                    ->money('EGP')
+                    ->formatStateUsing(fn ($state) => $state ? number_format((int) $state) . ' ج.م' : null)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('stock')
                     ->label('المخزون')

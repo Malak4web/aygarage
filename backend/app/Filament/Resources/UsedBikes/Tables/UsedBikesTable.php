@@ -33,7 +33,7 @@ class UsedBikesTable
                     ->sortable(),
                 TextColumn::make('price')
                     ->label('السعر')
-                    ->money('EGP')
+                    ->formatStateUsing(fn ($state) => number_format((int) $state) . ' ج.م')
                     ->sortable(),
                 TextColumn::make('inspection_score')
                     ->label('الفحص')

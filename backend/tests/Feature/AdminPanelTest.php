@@ -2,14 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\ManageSettings;
+use App\Filament\Resources\Bookings\Pages\CreateBooking;
+use App\Filament\Resources\Bookings\Pages\ListBookings;
+use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Models\Booking;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceRecord;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserBike;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminPanelTest extends TestCase
@@ -68,65 +75,146 @@ class AdminPanelTest extends TestCase
     public function test_admin_can_view_product_and_create(): void
     {
         $admin = User::where('role', 'admin')->first();
-        $category = Category::first();
 
         $response = $this->actingAs($admin)->get('/admin/products/create');
         $response->assertStatus(200);
     }
 
-    public function test_booking_complete_and_service_record_workflow(): void
+    public function test_livewire_can_change_pickup_order_status(): void
     {
+        $admin = User::where('role', 'admin')->first();
+        $this->actingAs($admin);
+
+        $order = Order::where('delivery_method', 'pickup')->first();
+        if (!$order) {
+            $order = Order::first();
+            $order->update(['delivery_method' => 'pickup', 'payment_method' => 'pickup']);
+        }
+
+        Livewire::test(EditOrder::class, ['record' => $order->id])
+            ->fillForm(['status' => 'ready_for_pickup'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $order->refresh();
+        $this->assertEquals('ready_for_pickup', $order->status);
+    }
+
+    public function test_livewire_cancelling_order_returns_stock(): void
+    {
+        $admin = User::where('role', 'admin')->first();
+        $this->actingAs($admin);
+
+        $order = Order::where('status', '!=', 'cancelled')->has('items')->first();
+        $this->assertNotNull($order);
+
+        $item = $order->items->first();
+        $product = Product::find($item->product_id);
+        $initialStock = $product->stock;
+
+        Livewire::test(EditOrder::class, ['record' => $order->id])
+            ->fillForm(['status' => 'cancelled'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $product->refresh();
+        $this->assertEquals($initialStock + $item->qty, $product->stock);
+
+        $order->refresh();
+        $this->assertEquals('cancelled', $order->status);
+    }
+
+    public function test_livewire_booking_action_completes_and_updates_bike(): void
+    {
+        $admin = User::where('role', 'admin')->first();
+        $this->actingAs($admin);
+
         $customer = User::where('role', 'customer')->first();
-        $bike = $customer->bikes()->first();
         $service = Service::first();
 
         $booking = Booking::create([
-            'number' => 'BK-9999',
             'user_id' => $customer->id,
-            'user_bike_id' => $bike->id,
+            'custom_model' => 'Zontes ZT350-X',
             'service_id' => $service->id,
-            'date' => now()->addDays(2)->format('Y-m-d'),
-            'time' => '10:00',
-            'odometer' => 15000,
-            'price_snapshot' => 650,
+            'date' => now()->toDateString(),
+            'time' => '11:00',
             'status' => 'confirmed',
         ]);
 
-        $this->assertEquals('confirmed', $booking->status);
+        Livewire::test(ListBookings::class)
+            ->callTableAction('completeAndRecord', $booking, data: [
+                'bike_choice' => 'new',
+                'new_bike_model_code' => 'ZT350-T',
+                'new_bike_plate' => 'م ص ر 5555',
+                'record_date' => now()->toDateString(),
+                'odometer' => 12900,
+                'work' => 'صيانة 10,000 كم',
+                'technician' => 'أبو يوسف',
+                'cost' => 650,
+            ])
+            ->assertHasNoTableActionErrors();
 
-        // Simulate complete action logic
-        $recordDate = now()->format('Y-m-d');
-        $newOdo = 15200;
-
-        $booking->update(['status' => 'done']);
-        $serviceRecord = ServiceRecord::create([
-            'user_bike_id' => $bike->id,
-            'booking_id' => $booking->id,
-            'date' => $recordDate,
-            'odometer' => $newOdo,
-            'work' => $service->name,
-            'technician' => 'أبو يوسف',
-            'cost' => 650,
-        ]);
-
-        $bike->update([
-            'odometer' => max($bike->odometer ?? 0, $newOdo),
-            'last_visit_at' => $recordDate,
-        ]);
-
-        $this->assertDatabaseHas('bookings', [
-            'id' => $booking->id,
-            'status' => 'done',
-        ]);
+        $booking->refresh();
+        $this->assertEquals('done', $booking->status);
 
         $this->assertDatabaseHas('service_records', [
             'booking_id' => $booking->id,
-            'user_bike_id' => $bike->id,
-            'odometer' => 15200,
+            'odometer' => 12900,
+            'cost' => 650,
         ]);
 
-        $bike->refresh();
-        $this->assertEquals(15200, $bike->odometer);
-        $this->assertEquals($recordDate, $bike->last_visit_at?->format('Y-m-d'));
+        $createdBike = UserBike::where('user_id', $customer->id)->where('plate', 'م ص ر 5555')->first();
+        $this->assertNotNull($createdBike);
+        $this->assertEquals(12900, $createdBike->odometer);
+        $this->assertEquals(15900, $createdBike->next_service_km);
+        $this->assertEquals(now()->toDateString(), $createdBike->last_visit_at->format('Y-m-d'));
+    }
+
+    public function test_livewire_save_settings_no_500(): void
+    {
+        $admin = User::where('role', 'admin')->first();
+        $this->actingAs($admin);
+
+        Livewire::test(ManageSettings::class)
+            ->fillForm([
+                'store_name' => 'جراج أبو يوسف المطور',
+                'phone' => '01099998888',
+                'whatsapp' => '01099998888',
+                'delivery_fee' => 85,
+                'booking_days_ahead' => 30,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertEquals(85, Setting::get('delivery_fee'));
+        $this->assertSame('01099998888', Setting::get('phone'));
+    }
+
+    public function test_livewire_create_booking_from_admin(): void
+    {
+        $admin = User::where('role', 'admin')->first();
+        $this->actingAs($admin);
+
+        $customer = User::where('role', 'customer')->first();
+        $service = Service::first();
+
+        Livewire::test(CreateBooking::class)
+            ->fillForm([
+                'user_id' => $customer->id,
+                'service_id' => $service->id,
+                'date' => now()->addDays(5)->toDateString(),
+                'time' => '14:00',
+                'status' => 'confirmed',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $createdBooking = Booking::where('user_id', $customer->id)
+            ->where('time', '14:00')
+            ->first();
+
+        $this->assertNotNull($createdBooking);
+        $this->assertStringStartsWith('BK-', $createdBooking->number);
+        $this->assertEquals('confirmed', $createdBooking->status);
     }
 }

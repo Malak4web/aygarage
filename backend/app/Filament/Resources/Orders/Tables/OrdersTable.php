@@ -31,7 +31,7 @@ class OrdersTable
                     ->searchable(),
                 TextColumn::make('total')
                     ->label('الإجمالي')
-                    ->money('EGP')
+                    ->formatStateUsing(fn ($state) => number_format((int) $state) . ' ج.م')
                     ->weight('bold')
                     ->sortable(),
                 TextColumn::make('delivery_method')

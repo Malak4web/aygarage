@@ -58,6 +58,8 @@ class ManageSettings extends Page
             $settings['whatsapp'] = (string) $settings['whatsapp'];
         }
 
+        $settings['booking_days_ahead'] = $settings['booking_days_ahead'] ?? 30;
+
         $this->form->fill($settings);
     }
 

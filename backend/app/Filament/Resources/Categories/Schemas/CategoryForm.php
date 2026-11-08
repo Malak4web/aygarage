@@ -14,6 +14,8 @@ class CategoryForm
                 TextInput::make('name')
                     ->label('اسم القسم')
                     ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn ($state, $set, $operation) => $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null)
                     ->maxLength(255),
                 TextInput::make('slug')
                     ->label('الرابط المخصص (Slug)')

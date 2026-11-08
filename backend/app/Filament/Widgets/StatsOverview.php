@@ -15,9 +15,9 @@ class StatsOverview extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $todayBookings = Booking::whereDate('date', now()->toDateString())->count();
+        $todayBookings = Booking::whereDate('date', now()->toDateString())->where('status', '!=', 'cancelled')->count();
         $newOrders = Order::where('status', 'new')->count();
-        $lowStockProducts = Product::where('stock', '<=', 3)->count();
+        $lowStockProducts = Product::where('is_active', true)->where('stock', '<=', 3)->count();
         $availableBikes = UsedBike::where('status', 'available')->count();
 
         return [

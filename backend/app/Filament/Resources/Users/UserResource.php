@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
 {
@@ -40,6 +41,17 @@ class UserResource extends Resource
     public static function getNavigationSort(): ?int
     {
         return 1;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        if ($record->id === auth()->id()) {
+            return false;
+        }
+        if ($record->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
+            return false;
+        }
+        return true;
     }
 
     public static function form(Schema $schema): Schema

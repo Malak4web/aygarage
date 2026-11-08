@@ -28,8 +28,7 @@ class ServicesTable
                     ->label('المدة'),
                 TextColumn::make('price')
                     ->label('السعر')
-                    ->money('EGP')
-                    ->placeholder('حسب الفحص')
+                    ->formatStateUsing(fn ($state) => $state ? number_format((int) $state) . ' ج.م' : 'حسب الفحص')
                     ->sortable(),
                 TextColumn::make('price_label')
                     ->label('وصف السعر'),

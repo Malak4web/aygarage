@@ -18,8 +18,14 @@ class UsedBikeForm
     {
         return $schema
             ->components([
+                TextInput::make('model_name')
+                    ->label('اسم الموديل التجاري')
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn ($state, $set, $operation) => $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null)
+                    ->maxLength(255),
                 TextInput::make('slug')
-                    ->label('Slug')
+                    ->label('الرابط المخصص (Slug)')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
@@ -27,9 +33,6 @@ class UsedBikeForm
                     ->label('الموديل')
                     ->options(fn () => BikeModel::pluck('name', 'code')->toArray())
                     ->required(),
-                TextInput::make('model_name')
-                    ->label('اسم الموديل التجاري')
-                    ->maxLength(255),
                 TextInput::make('family')
                     ->label('الفئة (مثل Adventure, Cruiser)')
                     ->maxLength(100),
@@ -40,17 +43,22 @@ class UsedBikeForm
                 TextInput::make('km')
                     ->label('العداد (كم)')
                     ->numeric()
+                    ->minValue(0)
                     ->required(),
                 TextInput::make('price')
                     ->label('السعر (ج.م)')
                     ->numeric()
+                    ->minValue(0)
                     ->required(),
                 TextInput::make('installment_monthly')
                     ->label('القسط الشهري (ج.م إن وجد)')
-                    ->numeric(),
+                    ->numeric()
+                    ->minValue(0),
                 TextInput::make('inspection_score')
                     ->label('درجة الفحص الشامل (من 100)')
                     ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
                     ->default(95),
                 TextInput::make('color')
                     ->label('اللون')
@@ -89,6 +97,8 @@ class UsedBikeForm
                         TextInput::make('score')
                             ->label('الدرجة /100')
                             ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
                             ->required(),
                         TextInput::make('note')
                             ->label('الملاحظة'),
