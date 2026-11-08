@@ -19,5 +19,16 @@ class CouponSeeder extends Seeder
                 'expires_at' => null,
             ]
         );
+
+        Coupon::updateOrCreate(
+            ['code' => 'GARAGE50'],
+            [
+                'type' => 'fixed',
+                'value' => 50,
+                'min_subtotal' => 200,
+                'is_active' => true,
+                'expires_at' => null,
+            ]
+        );
     }
 }

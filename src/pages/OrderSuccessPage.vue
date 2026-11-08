@@ -31,13 +31,13 @@
       <div v-if="order" class="order-details-box">
         <h3>تفاصيل الطلب</h3>
         <div class="order-items-list">
-          <div v-for="item in order.items" :key="item.lineId || item.productId" class="order-item-row">
+          <div v-for="item in order.items" :key="item.lineId || item.productId || item.id" class="order-item-row">
             <div class="order-item-info">
-              <b>{{ item.product.name }}</b>
-              <small>{{ item.qty }} × {{ (item.selectedOption?.price || item.product.price).toLocaleString('en') }} ج.م</small>
+              <b>{{ item.product?.name || item.name }}</b>
+              <small>{{ item.qty }} × {{ (item.selectedOption?.price || item.product?.price || item.unitPrice || 0).toLocaleString('en') }} ج.م</small>
             </div>
             <span class="order-item-total">
-              {{ ((item.selectedOption?.price || item.product.price) * item.qty).toLocaleString('en') }} ج.م
+              {{ (((item.selectedOption?.price || item.product?.price || item.unitPrice || 0) * item.qty)).toLocaleString('en') }} ج.م
             </span>
           </div>
         </div>

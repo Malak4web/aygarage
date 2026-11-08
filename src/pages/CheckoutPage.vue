@@ -257,6 +257,26 @@ const populateSavedAddress = () => {
   }
 }
 
+watch(
+  () => userStore.user,
+  (u) => {
+    if (u) {
+      if (!customerName.value && u.name && !u.name.startsWith('عميل')) {
+        customerName.value = u.name
+      }
+      if (!customerPhone.value && u.phone) {
+        customerPhone.value = u.phone
+      }
+      if (u.address) {
+        if (u.address.governorate) governorate.value = u.address.governorate
+        if (u.address.area) area.value = u.address.area
+        if (!addressDetails.value && u.address.street) addressDetails.value = u.address.street
+      }
+    }
+  },
+  { immediate: true }
+)
+
 const handleConfirmOrder = async () => {
   if (cartStore.items.length === 0) {
     return router.replace('/cart')
@@ -275,35 +295,29 @@ const handleConfirmOrder = async () => {
   submitError.value = ''
 
   try {
-    const deliveryFeeNum = cartStore.getDeliveryFee(deliveryMethod.value)
-    const totalNum = cartStore.getTotal(deliveryMethod.value)
-    const cleanEstimate = storeConfig.deliveryEstimate.replace(/^يوصلك\s*/, '')
-    const deliveryDate = deliveryMethod.value === 'pickup'
-      ? 'جاهز للاستلام من الجراج'
-      : cleanEstimate
-
     const orderData = {
-      items: [...cartStore.items],
-      totalNum,
-      subtotalNum: cartStore.subtotal,
-      discountNum: cartStore.discount,
-      deliveryFeeNum,
-      customer: {
-        name: customerName.value,
-        phone: customerPhone.value,
-        governorate: governorate.value,
-        area: area.value,
-        address: deliveryMethod.value === 'pickup' ? (addressDetails.value || 'استلام من مقر الجراج') : addressDetails.value
-      },
+      items: cartStore.items.map((i) => ({
+        productId: i.product?.id || i.slug,
+        slug: i.slug || i.product?.slug,
+        optionCode: i.optionCode || i.selectedOption?.code || null,
+        qty: i.qty
+      })),
+      name: customerName.value,
+      phone: customerPhone.value,
+      governorate: governorate.value,
+      area: area.value,
+      street: deliveryMethod.value === 'pickup' ? (addressDetails.value || 'استلام من مقر الجراج') : addressDetails.value,
       deliveryMethod: deliveryMethod.value,
       paymentMethod: paymentMethod.value,
-      deliveryDate
+      couponCode: cartStore.couponCode || null
     }
 
     const createdOrder = await api.createOrder(orderData)
-    userStore.addOrder(createdOrder)
+    if (typeof userStore.addOrder === 'function') {
+      userStore.addOrder(createdOrder)
+    }
     cartStore.clearCart()
-    router.push(`/order/${createdOrder.id}`)
+    router.push(`/order/${createdOrder.number || createdOrder.id}`)
   } catch (error) {
     submitError.value = error?.message || 'حدث خطأ أثناء تأكيد الطلب، يرجى المحاولة مرة أخرى.'
   } finally {

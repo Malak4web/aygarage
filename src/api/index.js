@@ -85,12 +85,7 @@ async function request(endpoint, options = {}) {
   return responseText ? JSON.parse(responseText) : null
 }
 
-// Stored orders & bookings fallback for orders/booking phases 4 & 5
-let storedOrders = []
-try {
-  const o = localStorage.getItem('ayg_orders')
-  if (o) storedOrders = JSON.parse(o)
-} catch (e) {}
+// Stored bookings fallback for booking phase 5
 
 export const api = {
   // --- Settings ---
@@ -304,47 +299,29 @@ export const api = {
     })
   },
 
-  async createOrder(orderData) {
-    const orderId = String(Math.floor(1000 + Math.random() * 9000))
-    const totalNum = typeof orderData.totalNum === 'number' ? orderData.totalNum : 0
-    const order = {
-      id: orderId,
-      date: 'اليوم',
-      status: 'قيد التجهيز',
-      statusClass: 'ok',
-      totalNum,
-      subtotalNum: orderData.subtotalNum || 0,
-      discountNum: orderData.discountNum || 0,
-      deliveryFeeNum: orderData.deliveryFeeNum || 0,
-      total: `${totalNum.toLocaleString('en')} ج.م`,
-      items: orderData.items,
-      customer: orderData.customer,
-      deliveryMethod: orderData.deliveryMethod,
-      paymentMethod: orderData.paymentMethod,
-      deliveryDate: orderData.deliveryDate
-    }
-    storedOrders.unshift(order)
-    try {
-      localStorage.setItem('ayg_orders', JSON.stringify(storedOrders))
-    } catch (e) {}
-    return order
+  async checkCoupon(code, subtotal) {
+    return await request('/coupons/check', {
+      method: 'POST',
+      body: JSON.stringify({ code, subtotal })
+    })
   },
 
-  async getOrder(id) {
-    try {
-      const o = localStorage.getItem('ayg_orders')
-      if (o) storedOrders = JSON.parse(o)
-    } catch (e) {}
-    const found = storedOrders.find((ord) => String(ord.id) === String(id))
-    if (!found) {
-      throw new Error(`الطلب #${id} غير موجود`)
-    }
-    return { ...found }
+  async createOrder(orderData) {
+    const res = await request('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    })
+    return res?.data || res
+  },
+
+  async getOrder(number) {
+    const res = await request(`/me/orders/${encodeURIComponent(number)}`)
+    return res?.data || res
   },
 
   async getUserOrders() {
-    // Until Phase 4 orders API is implemented
-    return []
+    const res = await request('/me/orders')
+    return res?.data || res || []
   },
 
   async getUserBookings() {

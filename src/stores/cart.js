@@ -7,6 +7,7 @@ export const useCartStore = defineStore('cart', {
   state: () => {
     let savedItems = []
     let savedCoupon = ''
+    let savedAppliedCoupon = null
     try {
       const version = localStorage.getItem('ayg_cart_v')
       const stored = localStorage.getItem('ayg_cart')
@@ -43,6 +44,12 @@ export const useCartStore = defineStore('cart', {
       if (storedCoupon) {
         savedCoupon = storedCoupon
       }
+      const storedAppliedCoupon = localStorage.getItem('ayg_applied_coupon')
+      if (storedAppliedCoupon) {
+        try {
+          savedAppliedCoupon = JSON.parse(storedAppliedCoupon)
+        } catch (_) {}
+      }
     } catch (e) {
       console.warn('Failed to parse cart from storage:', e)
     }
@@ -50,6 +57,7 @@ export const useCartStore = defineStore('cart', {
     return {
       items: savedItems,
       couponCode: savedCoupon,
+      appliedCoupon: savedAppliedCoupon || null,
       couponError: '',
       isRefreshing: false,
       isRefreshError: false,
@@ -69,7 +77,14 @@ export const useCartStore = defineStore('cart', {
     },
 
     discount(state) {
-      if (state.couponCode && state.couponCode.trim().toUpperCase() === 'ZONTES10') {
+      if (!state.couponCode) return 0
+      if (state.appliedCoupon) {
+        if (state.appliedCoupon.type === 'percent') {
+          return Math.round(this.subtotal * (state.appliedCoupon.value / 100))
+        }
+        return Math.min(state.appliedCoupon.value, this.subtotal)
+      }
+      if (state.couponCode.trim().toUpperCase() === 'ZONTES10') {
         return Math.round(this.subtotal * 0.1)
       }
       return 0
@@ -119,6 +134,11 @@ export const useCartStore = defineStore('cart', {
         localStorage.setItem('ayg_cart', JSON.stringify(compact))
         localStorage.setItem('ayg_cart_v', '2')
         localStorage.setItem('ayg_coupon', this.couponCode)
+        if (this.appliedCoupon) {
+          localStorage.setItem('ayg_applied_coupon', JSON.stringify(this.appliedCoupon))
+        } else {
+          localStorage.removeItem('ayg_applied_coupon')
+        }
       } catch (e) {
         console.warn('Failed to save cart:', e)
       }
@@ -303,20 +323,31 @@ export const useCartStore = defineStore('cart', {
     clearCart() {
       this.items = []
       this.couponCode = ''
+      this.appliedCoupon = null
       this.couponError = ''
       this.persist()
     },
 
-    applyCoupon(code) {
+    async applyCoupon(code) {
       const clean = (code || '').trim()
-      if (clean.toUpperCase() === 'ZONTES10') {
-        this.couponCode = clean
+      if (!clean) {
+        this.couponCode = ''
+        this.appliedCoupon = null
+        this.couponError = 'يرجى إدخال كود الخصم'
+        this.persist()
+        return false
+      }
+      try {
+        const res = await api.checkCoupon(clean, this.subtotal)
+        this.couponCode = res.code || clean.toUpperCase()
+        this.appliedCoupon = res
         this.couponError = ''
         this.persist()
         return true
-      } else {
+      } catch (err) {
         this.couponCode = ''
-        this.couponError = 'كود الخصم غير صحيح'
+        this.appliedCoupon = null
+        this.couponError = err?.message || 'كود الخصم غير صحيح'
         this.persist()
         return false
       }
@@ -324,6 +355,7 @@ export const useCartStore = defineStore('cart', {
 
     removeCoupon() {
       this.couponCode = ''
+      this.appliedCoupon = null
       this.couponError = ''
       this.persist()
     }
