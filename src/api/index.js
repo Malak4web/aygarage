@@ -98,9 +98,16 @@ export const api = {
     return await request('/settings')
   },
 
-  // --- Categories ---
+  // --- Categories (Loaded once, reused across components) ---
+  _categoriesPromise: null,
   async getCategories() {
-    return await request('/categories')
+    if (!this._categoriesPromise) {
+      this._categoriesPromise = request('/categories').catch((err) => {
+        this._categoriesPromise = null
+        throw err
+      })
+    }
+    return await this._categoriesPromise
   },
 
   // --- Products ---

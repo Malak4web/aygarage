@@ -3,21 +3,21 @@ import { api } from '@/api'
 
 const LEGACY_ID_MAP = {
   p1: 'motul-7100-10w40',
-  p2: 'zontes-oil-filter',
-  p3: 'brembo-brake-pads',
+  p2: 'zontes-oil-filter-zt350',
+  p3: 'brembo-front-brake-pads',
   p4: 'ls2-rapid-ii-helmet',
-  p5: 'did-520-chain',
+  p5: 'did-520-vx3-chain',
   p6: 'ngk-iridium-cr8eix',
   p7: 'alpinestars-smx-1-air',
   p8: 'yuasa-ytz10s-battery',
-  p9: 'pirelli-diablo-rosso-iii',
-  p10: 'castrol-power1-10w40',
-  p11: 'liqui-moly-street-10w40',
-  p12: 'shell-advance-ultra-10w40',
-  p13: 'mobil-1-racing-4t-15w50',
-  p14: 'repsol-moto-sintetico-10w40',
-  p15: 'motul-300v-factory-line-15w50',
-  p16: 'motul-5100-10w40'
+  p9: 'motul-5100-15w50',
+  p10: 'pirelli-angel-st-rear',
+  p11: 'castrol-power1-racing-10w40',
+  p12: 'liqui-moly-street-race-10w40',
+  p13: 'shell-advance-ultra-10w40',
+  p14: 'mobil-1-racing-4t-15w50',
+  p15: 'motul-300v-factory-line-10w40',
+  p16: 'repsol-moto-racing-10w40'
 }
 
 export function resolveSlug(item) {
@@ -92,7 +92,12 @@ export const useFavoritesStore = defineStore('favorites', {
                   try {
                     await api.addFavorite(slug)
                   } catch (err) {
-                    mergeSuccess = false
+                    // Item 1: Treat 404 as done (drop entry). Keep localStorage only on network or 5xx errors
+                    if (err?.status && err.status !== 404) {
+                      mergeSuccess = false
+                    } else if (!err?.status) {
+                      mergeSuccess = false
+                    }
                   }
                 }
               }
@@ -170,8 +175,8 @@ export const useFavoritesStore = defineStore('favorites', {
     },
 
     clearFavorites() {
-      this.favoriteIds = []
       this.favoriteProducts = []
+      this.favoriteIds = loadStoredFavorites()
     }
   }
 })

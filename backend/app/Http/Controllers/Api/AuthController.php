@@ -22,7 +22,6 @@ class AuthController extends Controller
             'name' => $request->input('name'),
             'phone' => $request->input('phone'),
             'password' => $request->input('password'),
-            'role' => 'customer',
         ]);
 
         if ($request->filled('bikeModel')) {
@@ -41,7 +40,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => new UserResource($user->load(['addresses', 'bikes'])),
+            'user' => new UserResource($user->load(['addresses', 'bikes.latestServiceRecord'])),
             'message' => 'تم إنشاء الحساب بنجاح',
         ], 201);
     }
@@ -64,7 +63,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => new UserResource($user->load(['addresses', 'bikes'])),
+            'user' => new UserResource($user->load(['addresses', 'bikes.latestServiceRecord'])),
             'message' => 'تم تسجيل الدخول بنجاح',
         ]);
     }
@@ -80,7 +79,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(new UserResource($request->user()->load(['addresses', 'bikes'])));
+        return response()->json(new UserResource($request->user()->load(['addresses', 'bikes.latestServiceRecord'])));
     }
 
     public function updateMe(UpdateMeRequest $request): JsonResponse
@@ -116,7 +115,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'user' => new UserResource($user->load(['addresses', 'bikes'])),
+            'user' => new UserResource($user->load(['addresses', 'bikes.latestServiceRecord'])),
             'message' => 'تم تحديث بيانات الحساب بنجاح',
         ]);
     }

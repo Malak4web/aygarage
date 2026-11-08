@@ -122,7 +122,7 @@
           <AppIcon v-if="fitResult === true" name="check" :size="22" :stroke-width="2.2" />
           <AppIcon v-else name="shield" :size="22" :stroke-width="1.5" />
           <div>
-            <b v-if="fitResult === true">يركب على موتوسيكلك {{ userStore.selectedBike }} · {{ userBikeYear }}</b>
+            <b v-if="fitResult === true">يركب على موتوسيكلك {{ userStore.selectedBike }}{{ userBikeYear ? ` · ${userBikeYear}` : '' }}</b>
             <b v-else>مش متأكدين إنه يركب على موتوسيكلك، اسألنا</b>
             <small v-if="fitResult === true && product.fitNote">{{ product.fitNote }}</small>
             <small v-else>اسأل الدعم أو راجع كتالوج الصيانة</small>

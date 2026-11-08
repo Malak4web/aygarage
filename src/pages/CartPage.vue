@@ -133,7 +133,7 @@
                   <AppIcon name="box" :size="32" />
                 </div>
                 <div class="line-info">
-                  <b>{{ item.slug }}</b>
+                  <b>{{ item.product?.name || item.name || 'منتج' }}</b>
                   <small style="color: var(--sale);">
                     تعذر تحديث تفاصيل المنتج
                   </small>
@@ -147,7 +147,7 @@
                 <button
                   type="button"
                   class="line-remove"
-                  @click="cartStore.removeBySlug(item.slug || item.product?.slug || item.lineId)"
+                  @click="cartStore.removeItem(item.lineId)"
                   aria-label="حذف المنتج من السلة"
                 >
                   <AppIcon name="x" :size="18" />

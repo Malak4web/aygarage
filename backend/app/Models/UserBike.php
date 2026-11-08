@@ -23,10 +23,6 @@ class UserBike extends Model
         'color',
     ];
 
-    protected $appends = [
-        'last_visit_at',
-    ];
-
     protected function casts(): array
     {
         return [
@@ -54,15 +50,5 @@ class UserBike extends Model
     public function latestServiceRecord()
     {
         return $this->hasOne(ServiceRecord::class)->latestOfMany('date');
-    }
-
-    public function getLastVisitAtAttribute(): ?string
-    {
-        $latest = $this->latestServiceRecord;
-        if (!$latest || !$latest->date) {
-            return null;
-        }
-
-        return \Carbon\Carbon::parse($latest->date)->locale('ar')->isoFormat('D MMMM');
     }
 }

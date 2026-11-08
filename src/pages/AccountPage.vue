@@ -136,7 +136,11 @@
                   <a href="#pdf" @click.prevent="downloadServicePdf">تحميل PDF</a>
                 </div>
 
-                <div class="table-wrap">
+                <div v-if="serviceHistoryList.length === 0" style="padding: 24px; text-align: center; color: var(--mu);">
+                  لسه مفيش زيارات صيانة مسجلة
+                </div>
+
+                <div v-else class="table-wrap">
                   <table>
                     <thead>
                       <tr>
@@ -217,7 +221,16 @@
             <div class="sec-head">
               <h1>سجل الصيانة الكامل</h1>
             </div>
-            <div class="box">
+            <div v-if="serviceHistoryList.length === 0">
+              <EmptyState
+                icon="wrench"
+                title="لسه مفيش زيارات صيانة مسجلة"
+                description="سجل الصيانة لموتوسيكلك هيظهر هنا تلقائياً بعد أول زيارة وفحص في الجراج."
+                action-label="احجز موعد صيانة"
+                action-to="/booking"
+              />
+            </div>
+            <div v-else class="box">
               <div class="table-wrap">
                 <table>
                   <thead>
@@ -349,7 +362,7 @@
               <div class="fl">
                 <div class="fld">
                   <FormField id="acc-name" label="الاسم" v-model="settingsName" />
-                  <span v-if="settingsErrors.name" class="field-error">{{ settingsErrors.name[0] }}</span>
+                  <span v-if="settingsErrors.name" class="field-error">{{ formatError(settingsErrors.name) }}</span>
                 </div>
                 <div class="fld">
                   <FormField
@@ -372,16 +385,16 @@
                       {{ gov.name }}
                     </option>
                   </select>
-                  <span v-if="settingsErrors.governorate" class="field-error">{{ settingsErrors.governorate[0] }}</span>
+                  <span v-if="settingsErrors.governorate" class="field-error">{{ formatError(settingsErrors.governorate) }}</span>
                 </div>
                 <div class="fld">
                   <FormField id="acc-area" label="المنطقة" v-model="settingsArea" />
-                  <span v-if="settingsErrors.area" class="field-error">{{ settingsErrors.area[0] }}</span>
+                  <span v-if="settingsErrors.area" class="field-error">{{ formatError(settingsErrors.area) }}</span>
                 </div>
               </div>
               <div class="fld" style="margin-top: 12px;">
                 <FormField id="acc-street" label="تفاصيل العنوان" v-model="settingsStreet" />
-                <span v-if="settingsErrors.street" class="field-error">{{ settingsErrors.street[0] }}</span>
+                <span v-if="settingsErrors.street" class="field-error">{{ formatError(settingsErrors.street) }}</span>
               </div>
 
               <div v-if="settingsSaved" class="success-banner">
@@ -407,7 +420,7 @@
                     v-model="currentPassword"
                     required
                   />
-                  <span v-if="passwordErrors.current_password" class="field-error">{{ passwordErrors.current_password[0] }}</span>
+                  <span v-if="passwordErrors.current_password" class="field-error">{{ formatError(passwordErrors.current_password) }}</span>
                 </div>
                 <div class="fl" style="margin-top: 12px;">
                   <div class="fld">
@@ -418,7 +431,7 @@
                       v-model="newPassword"
                       required
                     />
-                    <span v-if="passwordErrors.new_password" class="field-error">{{ passwordErrors.new_password[0] }}</span>
+                    <span v-if="passwordErrors.new_password" class="field-error">{{ formatError(passwordErrors.new_password) }}</span>
                   </div>
                   <div class="fld">
                     <FormField
@@ -428,7 +441,7 @@
                       v-model="confirmPassword"
                       required
                     />
-                    <span v-if="passwordErrors.confirm" class="field-error">{{ passwordErrors.confirm }}</span>
+                    <span v-if="passwordErrors.confirm" class="field-error">{{ formatError(passwordErrors.confirm) }}</span>
                   </div>
                 </div>
 
@@ -631,7 +644,7 @@ const favProducts = computed(() => {
   if (favStore.favoriteProducts && favStore.favoriteProducts.length > 0) {
     return favStore.favoriteProducts
   }
-  return allProducts.value.filter((p) => favStore.isFavorite(p.id) || favStore.isFavorite(p.slug))
+  return allProducts.value.filter((p) => favStore.isFavorite(p.slug))
 })
 
 const userAddresses = computed(() => {
@@ -817,6 +830,11 @@ const settingsErrors = ref({})
 const settingsSaved = ref(false)
 const isSavingSettings = ref(false)
 
+const formatError = (err) => {
+  if (!err) return ''
+  return Array.isArray(err) ? err[0] : String(err)
+}
+
 const handleSaveSettings = async () => {
   if (isSavingSettings.value) return
   isSavingSettings.value = true
@@ -826,8 +844,9 @@ const handleSaveSettings = async () => {
       name: settingsName.value.trim()
     })
 
+    const existingAddress = userStore.user?.address || userAddresses.value[0]
+
     if (settingsStreet.value.trim()) {
-      const existingAddress = userStore.user?.address || userAddresses.value[0]
       if (existingAddress?.id) {
         await api.updateAddress(existingAddress.id, {
           governorate: settingsGovernorate.value,
@@ -843,6 +862,9 @@ const handleSaveSettings = async () => {
           is_default: true
         })
       }
+    } else if (existingAddress?.id) {
+      // Item 8: Clear address if street was emptied
+      await api.deleteAddress(existingAddress.id)
     }
     await userStore.fetchUser()
     settingsSaved.value = true
@@ -875,7 +897,7 @@ const handleUpdatePassword = async () => {
     return
   }
   if (newPassword.value.length < 6) {
-    passwordErrors.value = { new_password: ['كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف'] }
+    passwordErrors.value = { new_password: 'كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف' }
     return
   }
 
