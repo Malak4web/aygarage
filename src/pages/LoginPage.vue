@@ -114,6 +114,7 @@ import { storeConfig } from '@/config/store.js'
 import { useUserStore } from '@/stores/user.js'
 import { useToastStore } from '@/stores/toast.js'
 import FormField from '@/components/common/FormField.vue'
+import { normalizePhone, isValidEgyptianPhone } from '@/utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -144,12 +145,23 @@ const redirectAfterAuth = () => {
 
 const handleLogin = async () => {
   if (isSubmitting.value) return
-  isSubmitting.value = true
   errorMessage.value = ''
   formErrors.value = {}
 
+  const normPhone = normalizePhone(phone.value)
+  if (!normPhone) {
+    formErrors.value = { phone: 'رقم الموبايل مطلوب' }
+    return
+  }
+  if (!isValidEgyptianPhone(normPhone)) {
+    formErrors.value = { phone: 'رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01' }
+    return
+  }
+
+  isSubmitting.value = true
+
   try {
-    await userStore.login(phone.value, password.value)
+    await userStore.login(normPhone, password.value)
     toastStore.show('مرحباً بك مجدداً في جراج أبو يوسف!', 'success')
     redirectAfterAuth()
   } catch (err) {
@@ -164,14 +176,31 @@ const handleLogin = async () => {
 
 const handleRegister = async () => {
   if (isSubmitting.value) return
-  isSubmitting.value = true
   errorMessage.value = ''
   formErrors.value = {}
 
+  const trimmedName = name.value.trim()
+  if (!trimmedName) {
+    formErrors.value = { name: 'الاسم مطلوب' }
+    return
+  }
+
+  const normPhone = normalizePhone(phone.value)
+  if (!normPhone) {
+    formErrors.value = { phone: 'رقم الموبايل مطلوب' }
+    return
+  }
+  if (!isValidEgyptianPhone(normPhone)) {
+    formErrors.value = { phone: 'رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01' }
+    return
+  }
+
+  isSubmitting.value = true
+
   try {
     await userStore.register({
-      name: name.value.trim() || 'عميل الجراج',
-      phone: phone.value,
+      name: trimmedName,
+      phone: normPhone,
       password: password.value,
       bikeModel: bikeModel.value || undefined
     })

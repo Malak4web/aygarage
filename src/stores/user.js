@@ -71,10 +71,7 @@ export const useUserStore = defineStore('user', {
     async fetchUser() {
       const token = localStorage.getItem('ayg_token')
       if (!token) {
-        this.user = null
-        this.token = null
-        this.isAuthenticated = false
-        localStorage.setItem('ayg_auth', 'false')
+        this.clearSession()
         return null
       }
 
@@ -88,7 +85,7 @@ export const useUserStore = defineStore('user', {
         return userData
       } catch (err) {
         if (err.status === 401) {
-          this.logout()
+          this.clearSession()
         }
         return null
       } finally {
@@ -144,11 +141,7 @@ export const useUserStore = defineStore('user', {
       return res
     },
 
-    async logout() {
-      try {
-        await api.logout()
-      } catch (_) {}
-
+    clearSession() {
       this.isAuthenticated = false
       this.user = null
       this.token = null
@@ -164,6 +157,25 @@ export const useUserStore = defineStore('user', {
       try {
         const favStore = useFavoritesStore()
         favStore.clearFavorites()
+      } catch (_) {}
+    },
+
+    async logout() {
+      const token = this.token || (typeof localStorage !== 'undefined' ? localStorage.getItem('ayg_token') : null)
+      if (token) {
+        try {
+          await api.logout()
+        } catch (_) {}
+      }
+
+      this.clearSession()
+
+      try {
+        const { useCartStore } = await import('./cart.js')
+        const cartStore = useCartStore()
+        if (typeof cartStore.clearCart === 'function') {
+          cartStore.clearCart()
+        }
       } catch (_) {}
     },
 

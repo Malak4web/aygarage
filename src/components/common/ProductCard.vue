@@ -87,10 +87,10 @@ const props = defineProps({
 const cartStore = useCartStore()
 const favStore = useFavoritesStore()
 
-const isFav = computed(() => favStore.isFavorite(props.product.id))
+const isFav = computed(() => favStore.isFavorite(props.product.slug || props.product.id))
 
 const toggleFav = () => {
-  favStore.toggle(props.product.id)
+  favStore.toggle(props.product.slug || props.product.id)
 }
 
 const discountPercentage = computed(() => {

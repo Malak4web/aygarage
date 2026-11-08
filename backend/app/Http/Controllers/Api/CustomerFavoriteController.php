@@ -14,22 +14,26 @@ class CustomerFavoriteController extends Controller
     public function index(Request $request): JsonResponse
     {
         $favorites = $request->user()->favorites()
+            ->whereHas('product', fn($q) => $q->where('is_active', true))
             ->with(['product.category', 'product.options', 'product.images'])
             ->get();
 
-        $products = $favorites->pluck('product')->filter();
+        $products = $favorites->pluck('product')->filter(fn($p) => $p && $p->is_active);
 
         return response()->json(ProductResource::collection($products));
     }
 
     public function store(Request $request, string $identifier): JsonResponse
     {
-        $product = Product::where('slug', $identifier)
-            ->orWhere('id', is_numeric($identifier) ? (int)$identifier : null)
+        $product = Product::where('is_active', true)
+            ->where(function ($q) use ($identifier) {
+                $q->where('slug', $identifier)
+                  ->orWhere('id', is_numeric($identifier) ? (int)$identifier : null);
+            })
             ->first();
 
         if (!$product) {
-            return response()->json(['message' => 'المنتج غير موجود'], 404);
+            return response()->json(['message' => 'المنتج غير موجود أو غير متاح'], 404);
         }
 
         Favorite::firstOrCreate([
@@ -45,8 +49,10 @@ class CustomerFavoriteController extends Controller
 
     public function destroy(Request $request, string $identifier): JsonResponse
     {
-        $product = Product::where('slug', $identifier)
-            ->orWhere('id', is_numeric($identifier) ? (int)$identifier : null)
+        $product = Product::where(function ($q) use ($identifier) {
+                $q->where('slug', $identifier)
+                  ->orWhere('id', is_numeric($identifier) ? (int)$identifier : null);
+            })
             ->first();
 
         if ($product) {

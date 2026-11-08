@@ -1,5 +1,3 @@
-import { defaultUser } from '../data/user.js'
-import { serviceHistory } from '../data/serviceHistory.js'
 import router from '@/router/index.js'
 import { useUserStore } from '@/stores/user.js'
 
@@ -31,22 +29,30 @@ async function request(endpoint, options = {}) {
     throw error
   }
 
+  const isLogoutRequest = endpoint.includes('/auth/logout')
+
   if (response.status === 401) {
     localStorage.removeItem('ayg_token')
-    try {
-      const userStore = useUserStore()
-      if (typeof userStore?.logout === 'function') {
-        userStore.logout()
-      } else if (userStore?.user) {
-        userStore.user = null
-      }
-    } catch (_) {}
+    localStorage.setItem('ayg_auth', 'false')
 
-    // Review 3 Item 17: Redirect on 401 only when the current route has requiresAuth
-    const requiresAuth = router?.currentRoute?.value?.meta?.requiresAuth
-    const currentPath = router?.currentRoute?.value?.fullPath || (typeof window !== 'undefined' ? window.location.pathname : '')
-    if (requiresAuth && currentPath && !currentPath.startsWith('/login') && router) {
-      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`)
+    if (!isLogoutRequest) {
+      try {
+        const userStore = useUserStore()
+        if (typeof userStore?.clearSession === 'function') {
+          userStore.clearSession()
+        } else if (userStore?.user) {
+          userStore.user = null
+        }
+      } catch (_) {}
+
+      // Review 3 Item 17: Redirect on 401 only when the current route has requiresAuth
+      const requiresAuth = router?.currentRoute?.value?.meta?.requiresAuth
+      const currentPath = router?.currentRoute?.value?.fullPath || (typeof window !== 'undefined' ? window.location.pathname : '')
+      if (requiresAuth && currentPath && !currentPath.startsWith('/login') && router) {
+        router.push(`/login?redirect=${encodeURIComponent(currentPath)}`)
+      }
+    } else {
+      return null
     }
   }
 
@@ -177,7 +183,7 @@ export const api = {
 
   // --- Service History (Account) ---
   async getServiceHistory() {
-    return [...serviceHistory]
+    return []
   },
 
   // --- User / Auth (Phase 3) ---
@@ -213,11 +219,7 @@ export const api = {
   },
 
   async getUser() {
-    try {
-      return await this.getMe()
-    } catch (_) {
-      return { ...defaultUser }
-    }
+    return await this.getMe()
   },
 
   // --- Customer Bikes (Phase 3) ---
@@ -334,60 +336,13 @@ export const api = {
   },
 
   async getUserOrders() {
-    try {
-      const o = localStorage.getItem('ayg_orders')
-      if (o) storedOrders = JSON.parse(o)
-    } catch (e) {}
-
-    let currentUser = null
-    try {
-      const u = localStorage.getItem('ayg_user')
-      if (u) currentUser = JSON.parse(u)
-    } catch (e) {}
-
-    const cleanDefault = String(defaultUser.phone || '').replace(/\D+/g, '')
-    const isDemo = currentUser && String(currentUser.phone || '').replace(/\D+/g, '') === cleanDefault
-
-    if (currentUser && !isDemo) {
-      const cleanPhone = String(currentUser.phone || '').replace(/\D+/g, '')
-      return storedOrders.filter(
-        (ord) => ord.customer?.phone && String(ord.customer.phone).replace(/\D+/g, '') === cleanPhone
-      )
-    }
-
-    if (storedOrders.length === 0 && defaultUser.orders?.length > 0) {
-      return [...defaultUser.orders]
-    }
-    return [...storedOrders]
+    // Until Phase 4 orders API is implemented
+    return []
   },
 
   async getUserBookings() {
-    let storedBookings = []
-    try {
-      const b = localStorage.getItem('ayg_bookings')
-      if (b) storedBookings = JSON.parse(b)
-    } catch (e) {}
-
-    let currentUser = null
-    try {
-      const u = localStorage.getItem('ayg_user')
-      if (u) currentUser = JSON.parse(u)
-    } catch (e) {}
-
-    const cleanDefault = String(defaultUser.phone || '').replace(/\D+/g, '')
-    const isDemo = currentUser && String(currentUser.phone || '').replace(/\D+/g, '') === cleanDefault
-
-    if (currentUser && !isDemo) {
-      const cleanPhone = String(currentUser.phone || '').replace(/\D+/g, '')
-      return storedBookings.filter(
-        (b) => b.phone && String(b.phone).replace(/\D+/g, '') === cleanPhone
-      )
-    }
-
-    if (storedBookings.length === 0 && defaultUser.bookings?.length > 0) {
-      return [...defaultUser.bookings]
-    }
-    return [...storedBookings]
+    // Until Phase 5 bookings API is implemented
+    return []
   },
 
   async createBooking(bookingData) {

@@ -256,6 +256,7 @@ import AppIcon from '@/components/common/AppIcon.vue'
 import FormField from '@/components/common/FormField.vue'
 import { useToastStore } from '@/stores/toast.js'
 import { useUserStore } from '@/stores/user.js'
+import { normalizePhone } from '@/utils/phone.js'
 
 const breadcrumbItems = [
   { label: 'الرئيسية', to: '/' },
@@ -301,7 +302,7 @@ const handleSellSubmit = async () => {
   try {
     const res = await api.createSellRequest({
       name: sellName.value,
-      phone: sellPhone.value,
+      phone: normalizePhone(sellPhone.value),
       bikeModel: sellModel.value,
       year: Number(sellYear.value),
       km: Number(sellKm.value) || 0,

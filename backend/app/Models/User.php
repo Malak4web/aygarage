@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Phone;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,7 +19,6 @@ class User extends Authenticatable
         'phone',
         'email',
         'password',
-        'role',
     ];
 
     protected $hidden = [
@@ -39,7 +39,7 @@ class User extends Authenticatable
      */
     public function setPhoneAttribute($value): void
     {
-        $this->attributes['phone'] = preg_replace('/\D+/', '', (string) $value);
+        $this->attributes['phone'] = Phone::normalize((string) $value);
     }
 
     public function isAdmin(): bool

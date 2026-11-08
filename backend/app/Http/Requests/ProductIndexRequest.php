@@ -53,7 +53,16 @@ class ProductIndexRequest extends FormRequest
             'type' => ['nullable', 'array'],
             'type.*' => ['string', 'max:50'],
             'minPrice' => ['nullable', 'integer', 'min:0'],
-            'maxPrice' => ['nullable', 'integer', 'min:0', 'gte:minPrice'],
+            'maxPrice' => [
+                'nullable',
+                'integer',
+                'min:0',
+                function ($attribute, $value, $fail) {
+                    if ($this->filled('minPrice') && (int) $value < (int) $this->input('minPrice')) {
+                        $fail('الحد الأقصى للسعر يجب أن يكون أكبر من أو يساوي الحد الأدنى');
+                    }
+                },
+            ],
             'inStock' => ['nullable', 'boolean'],
             'onSale' => ['nullable', 'boolean'],
             'bestSeller' => ['nullable', 'boolean'],

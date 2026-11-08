@@ -33,10 +33,29 @@ class BikeIndexRequest extends FormRequest
             'family.*' => ['string', 'max:50'],
             'model' => ['nullable', 'string', 'max:100'],
             'minPrice' => ['nullable', 'integer', 'min:0'],
-            'maxPrice' => ['nullable', 'integer', 'min:0', 'gte:minPrice'],
+            'maxPrice' => [
+                'nullable',
+                'integer',
+                'min:0',
+                function ($attribute, $value, $fail) {
+                    if ($this->filled('minPrice') && (int) $value < (int) $this->input('minPrice')) {
+                        $fail('الحد الأقصى للسعر يجب أن يكون أكبر من أو يساوي الحد الأدنى');
+                    }
+                },
+            ],
             'kmRange' => ['nullable', 'string', 'in:under5k,5kTo20k,5k-20k,over20k'],
             'minScore' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'maxScore' => ['nullable', 'integer', 'min:0', 'max:100', 'gte:minScore'],
+            'maxScore' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:100',
+                function ($attribute, $value, $fail) {
+                    if ($this->filled('minScore') && (int) $value < (int) $this->input('minScore')) {
+                        $fail('الحد الأقصى لدرجة الفحص يجب أن يكون أكبر من أو يساوي الحد الأدنى');
+                    }
+                },
+            ],
             'year' => ['nullable', 'array'],
             'year.*' => ['integer', 'min:1900', 'max:2100'],
             'sort' => ['nullable', 'string', 'in:popular,score-desc,score_desc,price-asc,price_asc,price-desc,price_desc,new,newest'],

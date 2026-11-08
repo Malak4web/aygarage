@@ -1,17 +1,53 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api'
 
+const LEGACY_ID_MAP = {
+  p1: 'motul-7100-10w40',
+  p2: 'zontes-oil-filter',
+  p3: 'brembo-brake-pads',
+  p4: 'ls2-rapid-ii-helmet',
+  p5: 'did-520-chain',
+  p6: 'ngk-iridium-cr8eix',
+  p7: 'alpinestars-smx-1-air',
+  p8: 'yuasa-ytz10s-battery',
+  p9: 'pirelli-diablo-rosso-iii',
+  p10: 'castrol-power1-10w40',
+  p11: 'liqui-moly-street-10w40',
+  p12: 'shell-advance-ultra-10w40',
+  p13: 'mobil-1-racing-4t-15w50',
+  p14: 'repsol-moto-sintetico-10w40',
+  p15: 'motul-300v-factory-line-15w50',
+  p16: 'motul-5100-10w40'
+}
+
+export function resolveSlug(item) {
+  if (!item) return ''
+  if (typeof item === 'object') {
+    return item.slug || LEGACY_ID_MAP[item.id] || String(item.id)
+  }
+  return LEGACY_ID_MAP[item] || String(item)
+}
+
+function loadStoredFavorites() {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('ayg_favorites') : null
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    const converted = parsed.map(resolveSlug).filter(Boolean)
+    if (JSON.stringify(converted) !== raw && typeof localStorage !== 'undefined') {
+      localStorage.setItem('ayg_favorites', JSON.stringify(converted))
+    }
+    return converted
+  } catch (e) {
+    return []
+  }
+}
+
 export const useFavoritesStore = defineStore('favorites', {
   state: () => {
-    let saved = []
-    try {
-      const stored = localStorage.getItem('ayg_favorites')
-      if (stored) saved = JSON.parse(stored)
-    } catch (e) {
-      console.warn('Failed to parse favorites:', e)
-    }
     return {
-      favoriteIds: Array.isArray(saved) ? saved : [],
+      favoriteIds: loadStoredFavorites(),
       favoriteProducts: [],
       isLoading: false
     }
@@ -25,12 +61,10 @@ export const useFavoritesStore = defineStore('favorites', {
       }
       return state.favoriteIds.length
     },
-    isFavorite: (state) => (idOrSlug) => {
-      if (!idOrSlug) return false
-      if (state.favoriteIds.includes(idOrSlug)) return true
-      if (typeof idOrSlug === 'number' && state.favoriteIds.includes(String(idOrSlug))) return true
-      if (typeof idOrSlug === 'string' && !isNaN(idOrSlug) && state.favoriteIds.includes(Number(idOrSlug))) return true
-      return false
+    isFavorite: (state) => (productOrSlug) => {
+      const slug = resolveSlug(productOrSlug)
+      if (!slug) return false
+      return state.favoriteIds.includes(slug)
     }
   },
 
@@ -39,10 +73,7 @@ export const useFavoritesStore = defineStore('favorites', {
       const token = typeof localStorage !== 'undefined' ? localStorage.getItem('ayg_token') : null
       if (!token) {
         // Guest mode: load from localStorage
-        try {
-          const stored = localStorage.getItem('ayg_favorites')
-          if (stored) this.favoriteIds = JSON.parse(stored)
-        } catch (_) {}
+        this.favoriteIds = loadStoredFavorites()
         return
       }
 
@@ -51,34 +82,41 @@ export const useFavoritesStore = defineStore('favorites', {
         // Merge guest favorites if any exist in localStorage
         const stored = localStorage.getItem('ayg_favorites')
         if (stored) {
+          let mergeSuccess = true
           try {
             const guestFavs = JSON.parse(stored)
             if (Array.isArray(guestFavs) && guestFavs.length > 0) {
               for (const item of guestFavs) {
-                try {
-                  await api.addFavorite(item)
-                } catch (_) {}
+                const slug = resolveSlug(item)
+                if (slug) {
+                  try {
+                    await api.addFavorite(slug)
+                  } catch (err) {
+                    mergeSuccess = false
+                  }
+                }
               }
             }
-          } catch (_) {}
-          localStorage.removeItem('ayg_favorites')
+          } catch (_) {
+            mergeSuccess = false
+          }
+
+          // Item 4: Remove ayg_favorites only after the merge succeeds
+          if (mergeSuccess) {
+            localStorage.removeItem('ayg_favorites')
+          }
         }
 
         // Fetch user favorites from backend API
         const list = await api.getFavorites()
         if (Array.isArray(list)) {
           this.favoriteProducts = list
-          const ids = new Set()
+          const slugs = new Set()
           list.forEach((p) => {
-            if (p.id) {
-              ids.add(p.id)
-              ids.add(String(p.id))
-            }
-            if (p.slug) {
-              ids.add(p.slug)
-            }
+            if (p.slug) slugs.add(p.slug)
+            if (p.id) slugs.add(String(p.id))
           })
-          this.favoriteIds = Array.from(ids)
+          this.favoriteIds = Array.from(slugs)
         }
       } catch (e) {
         console.warn('Failed to sync favorites with server:', e)
@@ -87,32 +125,23 @@ export const useFavoritesStore = defineStore('favorites', {
       }
     },
 
-    async toggle(productOrId) {
-      const identifier = typeof productOrId === 'object' && productOrId !== null
-        ? (productOrId.slug || productOrId.id)
-        : productOrId
+    async toggle(productOrSlug) {
+      const slug = resolveSlug(productOrSlug)
+      if (!slug) return
 
       const token = typeof localStorage !== 'undefined' ? localStorage.getItem('ayg_token') : null
-      const currentlyFav = this.isFavorite(identifier)
+      const currentlyFav = this.isFavorite(slug)
 
       // Optimistic update
       if (currentlyFav) {
-        this.favoriteIds = this.favoriteIds.filter(
-          (id) => id !== identifier && id !== String(identifier) && id !== Number(identifier)
+        this.favoriteIds = this.favoriteIds.filter((s) => s !== slug && s !== String(slug))
+        this.favoriteProducts = this.favoriteProducts.filter(
+          (p) => p.slug !== slug && p.id != slug
         )
-        if (typeof productOrId === 'object') {
-          this.favoriteProducts = this.favoriteProducts.filter(
-            (p) => p.id !== productOrId.id && p.slug !== productOrId.slug
-          )
-        } else {
-          this.favoriteProducts = this.favoriteProducts.filter(
-            (p) => p.id != identifier && p.slug !== identifier
-          )
-        }
       } else {
-        this.favoriteIds.push(identifier)
-        if (typeof productOrId === 'object' && productOrId !== null) {
-          this.favoriteProducts.push(productOrId)
+        this.favoriteIds.push(slug)
+        if (typeof productOrSlug === 'object' && productOrSlug !== null) {
+          this.favoriteProducts.push(productOrSlug)
         }
       }
 
@@ -126,12 +155,12 @@ export const useFavoritesStore = defineStore('favorites', {
         return
       }
 
-      // Authenticated mode: call server API
+      // Authenticated mode: call server API with slug
       try {
         if (currentlyFav) {
-          await api.removeFavorite(identifier)
+          await api.removeFavorite(slug)
         } else {
-          await api.addFavorite(identifier)
+          await api.addFavorite(slug)
         }
       } catch (err) {
         console.error('Failed to update favorite on server:', err)
