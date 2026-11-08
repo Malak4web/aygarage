@@ -2,51 +2,53 @@
   <div class="search-page">
     <Breadcrumbs :items="breadcrumbItems" />
 
-    <div class="lhd in">
-      <div>
-        <h1>نتائج البحث {{ searchQuery ? `عن "${searchQuery}"` : '' }}</h1>
-        <p>{{ meta?.total ?? results.length }} منتج متطابق</p>
-      </div>
+    <div v-if="error" class="in" style="padding-top: 40px; padding-bottom: 48px;">
+      <EmptyState
+        icon="search"
+        title="حدث خطأ في تحميل النتائج"
+        :description="error"
+        action-label="إعادة المحاولة"
+        @action="loadSearchResults"
+      />
     </div>
 
-    <div class="in" style="padding-top: 20px; padding-bottom: 48px;">
-      <div v-if="loading" class="grid">
-        <ProductCardSkeleton v-for="i in 5" :key="i" />
+    <template v-else>
+      <div class="lhd in">
+        <div>
+          <h1>نتائج البحث {{ searchQuery ? `عن "${searchQuery}"` : '' }}</h1>
+          <p>{{ meta?.total ?? results.length }} منتج متطابق</p>
+        </div>
       </div>
 
-      <div v-else-if="error">
-        <EmptyState
-          icon="search"
-          title="حدث خطأ في تحميل النتائج"
-          :description="error"
-          action-label="إعادة المحاولة"
-          @action="loadSearchResults"
-        />
-      </div>
+      <div class="in" style="padding-top: 20px; padding-bottom: 48px;">
+        <div v-if="loading" class="grid">
+          <ProductCardSkeleton v-for="i in 5" :key="i" />
+        </div>
 
-      <div v-else-if="results.length === 0">
-        <EmptyState
-          icon="search"
-          :title="`لا توجد نتائج بحث لـ '${searchQuery}'`"
-          description="تأكد من كتابة الكلمات بشكل صحيح، أو ابحث باسم الماركة (مثل Brembo, Motul, Zontes) أو رقم القطعة."
-          action-label="تصفح جميع الأقسام"
-          action-to="/c/oils"
-        />
-      </div>
+        <div v-else-if="results.length === 0">
+          <EmptyState
+            icon="search"
+            :title="`لا توجد نتائج بحث لـ '${searchQuery}'`"
+            description="تأكد من كتابة الكلمات بشكل صحيح، أو ابحث باسم الماركة (مثل Brembo, Motul, Zontes) أو رقم القطعة."
+            action-label="تصفح جميع الأقسام"
+            action-to="/c/oils"
+          />
+        </div>
 
-      <div v-else class="grid">
-        <ProductCard
-          v-for="p in results"
-          :key="p.id"
-          :product="p"
-        />
+        <div v-else class="grid">
+          <ProductCard
+            v-for="p in results"
+            :key="p.id"
+            :product="p"
+          />
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'

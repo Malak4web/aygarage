@@ -2,7 +2,19 @@
   <div class="bikes-listing-page">
     <Breadcrumbs :items="breadcrumbItems" />
 
-    <div class="lhd in">
+    <!-- Error state with retry -->
+    <div v-if="error" class="in" style="padding: 40px 0;">
+      <EmptyState
+        icon="bike"
+        title="حدث خطأ في تحميل الموتوسيكلات"
+        :description="error"
+        action-label="إعادة المحاولة"
+        @action="fetchBikes"
+      />
+    </div>
+
+    <template v-else>
+      <div class="lhd in">
       <div>
         <h1>موتوسيكلات مستعملة مفحوصة</h1>
         <p>{{ storeConfig.totalInspectedBikes }} موتوسيكل · كل واحد عليه تقرير فحص 120 نقطة من الجراج</p>
@@ -175,6 +187,7 @@
         />
       </main>
     </div>
+    </template>
 
     <!-- Sell Bike Modal Dialog (Item 29) -->
     <div v-if="showSellModal" class="modal-backdrop" @click="showSellModal = false">

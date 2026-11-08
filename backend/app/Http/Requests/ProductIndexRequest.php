@@ -13,6 +13,25 @@ class ProductIndexRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'inStock' => $this->filterBool($this->input('inStock')),
+            'onSale' => $this->filterBool($this->input('onSale')),
+            'bestSeller' => $this->filterBool($this->input('bestSeller')),
+            'weeklyOffer' => $this->filterBool($this->input('weeklyOffer')),
+        ]);
+    }
+
+    private function filterBool(mixed $val): mixed
+    {
+        if ($val === null || $val === '') {
+            return null;
+        }
+        $filtered = filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return $filtered !== null ? ($filtered ? 1 : 0) : $val;
+    }
+
     public function rules(): array
     {
         return [

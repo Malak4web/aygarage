@@ -99,6 +99,8 @@ export const api = {
         if (v !== undefined && v !== null && v !== '') {
           if (Array.isArray(v)) {
             v.forEach((item) => searchParams.append(`${k}[]`, item))
+          } else if (typeof v === 'boolean') {
+            searchParams.append(k, v ? '1' : '0')
           } else {
             searchParams.append(k, v)
           }
@@ -136,6 +138,8 @@ export const api = {
         if (v !== undefined && v !== null && v !== '') {
           if (Array.isArray(v)) {
             v.forEach((item) => searchParams.append(`${k}[]`, item))
+          } else if (typeof v === 'boolean') {
+            searchParams.append(k, v ? '1' : '0')
           } else {
             searchParams.append(k, v)
           }
