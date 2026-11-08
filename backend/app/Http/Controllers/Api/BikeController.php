@@ -7,7 +7,6 @@ use App\Http\Requests\BikeIndexRequest;
 use App\Http\Resources\UsedBikeResource;
 use App\Models\UsedBike;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class BikeController extends Controller
 {
@@ -25,7 +24,7 @@ class BikeController extends Controller
             $model = $request->query('model');
             $query->where(function ($q) use ($model) {
                 $q->where('bike_model_code', $model)
-                  ->orWhere('model_name', 'like', "%{$model}%")
+                  ->orWhere('model_name', $model)
                   ->orWhere('family', $model);
             });
         }
@@ -50,9 +49,12 @@ class BikeController extends Controller
             }
         }
 
-        // Min inspection score
+        // Min / Max inspection score (Review 3 Item 16)
         if ($request->filled('minScore')) {
             $query->where('inspection_score', '>=', (int) $request->query('minScore'));
+        }
+        if ($request->filled('maxScore')) {
+            $query->where('inspection_score', '<=', (int) $request->query('maxScore'));
         }
 
         // Year(s): 2021 or older means <= 2021 (Item 12)
@@ -139,7 +141,7 @@ class BikeController extends Controller
         ];
 
         if ($request->filled('perPage') || $request->filled('page')) {
-            $perPage = min(48, max(1, (int) $request->query('perPage', 12)));
+            $perPage = (int) $request->query('perPage', 12);
             $paginator = $query->paginate($perPage);
 
             return response()->json([
@@ -180,11 +182,12 @@ class BikeController extends Controller
             return response()->json(['message' => 'الموتوسيكل غير موجود'], 404);
         }
 
-        // Item 7: Similar bikes - same family first (up to 3), then fill with others, excluding current bike
+        // Item 7 & 18: Similar bikes - same family first (up to 3), then fill with others, excluding current bike
         $sameFamily = UsedBike::with(['inspections', 'images', 'serviceRecords'])
             ->where('id', '!=', $bike->id)
             ->whereIn('status', ['available', 'reserved'])
             ->where('family', $bike->family)
+            ->orderBy('id', 'asc')
             ->take(3)
             ->get();
 
@@ -194,6 +197,7 @@ class BikeController extends Controller
             $others = UsedBike::with(['inspections', 'images', 'serviceRecords'])
                 ->whereNotIn('id', $excludeIds)
                 ->whereIn('status', ['available', 'reserved'])
+                ->orderBy('id', 'asc')
                 ->take($needed)
                 ->get();
             $similar = $sameFamily->concat($others);

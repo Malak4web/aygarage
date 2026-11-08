@@ -280,7 +280,13 @@
         </div>
 
         <div v-else-if="activeTab === 'reviews'">
-          <div class="reviews-list">
+          <div v-if="reviewsError" class="reviews-empty">
+            <p>{{ reviewsError }}</p>
+          </div>
+          <div v-else-if="reviewsList.length === 0" class="reviews-empty">
+            <p>لسه مفيش تقييمات مكتوبة للمنتج ده</p>
+          </div>
+          <div v-else class="reviews-list">
             <div v-for="rev in reviewsList" :key="rev.id" class="review-item">
               <div class="review-author">
                 <b>{{ rev.author }}</b>
@@ -320,7 +326,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
@@ -352,6 +358,9 @@ const product = ref(null)
 const companionProducts = ref([])
 const categoriesList = ref([])
 const reviewsList = ref([])
+const reviewsLoading = ref(false)
+const reviewsError = ref('')
+let productRequestId = 0
 
 const activeThumb = ref(0)
 const activeTab = ref('desc')
@@ -364,12 +373,23 @@ useModalTrap(showBikePicker, bikePickerModalRef, () => {
   showBikePicker.value = false
 })
 
-const productTabs = computed(() => [
-  { id: 'desc', label: 'الوصف' },
-  { id: 'specs', label: 'المواصفات' },
-  { id: 'reviews', label: `التقييمات (${product.value?.reviewCount || 0})` },
-  { id: 'fit', label: 'الموديلات المتوافقة' }
-])
+const productTabs = computed(() => {
+  const count = product.value?.reviewCount || 0
+  const rating = product.value?.rating || 0
+  let reviewsLabel = 'التقييمات'
+  if (count > 0 && rating > 0) {
+    reviewsLabel = `التقييمات (${rating} من ${count} تقييم)`
+  } else if (count > 0) {
+    reviewsLabel = `التقييمات (${count})`
+  }
+
+  return [
+    { id: 'desc', label: 'الوصف' },
+    { id: 'specs', label: 'المواصفات' },
+    { id: 'reviews', label: reviewsLabel },
+    { id: 'fit', label: 'الموديلات المتوافقة' }
+  ]
+})
 
 const galleryImages = computed(() => {
   if (product.value?.images && product.value.images.length > 0) {
@@ -389,42 +409,60 @@ const currentGalleryImage = computed(() => {
 })
 
 const loadProductData = async () => {
+  const currentReq = ++productRequestId
   loading.value = true
   error.value = ''
   notFound.value = false
+  reviewsError.value = ''
   const slug = route.params.slug
   try {
     const p = await api.getProductBySlug(slug)
+    if (currentReq !== productRequestId) return
     product.value = p
     selectedOption.value = p.options?.[0] ?? null
     activeTab.value = 'desc'
     activeThumb.value = 0
     quantity.value = 1
     companionProducts.value = p.related || []
+    loading.value = false // Review 3 Item 10: Show product as soon as it loads
   } catch (e) {
+    if (currentReq !== productRequestId) return
     product.value = null
     if (e?.status === 404) {
       notFound.value = true
     } else {
-      error.value = e?.message || 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً.'
+      error.value = 'تعذر التحميل، اتأكد من النت وحاول تاني'
     }
     loading.value = false
     return
   }
 
-  // Load reviews and categories separately (Item 2 & 1)
-  try {
-    const [cats, revs] = await Promise.all([
-      api.getCategories(),
-      api.getReviews(product.value.slug)
-    ])
-    categoriesList.value = cats
-    reviewsList.value = revs
-  } catch (e) {
-    console.warn('Could not load reviews or categories', e)
-  } finally {
-    loading.value = false
-  }
+  // Review 3 Item 10: Load reviews and categories separately, not in one Promise.all
+  api.getCategories()
+    .then((cats) => {
+      if (currentReq === productRequestId) {
+        categoriesList.value = cats
+      }
+    })
+    .catch(() => {})
+
+  reviewsLoading.value = true
+  api.getReviews(slug)
+    .then((revs) => {
+      if (currentReq === productRequestId) {
+        reviewsList.value = revs
+      }
+    })
+    .catch(() => {
+      if (currentReq === productRequestId) {
+        reviewsError.value = 'تعذر تحميل التقييمات'
+      }
+    })
+    .finally(() => {
+      if (currentReq === productRequestId) {
+        reviewsLoading.value = false
+      }
+    })
 }
 
 watch(

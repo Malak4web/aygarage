@@ -223,24 +223,31 @@ const currentBikeImage = computed(() => {
   return bike.value?.image || null
 })
 
+let bikeRequestId = 0
+
 const loadBikeData = async () => {
+  const currentReq = ++bikeRequestId
   loading.value = true
   error.value = ''
   notFound.value = false
   try {
     const slug = route.params.slug
     const b = await api.getBikeBySlug(slug)
+    if (currentReq !== bikeRequestId) return
     bike.value = b
     similarBikes.value = b.similar || []
   } catch (e) {
+    if (currentReq !== bikeRequestId) return
     bike.value = null
     if (e?.status === 404) {
       notFound.value = true
     } else {
-      error.value = e?.message || 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً.'
+      error.value = 'تعذر التحميل، اتأكد من النت وحاول تاني'
     }
   } finally {
-    loading.value = false
+    if (currentReq === bikeRequestId) {
+      loading.value = false
+    }
   }
 }
 

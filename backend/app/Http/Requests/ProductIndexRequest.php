@@ -15,12 +15,20 @@ class ProductIndexRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
+        $merges = [
             'inStock' => $this->filterBool($this->input('inStock')),
             'onSale' => $this->filterBool($this->input('onSale')),
             'bestSeller' => $this->filterBool($this->input('bestSeller')),
             'weeklyOffer' => $this->filterBool($this->input('weeklyOffer')),
-        ]);
+        ];
+
+        foreach (['brand', 'viscosity', 'type', 'slugs'] as $arrField) {
+            if ($this->has($arrField) && !is_null($this->input($arrField)) && !is_array($this->input($arrField))) {
+                $merges[$arrField] = [$this->input($arrField)];
+            }
+        }
+
+        $this->merge($merges);
     }
 
     private function filterBool(mixed $val): mixed
@@ -38,19 +46,19 @@ class ProductIndexRequest extends FormRequest
             'category' => ['nullable', 'string', 'max:100'],
             'q' => ['nullable', 'string', 'max:100'],
             'model' => ['nullable', 'string', 'max:100'],
-            'brand' => ['nullable'],
+            'brand' => ['nullable', 'array'],
             'brand.*' => ['string', 'max:100'],
-            'viscosity' => ['nullable'],
+            'viscosity' => ['nullable', 'array'],
             'viscosity.*' => ['string', 'max:50'],
-            'type' => ['nullable'],
+            'type' => ['nullable', 'array'],
             'type.*' => ['string', 'max:50'],
             'minPrice' => ['nullable', 'integer', 'min:0'],
-            'maxPrice' => ['nullable', 'integer', 'min:0'],
+            'maxPrice' => ['nullable', 'integer', 'min:0', 'gte:minPrice'],
             'inStock' => ['nullable', 'boolean'],
             'onSale' => ['nullable', 'boolean'],
             'bestSeller' => ['nullable', 'boolean'],
             'weeklyOffer' => ['nullable', 'boolean'],
-            'slugs' => ['nullable'],
+            'slugs' => ['nullable', 'array', 'max:50'],
             'slugs.*' => ['string', 'max:100'],
             'sort' => ['nullable', 'string', 'in:new,newest,price_asc,price-asc,price_desc,price-desc,rating,best,bestseller'],
             'perPage' => ['nullable', 'integer', 'min:1', 'max:50'],

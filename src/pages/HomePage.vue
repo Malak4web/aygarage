@@ -38,7 +38,7 @@
         <div class="ban s">
           <div class="tx">
             <h3>موتوسيكلات مفحوصة</h3>
-            <p>{{ storeConfig.totalInspectedBikes }} موتوسيكل بتقرير فحص</p>
+            <p>فحصنا أكتر من {{ storeConfig.totalInspectedBikes }} موتوسيكل</p>
             <RouterLink to="/bikes">شوف المعروض</RouterLink>
           </div>
           <div class="art">
@@ -161,7 +161,7 @@
       <section class="sec in">
         <div class="sh">
           <h2>موتوسيكلات مستعملة مفحوصة</h2>
-          <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات ({{ storeConfig.totalInspectedBikes }})</RouterLink>
+          <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات ({{ totalBikesCount || featuredBikes.length }})</RouterLink>
         </div>
         <div v-if="loading" class="grid g3">
           <BikeCardSkeleton v-for="i in 3" :key="i" />
@@ -239,6 +239,7 @@ const error = ref('')
 const bestSellers = ref([])
 const weeklyOffers = ref([])
 const featuredBikes = ref([])
+const totalBikesCount = ref(0)
 const categories = ref([])
 
 const loadHomeData = async () => {
@@ -254,6 +255,7 @@ const loadHomeData = async () => {
     bestSellers.value = bests.slice(0, 5)
     weeklyOffers.value = offers.slice(0, 5)
     featuredBikes.value = bks.slice(0, 3)
+    totalBikesCount.value = bks.meta?.total || bks.length
     categories.value = cats
   } catch (e) {
     error.value = 'تعذر تحميل بيانات الصفحة الرئيسية'
@@ -298,7 +300,7 @@ const handleHeroAction = async (slide) => {
   } else if (slide?.action === 'booking') {
     router.push('/booking')
   } else {
-    let p1 = bestSellers.value.find((p) => p.slug === 'motul-7100-10w40' || p.id === 'p1')
+    let p1 = bestSellers.value.find((p) => p.slug === 'motul-7100-10w40')
     if (!p1) {
       try {
         p1 = await api.getProductBySlug('motul-7100-10w40')

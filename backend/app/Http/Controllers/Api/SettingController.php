@@ -34,6 +34,9 @@ class SettingController extends Controller
                         $item['desc'] = "خلال {$deliveryEstimateDays}";
                     } elseif ($item['icon'] === 'ret') {
                         $item['title'] = "استرجاع خلال {$returnDays} يوم";
+                    } elseif ($item['icon'] === 'cash') {
+                        $item['title'] = 'الدفع عند الاستلام';
+                        $item['desc'] = 'كاش للمندوب أو في الجراج';
                     }
                 }
             }

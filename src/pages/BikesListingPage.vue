@@ -17,7 +17,7 @@
       <div class="lhd in">
       <div>
         <h1>موتوسيكلات مستعملة مفحوصة</h1>
-        <p>{{ storeConfig.totalInspectedBikes }} موتوسيكل · كل واحد عليه تقرير فحص 120 نقطة من الجراج</p>
+        <p>{{ totalBikesCount }} موتوسيكل معروض للبيع · فحصنا أكتر من {{ storeConfig.totalInspectedBikes }} موتوسيكل بتقرير 120 نقطة</p>
       </div>
       <div class="header-actions">
         <button type="button" class="btn o sm mobile-filter-btn" @click="mobileFilterOpen = true">
@@ -106,11 +106,11 @@
             <input
               type="radio"
               name="scoreRange"
-              :value="sc.min"
-              v-model="selectedMinScore"
+              :value="sc.value"
+              v-model="selectedScoreRange"
               class="cb-input"
             />
-            <span class="cb" :class="{ on: selectedMinScore === sc.min }"></span>
+            <span class="cb" :class="{ on: selectedScoreRange === sc.value }"></span>
             <span>{{ sc.label }}</span>
             <small>{{ sc.count }}</small>
           </label>
@@ -147,17 +147,6 @@
         <!-- Loading state -->
         <div v-if="loading" class="grid g3">
           <BikeCardSkeleton v-for="i in 6" :key="i" />
-        </div>
-
-        <!-- Error state -->
-        <div v-else-if="error">
-          <EmptyState
-            icon="bike"
-            title="حدث خطأ في تحميل الموتوسيكلات"
-            :description="error"
-            action-label="إعادة المحاولة"
-            @action="fetchBikes"
-          />
         </div>
 
         <!-- Empty state -->
@@ -238,7 +227,7 @@ const facets = ref(null)
 
 const selectedFamilies = ref([])
 const selectedKmRange = ref('')
-const selectedMinScore = ref(0)
+const selectedScoreRange = ref('')
 const selectedYears = ref([])
 const minPrice = ref(0)
 const maxPrice = ref(400000)
@@ -248,6 +237,7 @@ const itemsPerPage = 12
 const mobileFilterOpen = ref(false)
 const showSellModal = ref(false)
 const sellModalRef = ref(null)
+let fetchRequestId = 0
 
 useModalTrap(showSellModal, sellModalRef, () => {
   showSellModal.value = false
@@ -262,13 +252,15 @@ const sortOptions = [
 ]
 
 const fetchBikes = async () => {
+  const currentReq = ++fetchRequestId
   loading.value = true
   error.value = ''
   try {
     const params = {
       family: selectedFamilies.value.length > 0 ? selectedFamilies.value : undefined,
       kmRange: selectedKmRange.value || undefined,
-      minScore: selectedMinScore.value > 0 ? selectedMinScore.value : undefined,
+      minScore: selectedScoreRange.value === '90+' ? 90 : (selectedScoreRange.value === '80-89' ? 80 : undefined),
+      maxScore: selectedScoreRange.value === '80-89' ? 89 : undefined,
       year: selectedYears.value.length > 0 ? selectedYears.value : undefined,
       minPrice: minPrice.value > 0 ? minPrice.value : undefined,
       maxPrice: maxPrice.value < 400000 ? maxPrice.value : undefined,
@@ -277,13 +269,17 @@ const fetchBikes = async () => {
       perPage: itemsPerPage
     }
     const res = await api.getBikes(params)
+    if (currentReq !== fetchRequestId) return
     bikes.value = res
     meta.value = res.meta || { total: res.length, page: currentPage.value, perPage: itemsPerPage, lastPage: 1 }
     facets.value = res.facets || { families: {}, kmRanges: {}, scores: {}, years: {} }
   } catch (e) {
-    error.value = 'تعذر الاتصال بخادم المعروضات، يرجى المحاولة لاحقاً.'
+    if (currentReq !== fetchRequestId) return
+    error.value = 'تعذر التحميل، اتأكد من النت وحاول تاني'
   } finally {
-    loading.value = false
+    if (currentReq === fetchRequestId) {
+      loading.value = false
+    }
   }
 }
 
@@ -325,38 +321,34 @@ const kmOptions = computed(() => [
 const scoreOptions = computed(() => [
   {
     label: '90 وأكتر',
-    min: 90,
+    value: '90+',
     count: facets.value?.scores?.['90+'] || 0
   },
   {
     label: '80 – 89',
-    min: 80,
+    value: '80-89',
     count: facets.value?.scores?.['80-89'] || 0
   }
 ])
 
-const yearOptions = computed(() => [
-  {
-    label: '2024',
-    value: 2024,
-    count: facets.value?.years?.['2024'] || 0
-  },
-  {
-    label: '2023',
-    value: 2023,
-    count: facets.value?.years?.['2023'] || 0
-  },
-  {
-    label: '2022',
-    value: 2022,
-    count: facets.value?.years?.['2022'] || 0
-  },
-  {
-    label: '2021 وأقدم',
-    value: 2021,
-    count: facets.value?.years?.['2021'] || 0
+const yearOptions = computed(() => {
+  const map = facets.value?.years || {}
+  const keys = Object.keys(map).map((k) => parseInt(k, 10)).filter((k) => !isNaN(k))
+  if (keys.length === 0) {
+    return [
+      { label: '2024', value: 2024, count: 0 },
+      { label: '2023', value: 2023, count: 0 },
+      { label: '2022', value: 2022, count: 0 },
+      { label: '2021 وأقدم', value: 2021, count: 0 }
+    ]
   }
-])
+  keys.sort((a, b) => b - a)
+  return keys.map((y) => ({
+    label: y <= 2021 ? `${y} وأقدم` : String(y),
+    value: y,
+    count: map[String(y)] || 0
+  }))
+})
 
 const activeFilterChips = computed(() => {
   const chips = []
@@ -367,9 +359,9 @@ const activeFilterChips = computed(() => {
     const k = kmOptions.value.find((opt) => opt.value === selectedKmRange.value)
     if (k) chips.push({ id: 'km', label: k.label })
   }
-  if (selectedMinScore.value === 90) {
+  if (selectedScoreRange.value === '90+') {
     chips.push({ id: 'score', label: 'فحص 90 وأكتر' })
-  } else if (selectedMinScore.value === 80) {
+  } else if (selectedScoreRange.value === '80-89') {
     chips.push({ id: 'score', label: 'فحص 80 – 89' })
   }
   selectedYears.value.forEach((yr) => {
@@ -390,7 +382,7 @@ const handleRemoveChip = (id) => {
   } else if (id === 'km') {
     selectedKmRange.value = ''
   } else if (id === 'score') {
-    selectedMinScore.value = 0
+    selectedScoreRange.value = ''
   } else if (id.startsWith('year-')) {
     const yr = Number(id.replace('year-', ''))
     selectedYears.value = selectedYears.value.filter((item) => item !== yr)
@@ -403,17 +395,34 @@ const handleRemoveChip = (id) => {
 const resetFilters = () => {
   selectedFamilies.value = []
   selectedKmRange.value = ''
-  selectedMinScore.value = 0
+  selectedScoreRange.value = ''
   selectedYears.value = []
   minPrice.value = 0
   maxPrice.value = 400000
 }
 
-watch(
-  [selectedFamilies, selectedKmRange, selectedMinScore, selectedYears, minPrice, maxPrice, sortBy],
-  () => {
+let isResettingPage = false
+const onFilterChanged = () => {
+  if (currentPage.value !== 1) {
+    isResettingPage = true
     currentPage.value = 1
-    fetchBikes()
+    isResettingPage = false
+  }
+  fetchBikes()
+}
+
+let priceDebounceTimer = null
+watch([minPrice, maxPrice], () => {
+  clearTimeout(priceDebounceTimer)
+  priceDebounceTimer = setTimeout(() => {
+    onFilterChanged()
+  }, 400)
+})
+
+watch(
+  [selectedFamilies, selectedKmRange, selectedScoreRange, selectedYears, sortBy],
+  () => {
+    onFilterChanged()
   },
   { deep: true }
 )
@@ -421,7 +430,9 @@ watch(
 watch(
   () => currentPage.value,
   () => {
-    fetchBikes()
+    if (!isResettingPage) {
+      fetchBikes()
+    }
   }
 )
 </script>

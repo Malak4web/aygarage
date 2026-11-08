@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductIndexRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ReviewResource;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -16,22 +16,28 @@ class ProductController extends Controller
     {
         $query = Product::with(['category', 'options', 'images'])->where('is_active', true);
 
-        // Filter by category slug
+        // Filter by category slug (Review 3 Item 12: unknown category returns 404)
         if ($request->filled('category') && $request->query('category') !== 'all') {
             $catSlug = $request->query('category');
+            if (!Category::where('slug', $catSlug)->exists()) {
+                return response()->json(['message' => 'القسم غير موجود'], 404);
+            }
             $query->whereHas('category', function ($q) use ($catSlug) {
                 $q->where('slug', $catSlug);
             });
         }
 
-        // Search query q
+        // Search query q (Review 3 Item 9: match name, brand, sku, description, and category name/slug)
         if ($request->filled('q')) {
             $search = '%' . trim($request->query('q')) . '%';
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', $search)
                   ->orWhere('brand', 'like', $search)
                   ->orWhere('sku', 'like', $search)
-                  ->orWhere('description', 'like', $search);
+                  ->orWhere('description', 'like', $search)
+                  ->orWhereHas('category', function ($catQ) use ($search) {
+                      $catQ->where('name', 'like', $search)->orWhere('slug', 'like', $search);
+                  });
             });
         }
 
@@ -178,7 +184,7 @@ class ProductController extends Controller
 
         // If pagination is requested or default
         if ($request->filled('perPage') || $request->filled('page')) {
-            $perPage = min(50, max(1, (int) $request->query('perPage', 12)));
+            $perPage = (int) $request->query('perPage', 12);
             $paginator = $query->paginate($perPage);
 
             return response()->json([
@@ -218,11 +224,12 @@ class ProductController extends Controller
             return response()->json(['message' => 'المنتج غير موجود'], 404);
         }
 
-        // Related products in the same category (5 items)
+        // Related products in the same category (5 items, Item 18 orderBy)
         $related = Product::with(['category', 'options', 'images'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
+            ->orderBy('id', 'asc')
             ->take(5)
             ->get();
 

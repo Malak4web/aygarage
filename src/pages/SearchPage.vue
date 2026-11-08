@@ -35,11 +35,19 @@
           />
         </div>
 
-        <div v-else class="grid">
-          <ProductCard
-            v-for="p in results"
-            :key="p.id"
-            :product="p"
+        <div v-else>
+          <div class="grid">
+            <ProductCard
+              v-for="p in results"
+              :key="p.id"
+              :product="p"
+            />
+          </div>
+          <Pagination
+            v-if="totalPages > 1"
+            :current-page="currentPage"
+            :total-pages="totalPages"
+            @update:current-page="currentPage = $event"
           />
         </div>
       </div>
@@ -55,30 +63,50 @@ import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
 import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import Pagination from '@/components/common/Pagination.vue'
 
 const route = useRoute()
 const loading = ref(true)
 const error = ref('')
 const results = ref([])
 const meta = ref(null)
+const currentPage = ref(1)
+const itemsPerPage = 12
+let searchRequestId = 0
 
 const searchQuery = computed(() => (route.query.q || '').trim())
+const totalPages = computed(() => meta.value?.lastPage ?? 1)
 
 const loadSearchResults = async () => {
+  const currentReq = ++searchRequestId
+
+  if (!searchQuery.value) {
+    results.value = []
+    meta.value = { total: 0, page: 1, perPage: itemsPerPage, lastPage: 1 }
+    loading.value = false
+    error.value = ''
+    return
+  }
+
   loading.value = true
   error.value = ''
   try {
-    const params = {}
-    if (searchQuery.value) {
-      params.q = searchQuery.value
+    const params = {
+      q: searchQuery.value,
+      page: currentPage.value,
+      perPage: itemsPerPage
     }
     const res = await api.getProducts(params)
+    if (currentReq !== searchRequestId) return
     results.value = res
-    meta.value = res.meta || null
+    meta.value = res.meta || { total: res.length, page: currentPage.value, perPage: itemsPerPage, lastPage: 1 }
   } catch (e) {
-    error.value = 'تعذر تحميل نتائج البحث'
+    if (currentReq !== searchRequestId) return
+    error.value = 'تعذر التحميل، اتأكد من النت وحاول تاني'
   } finally {
-    loading.value = false
+    if (currentReq === searchRequestId) {
+      loading.value = false
+    }
   }
 }
 
@@ -88,6 +116,14 @@ onMounted(() => {
 
 watch(
   () => route.query.q,
+  () => {
+    currentPage.value = 1
+    loadSearchResults()
+  }
+)
+
+watch(
+  () => currentPage.value,
   () => {
     loadSearchResults()
   }

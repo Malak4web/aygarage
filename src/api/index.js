@@ -42,8 +42,10 @@ async function request(endpoint, options = {}) {
       }
     } catch (_) {}
 
+    // Review 3 Item 17: Redirect on 401 only when the current route has requiresAuth
+    const requiresAuth = router?.currentRoute?.value?.meta?.requiresAuth
     const currentPath = router?.currentRoute?.value?.fullPath || (typeof window !== 'undefined' ? window.location.pathname : '')
-    if (currentPath && !currentPath.startsWith('/login') && router) {
+    if (requiresAuth && currentPath && !currentPath.startsWith('/login') && router) {
       router.push(`/login?redirect=${encodeURIComponent(currentPath)}`)
     }
   }
@@ -69,7 +71,12 @@ async function request(endpoint, options = {}) {
     throw error
   }
 
-  return response.json()
+  // Review 3 Item 17: Handle a 204 / empty body without calling response.json()
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return null
+  }
+  const responseText = await response.text()
+  return responseText ? JSON.parse(responseText) : null
 }
 
 // Stored orders & bookings fallback for orders/booking phases 4 & 5

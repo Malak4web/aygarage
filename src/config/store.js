@@ -61,7 +61,7 @@ export const storeConfig = reactive({
   trustItems: [
     { icon: 'truck', title: 'توصيل لكل المحافظات', desc: 'خلال 2-4 أيام عمل' },
     { icon: 'shield', title: 'قطع أصلية', desc: 'من الوكيل أو الشركة المصنعة' },
-    { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'أو كارت وفودافون كاش' },
+    { icon: 'cash', title: 'الدفع عند الاستلام', desc: 'كاش للمندوب أو في الجراج' },
     { icon: 'ret', title: 'استرجاع خلال 14 يوم', desc: 'لو القطعة ما ركبتش' }
   ],
   pickupTimes: 'جاهز النهارده بعد 3 العصر',

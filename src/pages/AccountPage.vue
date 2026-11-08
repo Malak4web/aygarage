@@ -436,7 +436,7 @@ const loadAccountData = async () => {
     const [bks, ords, prods, hist] = await Promise.all([
       api.getUserBookings(),
       api.getUserOrders(),
-      api.getProducts(),
+      api.getProducts({ model: userStore.selectedBike || undefined, perPage: 8 }),
       api.getServiceHistory()
     ])
     userBookings.value = bks

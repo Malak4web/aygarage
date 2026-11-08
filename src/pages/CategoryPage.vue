@@ -2,8 +2,19 @@
   <div class="category-page">
     <Breadcrumbs :items="breadcrumbItems" />
 
+    <!-- 404 Not Found State (Review 3 Item 12) -->
+    <div v-if="notFound" class="in" style="padding: 40px 0;">
+      <EmptyState
+        icon="alert"
+        title="القسم غير موجود"
+        description="القسم الذي تبحث عنه غير متوفر أو تم نقله."
+        action-label="تصفح جميع الأقسام"
+        action-to="/c/oils"
+      />
+    </div>
+
     <!-- Error State with Retry (Item 2) -->
-    <div v-if="error" class="in" style="padding: 40px 0;">
+    <div v-else-if="error" class="in" style="padding: 40px 0;">
       <EmptyState
         icon="alert"
         title="حدث خطأ في تحميل المنتجات"
@@ -55,7 +66,7 @@
               aria-label="اختيار موديل الموتوسيكل"
             >
               <option v-for="m in storeConfig.models" :key="m" :value="m">
-                {{ m }} · {{ userBikeYear }}
+                {{ m }}{{ m === userStore.selectedBike ? ` · ${userBikeYear}` : '' }}
               </option>
             </select>
             <AppIcon name="down" :size="14" class="sel-icon" />
@@ -99,15 +110,15 @@
         <!-- Oil Type filter -->
         <div class="g" v-if="oilTypes.length > 0">
           <h5>النوع</h5>
-          <label v-for="t in oilTypes" :key="t.name" class="filter-label">
+          <label v-for="t in oilTypes" :key="t.rawValue || t.name" class="filter-label">
             <input
               type="radio"
               name="oilType"
-              :value="t.name"
+              :value="t.rawValue || t.name"
               v-model="selectedOilType"
               class="cb-input"
             />
-            <span class="cb" :class="{ on: selectedOilType === t.name }"></span>
+            <span class="cb" :class="{ on: selectedOilType === (t.rawValue || t.name) }"></span>
             <span>{{ t.name }}</span>
             <small>{{ t.count }}</small>
           </label>
@@ -164,16 +175,6 @@
           <ProductCardSkeleton v-for="i in 8" :key="i" />
         </div>
 
-        <!-- Error with retry -->
-        <div v-else-if="error" class="no-results">
-          <EmptyState
-            title="حدث خطأ في تحميل المنتجات"
-            :description="error"
-            action-label="إعادة المحاولة"
-            @action="fetchProducts"
-          />
-        </div>
-
         <!-- Empty Results -->
         <div v-else-if="products.length === 0" class="no-results">
           <EmptyState
@@ -210,7 +211,6 @@ import { useRoute } from 'vue-router'
 import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
 import { useUserStore } from '@/stores/user.js'
-import { doesFit } from '@/utils/fit.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
 import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
@@ -226,6 +226,7 @@ const userStore = useUserStore()
 
 const loading = ref(true)
 const error = ref('')
+const notFound = ref(false)
 const products = ref([])
 const categoriesList = ref([])
 const meta = ref(null)
@@ -243,6 +244,7 @@ const sortBy = ref('bestseller')
 const currentPage = ref(1)
 const itemsPerPage = 12
 const mobileFilterOpen = ref(false)
+let fetchRequestId = 0
 
 const sortOptions = [
   { value: 'bestseller', label: 'ترتيب: الأكثر مبيعاً' },
@@ -253,8 +255,10 @@ const sortOptions = [
 ]
 
 const fetchProducts = async () => {
+  const currentReq = ++fetchRequestId
   loading.value = true
   error.value = ''
+  notFound.value = false
   try {
     const params = {
       category: route.params.category && route.params.category !== 'all' ? route.params.category : undefined,
@@ -277,14 +281,23 @@ const fetchProducts = async () => {
       categoriesList.value.length ? Promise.resolve(categoriesList.value) : api.getCategories()
     ])
 
+    if (currentReq !== fetchRequestId) return
+
     products.value = prodsRes
     meta.value = prodsRes.meta || { total: prodsRes.length, page: currentPage.value, perPage: itemsPerPage, lastPage: 1 }
     serverFacets.value = prodsRes.facets || { brands: {}, viscosities: {}, types: {}, models: {} }
     categoriesList.value = catsRes
   } catch (e) {
-    error.value = 'تعذر الاتصال بقاعدة البيانات، يرجى المحاولة لاحقاً.'
+    if (currentReq !== fetchRequestId) return
+    if (e?.status === 404) {
+      notFound.value = true
+    } else {
+      error.value = 'تعذر التحميل، اتأكد من النت وحاول تاني'
+    }
   } finally {
-    loading.value = false
+    if (currentReq === fetchRequestId) {
+      loading.value = false
+    }
   }
 }
 
@@ -327,9 +340,25 @@ const brands = computed(() => {
   return Object.entries(map).map(([name, count]) => ({ name, count }))
 })
 
+const typeLabels = {
+  oil: 'زيوت',
+  filter: 'فلاتر',
+  brake: 'فرامل',
+  chain: 'سير أو جنزير',
+  plug: 'بوجيهات',
+  battery: 'بطاريات',
+  helmet: 'خوذ',
+  glove: 'قفازات',
+  tyre: 'إطارات'
+}
+
 const oilTypes = computed(() => {
   const map = serverFacets.value?.types || {}
-  return Object.entries(map).map(([name, count]) => ({ name, count }))
+  return Object.entries(map).map(([rawType, count]) => ({
+    name: typeLabels[rawType] || rawType,
+    rawValue: rawType,
+    count
+  }))
 })
 
 const activeFilterChips = computed(() => {
@@ -388,19 +417,38 @@ const resetCategoryFilters = () => {
   maxPrice.value = 10000
 }
 
-// Reset page & fetch when filters change
-watch(
-  [filterOnlyFitting, selectedViscosity, selectedBrand, selectedOilType, inStockOnly, onSaleOnly, sortBy, minPrice, maxPrice],
-  () => {
+// Review 3 Item 8: Debounce price inputs (400ms) & single fetch on filter change
+let isResettingPage = false
+const onFilterChanged = () => {
+  if (currentPage.value !== 1) {
+    isResettingPage = true
     currentPage.value = 1
-    fetchProducts()
+    isResettingPage = false
+  }
+  fetchProducts()
+}
+
+let priceDebounceTimer = null
+watch([minPrice, maxPrice], () => {
+  clearTimeout(priceDebounceTimer)
+  priceDebounceTimer = setTimeout(() => {
+    onFilterChanged()
+  }, 400)
+})
+
+watch(
+  [filterOnlyFitting, selectedViscosity, selectedBrand, selectedOilType, inStockOnly, onSaleOnly, sortBy],
+  () => {
+    onFilterChanged()
   }
 )
 
 watch(
   () => currentPage.value,
   () => {
-    fetchProducts()
+    if (!isResettingPage) {
+      fetchProducts()
+    }
   }
 )
 
@@ -408,8 +456,7 @@ watch(
   () => [route.params.category, route.query.q],
   () => {
     resetCategoryFilters()
-    currentPage.value = 1
-    fetchProducts()
+    onFilterChanged()
   }
 )
 
@@ -417,8 +464,7 @@ watch(
   () => userStore.selectedBike,
   () => {
     if (filterOnlyFitting.value) {
-      currentPage.value = 1
-      fetchProducts()
+      onFilterChanged()
     }
   }
 )
