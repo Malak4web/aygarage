@@ -5,7 +5,7 @@
     <div class="lhd in">
       <div>
         <h1>نتائج البحث {{ searchQuery ? `عن "${searchQuery}"` : '' }}</h1>
-        <p>{{ results.length }} منتج متطابق</p>
+        <p>{{ meta?.total ?? results.length }} منتج متطابق</p>
       </div>
     </div>
 
@@ -57,13 +57,22 @@ import EmptyState from '@/components/common/EmptyState.vue'
 const route = useRoute()
 const loading = ref(true)
 const error = ref('')
-const allProducts = ref([])
+const results = ref([])
+const meta = ref(null)
+
+const searchQuery = computed(() => (route.query.q || '').trim())
 
 const loadSearchResults = async () => {
   loading.value = true
   error.value = ''
   try {
-    allProducts.value = await api.getProducts()
+    const params = {}
+    if (searchQuery.value) {
+      params.q = searchQuery.value
+    }
+    const res = await api.getProducts(params)
+    results.value = res
+    meta.value = res.meta || null
   } catch (e) {
     error.value = 'تعذر تحميل نتائج البحث'
   } finally {
@@ -75,26 +84,17 @@ onMounted(() => {
   loadSearchResults()
 })
 
-const searchQuery = computed(() => (route.query.q || '').trim())
+watch(
+  () => route.query.q,
+  () => {
+    loadSearchResults()
+  }
+)
 
 const breadcrumbItems = computed(() => [
   { label: 'الرئيسية', to: '/' },
   { label: 'البحث' }
 ])
-
-const results = computed(() => {
-  if (!searchQuery.value) return allProducts.value
-  const q = searchQuery.value.toLowerCase()
-  return allProducts.value.filter((p) => {
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      (p.description && p.description.toLowerCase().includes(q)) ||
-      (p.fits && p.fits.some((m) => m.toLowerCase().includes(q)))
-    )
-  })
-})
 </script>
 
 <style scoped>

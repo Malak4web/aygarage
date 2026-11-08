@@ -17,7 +17,7 @@
       <div class="lhd in">
       <div>
         <h1>{{ categoryName }}</h1>
-        <p>{{ filteredProducts.length }} منتج</p>
+        <p>{{ totalCount }} منتج</p>
       </div>
 
       <!-- Mobile filter trigger button -->
@@ -175,7 +175,7 @@
         </div>
 
         <!-- Empty Results -->
-        <div v-else-if="filteredProducts.length === 0" class="no-results">
+        <div v-else-if="products.length === 0" class="no-results">
           <EmptyState
             title="لا توجد منتجات مطابقة للبحث أو الفلترة"
             description="جرّب تقليل شروط الفلترة أو مسح الموديل لعرض كل المنتجات المتوفرة."
@@ -187,7 +187,7 @@
         <!-- Products Grid -->
         <div v-else class="grid g4">
           <ProductCard
-            v-for="product in paginatedProducts"
+            v-for="product in products"
             :key="product.id"
             :product="product"
           />
@@ -226,19 +226,61 @@ const userStore = useUserStore()
 
 const loading = ref(true)
 const error = ref('')
-const allProducts = ref([])
+const products = ref([])
 const categoriesList = ref([])
+const meta = ref(null)
+const serverFacets = ref(null)
+
+const filterOnlyFitting = ref(!!userStore.selectedBike)
+const selectedViscosity = ref('')
+const selectedBrand = ref('')
+const selectedOilType = ref('')
+const minPrice = ref(0)
+const maxPrice = ref(10000)
+const inStockOnly = ref(false)
+const onSaleOnly = ref(false)
+const sortBy = ref('bestseller')
+const currentPage = ref(1)
+const itemsPerPage = 12
+const mobileFilterOpen = ref(false)
+
+const sortOptions = [
+  { value: 'bestseller', label: 'ترتيب: الأكثر مبيعاً' },
+  { value: 'newest', label: 'ترتيب: الأحدث' },
+  { value: 'price-asc', label: 'السعر: من الأقل للأعلى' },
+  { value: 'price-desc', label: 'السعر: من الأعلى للأقل' },
+  { value: 'rating', label: 'التقييم' }
+]
 
 const fetchProducts = async () => {
   loading.value = true
   error.value = ''
   try {
-    const [prods, cats] = await Promise.all([
-      api.getProducts(),
-      api.getCategories()
+    const params = {
+      category: route.params.category && route.params.category !== 'all' ? route.params.category : undefined,
+      q: route.query.q || undefined,
+      model: filterOnlyFitting.value && userStore.selectedBike ? userStore.selectedBike : undefined,
+      brand: selectedBrand.value || undefined,
+      viscosity: selectedViscosity.value || undefined,
+      type: selectedOilType.value || undefined,
+      minPrice: minPrice.value > 0 ? minPrice.value : undefined,
+      maxPrice: maxPrice.value < 10000 ? maxPrice.value : undefined,
+      inStock: inStockOnly.value ? 1 : undefined,
+      onSale: onSaleOnly.value ? 1 : undefined,
+      sort: sortBy.value,
+      page: currentPage.value,
+      perPage: itemsPerPage
+    }
+
+    const [prodsRes, catsRes] = await Promise.all([
+      api.getProducts(params),
+      categoriesList.value.length ? Promise.resolve(categoriesList.value) : api.getCategories()
     ])
-    allProducts.value = prods
-    categoriesList.value = cats
+
+    products.value = prodsRes
+    meta.value = prodsRes.meta || { total: prodsRes.length, page: currentPage.value, perPage: itemsPerPage, lastPage: 1 }
+    serverFacets.value = prodsRes.facets || { brands: {}, viscosities: {}, types: {}, models: {} }
+    categoriesList.value = catsRes
   } catch (e) {
     error.value = 'تعذر الاتصال بقاعدة البيانات، يرجى المحاولة لاحقاً.'
   } finally {
@@ -274,64 +316,19 @@ const breadcrumbItems = computed(() => [
 
 const userBikeYear = computed(() => userStore.userBikeYear)
 
-// Filter states - default fitting true when bike selected (Item 7)
-const filterOnlyFitting = ref(!!userStore.selectedBike)
-const selectedViscosity = ref('')
-const selectedBrand = ref('')
-const selectedOilType = ref('')
-const minPrice = ref(0)
-const maxPrice = ref(10000)
-const inStockOnly = ref(false)
-const onSaleOnly = ref(false)
-const sortBy = ref('bestseller')
-const currentPage = ref(1)
-const itemsPerPage = 12
-const mobileFilterOpen = ref(false)
-
-const sortOptions = [
-  { value: 'bestseller', label: 'ترتيب: الأكثر مبيعاً' },
-  { value: 'newest', label: 'ترتيب: الأحدث' },
-  { value: 'price-asc', label: 'السعر: من الأقل للأعلى' },
-  { value: 'price-desc', label: 'السعر: من الأعلى للأقل' },
-  { value: 'rating', label: 'التقييم' }
-]
-
-// Products strictly in this category
-const categoryProducts = computed(() => {
-  if (route.params.category && route.params.category !== 'all') {
-    return allProducts.value.filter((p) => p.category === route.params.category)
-  }
-  return [...allProducts.value]
-})
-
-// Dynamically derived filter options
+// Server-side derived facets
 const viscosities = computed(() => {
-  const map = {}
-  categoryProducts.value.forEach((p) => {
-    if (p.viscosity) {
-      map[p.viscosity] = (map[p.viscosity] || 0) + 1
-    }
-  })
+  const map = serverFacets.value?.viscosities || {}
   return Object.entries(map).map(([name, count]) => ({ name, count }))
 })
 
 const brands = computed(() => {
-  const map = {}
-  categoryProducts.value.forEach((p) => {
-    if (p.brand) {
-      map[p.brand] = (map[p.brand] || 0) + 1
-    }
-  })
+  const map = serverFacets.value?.brands || {}
   return Object.entries(map).map(([name, count]) => ({ name, count }))
 })
 
 const oilTypes = computed(() => {
-  const map = {}
-  categoryProducts.value.forEach((p) => {
-    if (p.oilType) {
-      map[p.oilType] = (map[p.oilType] || 0) + 1
-    }
-  })
+  const map = serverFacets.value?.types || {}
   return Object.entries(map).map(([name, count]) => ({ name, count }))
 })
 
@@ -391,109 +388,53 @@ const resetCategoryFilters = () => {
   maxPrice.value = 10000
 }
 
-// Reset filters on category route change
-watch(
-  () => route.params.category,
-  () => {
-    resetCategoryFilters()
-    currentPage.value = 1
-  }
-)
-
-// Reset page on filter changes
+// Reset page & fetch when filters change
 watch(
   [filterOnlyFitting, selectedViscosity, selectedBrand, selectedOilType, inStockOnly, onSaleOnly, sortBy, minPrice, maxPrice],
   () => {
     currentPage.value = 1
+    fetchProducts()
   }
 )
 
-// Filtered and sorted products
-const filteredProducts = computed(() => {
-  let list = [...categoryProducts.value]
-
-  // Filter query
-  if (route.query.q) {
-    const q = route.query.q.toLowerCase()
-    list = list.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.brand.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q)
-    )
+watch(
+  () => currentPage.value,
+  () => {
+    fetchProducts()
   }
+)
 
-  // Filter model compatibility with doesFit
-  if (filterOnlyFitting.value) {
-    const currentBike = userStore.selectedBike
-    list = list.filter((p) => doesFit(p, currentBike) !== false)
+watch(
+  () => [route.params.category, route.query.q],
+  () => {
+    resetCategoryFilters()
+    currentPage.value = 1
+    fetchProducts()
   }
+)
 
-  // Filter viscosity
-  if (selectedViscosity.value) {
-    list = list.filter((p) => p.viscosity === selectedViscosity.value)
+watch(
+  () => userStore.selectedBike,
+  () => {
+    if (filterOnlyFitting.value) {
+      currentPage.value = 1
+      fetchProducts()
+    }
   }
+)
 
-  // Filter brand
-  if (selectedBrand.value) {
-    list = list.filter((p) => p.brand === selectedBrand.value)
-  }
+const totalCount = computed(() => meta.value?.total ?? products.value.length)
+const totalPages = computed(() => meta.value?.lastPage ?? 1)
 
-  // Filter oil type
-  if (selectedOilType.value) {
-    list = list.filter((p) => p.oilType === selectedOilType.value)
-  }
-
-  // Price range
-  if (minPrice.value > 0) {
-    list = list.filter((p) => p.price >= minPrice.value)
-  }
-  if (maxPrice.value < 10000) {
-    list = list.filter((p) => p.price <= maxPrice.value)
-  }
-
-  // Stock
-  if (inStockOnly.value) {
-    list = list.filter((p) => p.stock > 0)
-  }
-
-  // Discount
-  if (onSaleOnly.value) {
-    list = list.filter((p) => p.oldPrice && p.oldPrice > p.price)
-  }
-
-  // Item 21: Sorting
-  if (sortBy.value === 'bestseller') {
-    list.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
-  } else if (sortBy.value === 'newest') {
-    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-  } else if (sortBy.value === 'price-asc') {
-    list.sort((a, b) => a.price - b.price)
-  } else if (sortBy.value === 'price-desc') {
-    list.sort((a, b) => b.price - a.price)
-  } else if (sortBy.value === 'rating') {
-    list.sort((a, b) => b.rating - a.rating)
-  }
-
-  return list
-})
-
-// Item 22: Dynamic pagination text
+// Dynamic pagination text from meta
 const paginationText = computed(() => {
-  const total = filteredProducts.value.length
+  const total = totalCount.value
   if (total === 0) return '0 منتج'
-  const start = (currentPage.value - 1) * itemsPerPage + 1
-  const end = Math.min(currentPage.value * itemsPerPage, total)
+  const p = meta.value?.page || currentPage.value
+  const pp = meta.value?.perPage || itemsPerPage
+  const start = (p - 1) * pp + 1
+  const end = Math.min(p * pp, total)
   return `عرض ${start}-${end} من ${total} منتج`
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredProducts.value.length / itemsPerPage)
-})
-
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredProducts.value.slice(start, start + itemsPerPage)
 })
 </script>
 

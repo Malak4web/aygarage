@@ -124,7 +124,7 @@
       <!-- Bikes Grid Main -->
       <main class="bikes-main">
         <div class="tb">
-          <span>{{ filteredBikes.length }} موتوسيكل متاح</span>
+          <span>{{ totalBikesCount }} موتوسيكل متاح</span>
           <SortSelect
             v-model="sortBy"
             :options="sortOptions"
@@ -149,7 +149,7 @@
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="filteredBikes.length === 0">
+        <div v-else-if="bikes.length === 0">
           <EmptyState
             icon="bike"
             title="لا توجد موتوسيكلات مطابقة"
@@ -162,11 +162,17 @@
         <!-- Bikes Grid -->
         <div v-else class="grid g3">
           <BikeCard
-            v-for="b in filteredBikes"
+            v-for="b in bikes"
             :key="b.id"
             :bike="b"
           />
         </div>
+
+        <Pagination
+          v-if="totalPages > 1"
+          v-model:current-page="currentPage"
+          :total-pages="totalPages"
+        />
       </main>
     </div>
 
@@ -192,7 +198,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { storeConfig } from '@/config/store.js'
 import { api } from '@/api/index.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
@@ -202,6 +208,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import FilterSidebar from '@/components/common/FilterSidebar.vue'
 import FilterChips from '@/components/common/FilterChips.vue'
 import SortSelect from '@/components/common/SortSelect.vue'
+import Pagination from '@/components/common/Pagination.vue'
 import { useModalTrap } from '@/utils/modal.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
@@ -212,25 +219,10 @@ const breadcrumbItems = [
 
 const loading = ref(true)
 const error = ref('')
-const allBikes = ref([])
+const bikes = ref([])
+const meta = ref(null)
+const facets = ref(null)
 
-const fetchBikes = async () => {
-  loading.value = true
-  error.value = ''
-  try {
-    allBikes.value = await api.getBikes()
-  } catch (e) {
-    error.value = 'تعذر الاتصال بخادم المعروضات، يرجى المحاولة لاحقاً.'
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchBikes()
-})
-
-// Item 20: Defaults empty
 const selectedFamilies = ref([])
 const selectedKmRange = ref('')
 const selectedMinScore = ref(0)
@@ -238,6 +230,8 @@ const selectedYears = ref([])
 const minPrice = ref(0)
 const maxPrice = ref(400000)
 const sortBy = ref('newest')
+const currentPage = ref(1)
+const itemsPerPage = 12
 const mobileFilterOpen = ref(false)
 const showSellModal = ref(false)
 const sellModalRef = ref(null)
@@ -254,33 +248,64 @@ const sortOptions = [
   { value: 'price-desc', label: 'السعر: من الأعلى للأقل' }
 ]
 
+const fetchBikes = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    const params = {
+      family: selectedFamilies.value.length > 0 ? selectedFamilies.value : undefined,
+      kmRange: selectedKmRange.value || undefined,
+      minScore: selectedMinScore.value > 0 ? selectedMinScore.value : undefined,
+      year: selectedYears.value.length > 0 ? selectedYears.value : undefined,
+      minPrice: minPrice.value > 0 ? minPrice.value : undefined,
+      maxPrice: maxPrice.value < 400000 ? maxPrice.value : undefined,
+      sort: sortBy.value,
+      page: currentPage.value,
+      perPage: itemsPerPage
+    }
+    const res = await api.getBikes(params)
+    bikes.value = res
+    meta.value = res.meta || { total: res.length, page: currentPage.value, perPage: itemsPerPage, lastPage: 1 }
+    facets.value = res.facets || { families: {}, kmRanges: {}, scores: {}, years: {} }
+  } catch (e) {
+    error.value = 'تعذر الاتصال بخادم المعروضات، يرجى المحاولة لاحقاً.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchBikes()
+})
+
+const totalBikesCount = computed(() => meta.value?.total ?? bikes.value.length)
+const totalPages = computed(() => meta.value?.lastPage ?? 1)
+
+// Server-derived facet options (Item 9 & 19)
 const modelFamilies = computed(() => {
   const families = ['ZT125', 'ZT310', 'ZT350', 'ZT703']
+  const map = facets.value?.families || {}
   return families.map((f) => ({
     name: f,
-    count: allBikes.value.filter((b) => b.family === f).length
+    count: map[f] || 0
   }))
 })
 
-// Computed facet counts (Item 19)
 const kmOptions = computed(() => [
   {
     label: 'أقل من 5,000 كم',
     value: 'under5k',
-    count: allBikes.value.filter((b) => (Number(b.km) || 0) < 5000).length
+    count: facets.value?.kmRanges?.under5k || 0
   },
   {
     label: '5,000 – 20,000 كم',
     value: '5kTo20k',
-    count: allBikes.value.filter((b) => {
-      const k = Number(b.km) || 0
-      return k >= 5000 && k <= 20000
-    }).length
+    count: facets.value?.kmRanges?.['5kTo20k'] || 0
   },
   {
     label: 'أكتر من 20,000 كم',
     value: 'over20k',
-    count: allBikes.value.filter((b) => (Number(b.km) || 0) > 20000).length
+    count: facets.value?.kmRanges?.over20k || 0
   }
 ])
 
@@ -288,15 +313,12 @@ const scoreOptions = computed(() => [
   {
     label: '90 وأكتر',
     min: 90,
-    count: allBikes.value.filter((b) => (b.inspectionScore || 0) >= 90).length
+    count: facets.value?.scores?.['90+'] || 0
   },
   {
     label: '80 – 89',
     min: 80,
-    count: allBikes.value.filter((b) => {
-      const s = b.inspectionScore || 0
-      return s >= 80 && s < 90
-    }).length
+    count: facets.value?.scores?.['80-89'] || 0
   }
 ])
 
@@ -304,22 +326,22 @@ const yearOptions = computed(() => [
   {
     label: '2024',
     value: 2024,
-    count: allBikes.value.filter((b) => b.year === 2024).length
+    count: facets.value?.years?.['2024'] || 0
   },
   {
     label: '2023',
     value: 2023,
-    count: allBikes.value.filter((b) => b.year === 2023).length
+    count: facets.value?.years?.['2023'] || 0
   },
   {
     label: '2022',
     value: 2022,
-    count: allBikes.value.filter((b) => b.year === 2022).length
+    count: facets.value?.years?.['2022'] || 0
   },
   {
     label: '2021 وأقدم',
     value: 2021,
-    count: allBikes.value.filter((b) => b.year <= 2021).length
+    count: facets.value?.years?.['2021'] || 0
   }
 ])
 
@@ -374,63 +396,21 @@ const resetFilters = () => {
   maxPrice.value = 400000
 }
 
-const filteredBikes = computed(() => {
-  let list = [...allBikes.value]
+watch(
+  [selectedFamilies, selectedKmRange, selectedMinScore, selectedYears, minPrice, maxPrice, sortBy],
+  () => {
+    currentPage.value = 1
+    fetchBikes()
+  },
+  { deep: true }
+)
 
-  // Family
-  if (selectedFamilies.value.length > 0) {
-    list = list.filter((b) => selectedFamilies.value.includes(b.family))
+watch(
+  () => currentPage.value,
+  () => {
+    fetchBikes()
   }
-
-  // Price range
-  if (minPrice.value > 0) {
-    list = list.filter((b) => b.price >= minPrice.value)
-  }
-  if (maxPrice.value < 400000) {
-    list = list.filter((b) => b.price <= maxPrice.value)
-  }
-
-  // KM range with numeric comparison
-  if (selectedKmRange.value === 'under5k') {
-    list = list.filter((b) => Number(b.km) < 5000)
-  } else if (selectedKmRange.value === '5kTo20k') {
-    list = list.filter((b) => Number(b.km) >= 5000 && Number(b.km) <= 20000)
-  } else if (selectedKmRange.value === 'over20k') {
-    list = list.filter((b) => Number(b.km) > 20000)
-  }
-
-  // Inspection Score
-  if (selectedMinScore.value === 90) {
-    list = list.filter((b) => b.inspectionScore >= 90)
-  } else if (selectedMinScore.value === 80) {
-    list = list.filter((b) => b.inspectionScore >= 80 && b.inspectionScore < 90)
-  }
-
-  // Year: "2021 وأقدم" means <= 2021
-  if (selectedYears.value.length > 0) {
-    list = list.filter((b) => {
-      return selectedYears.value.some((yr) => {
-        if (yr === 2021) return b.year <= 2021
-        return b.year === yr
-      })
-    })
-  }
-
-  // Sorting
-  if (sortBy.value === 'popular') {
-    list.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
-  } else if (sortBy.value === 'score-desc') {
-    list.sort((a, b) => b.inspectionScore - a.inspectionScore)
-  } else if (sortBy.value === 'price-asc') {
-    list.sort((a, b) => a.price - b.price)
-  } else if (sortBy.value === 'price-desc') {
-    list.sort((a, b) => b.price - a.price)
-  } else if (sortBy.value === 'newest') {
-    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-  }
-
-  return list
-})
+)
 </script>
 
 <style scoped>
