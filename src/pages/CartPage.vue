@@ -30,59 +30,81 @@
 
         <!-- Lines -->
         <div class="lines-list">
-          <div
-            v-for="item in cartStore.items"
-            :key="item.lineId"
-            class="line"
-          >
-            <div class="im">
-              <ProductIllustration
-                :type="item.product.type"
-                :color="item.product.color"
-                :image="item.product.image"
-                :width="70"
-                :alt="item.product.name"
-              />
+          <template v-if="cartStore.isRefreshing && !hasLoadedItems">
+            <div v-for="i in Math.max(1, cartStore.items.length)" :key="i" class="line skeleton-line-row">
+              <div class="im skeleton-box"></div>
+              <div class="line-info">
+                <div class="skeleton-bar title-bar"></div>
+                <div class="skeleton-bar sub-bar"></div>
+              </div>
             </div>
+          </template>
 
-            <div class="line-info">
-              <b>{{ item.product.name }}</b>
-              <small>
-                {{ item.product.brand }} ·
-                <span v-if="doesFit(item.product, userStore.selectedBike) === true" class="line-fit">
-                  يركب على {{ userStore.selectedBike }}
-                </span>
-                <span v-else-if="doesFit(item.product, userStore.selectedBike) === null" style="color: var(--mu)">
-                  مقاسات متعددة
-                </span>
-                <span v-else style="color: var(--mu)">
-                  مش متأكدين إنه يركب على موتوسيكلك، اسألنا
-                </span>
-              </small>
-            </div>
-
-            <div class="line-qty">
-              <QtyStepper
-                :model-value="item.qty"
-                :max="item.product?.stock !== undefined ? item.product.stock : 99"
-                @update:model-value="cartStore.updateQty(item.lineId, $event)"
-                height="40px"
-              />
-            </div>
-
-            <b class="line-total">
-              {{ (getItemPrice(item) * item.qty).toLocaleString('en') }} ج.م
-            </b>
-
-            <button
-              type="button"
-              class="line-remove"
-              @click="cartStore.removeItem(item.lineId)"
-              aria-label="حذف المنتج من السلة"
+          <template v-else>
+            <div
+              v-for="item in cartStore.items"
+              :key="item.lineId"
+              class="line"
             >
-              <AppIcon name="x" :size="18" />
-            </button>
-          </div>
+              <template v-if="item.product">
+                <div class="im">
+                  <ProductIllustration
+                    :type="item.product?.type"
+                    :color="item.product?.color"
+                    :image="item.product?.image"
+                    :width="70"
+                    :alt="item.product?.name"
+                  />
+                </div>
+
+                <div class="line-info">
+                  <b>{{ item.product?.name }}</b>
+                  <small>
+                    {{ item.product?.brand }} ·
+                    <span v-if="doesFit(item.product, userStore.selectedBike) === true" class="line-fit">
+                      يركب على {{ userStore.selectedBike }}
+                    </span>
+                    <span v-else-if="doesFit(item.product, userStore.selectedBike) === null" style="color: var(--mu)">
+                      مقاسات متعددة
+                    </span>
+                    <span v-else style="color: var(--mu)">
+                      مش متأكدين إنه يركب على موتوسيكلك، اسألنا
+                    </span>
+                  </small>
+                </div>
+
+                <div class="line-qty">
+                  <QtyStepper
+                    :model-value="item.qty"
+                    :max="item.product?.stock !== undefined ? item.product.stock : 99"
+                    @update:model-value="cartStore.updateQty(item.lineId, $event)"
+                    height="40px"
+                  />
+                </div>
+
+                <b class="line-total">
+                  {{ (getItemPrice(item) * item.qty).toLocaleString('en') }} ج.م
+                </b>
+
+                <button
+                  type="button"
+                  class="line-remove"
+                  @click="cartStore.removeItem(item.lineId)"
+                  aria-label="حذف المنتج من السلة"
+                >
+                  <AppIcon name="x" :size="18" />
+                </button>
+              </template>
+
+              <template v-else>
+                <div class="im skeleton-box"></div>
+                <div class="line-info">
+                  <div class="skeleton-bar title-bar"></div>
+                  <div class="skeleton-bar sub-bar"></div>
+                </div>
+              </template>
+            </div>
+          </template>
         </div>
 
         <!-- Bottom Cart Actions -->
@@ -175,8 +197,12 @@ const breadcrumbItems = [
   { label: 'السلة' }
 ]
 
+const hasLoadedItems = computed(() => {
+  return cartStore.items.some((i) => !!i.product)
+})
+
 const getItemPrice = (item) => {
-  return item.selectedOption?.price || item.product.price
+  return item.selectedOption?.price || item.product?.price || item.seenPrice || 0
 }
 
 const applyCoupon = () => {
@@ -237,6 +263,39 @@ const companionProducts = computed(() => {
   background: var(--sf);
   display: grid;
   place-items: center;
+}
+
+.skeleton-line-row {
+  opacity: 0.7;
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, var(--sf) 25%, var(--sf2) 50%, var(--sf) 75%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.5s infinite;
+}
+
+.skeleton-bar {
+  background: linear-gradient(90deg, var(--sf) 25%, var(--sf2) 50%, var(--sf) 75%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.title-bar {
+  width: 60%;
+  height: 18px;
+  margin-bottom: 8px;
+}
+
+.sub-bar {
+  width: 40%;
+  height: 13px;
+}
+
+@keyframes skel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .line-info b {

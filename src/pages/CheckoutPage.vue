@@ -143,20 +143,31 @@
                 :key="item.lineId"
                 class="mini"
               >
-                <div class="im">
-                  <ProductIllustration
-                    :type="item.product.type"
-                    :color="item.product.color"
-                    :image="item.product.image"
-                    :width="40"
-                    :alt="item.product.name"
-                  />
-                  <span class="mini-qty">{{ item.qty }}</span>
-                </div>
-                <span class="mini-name">{{ item.product.name }}</span>
-                <b class="mini-price">
-                  {{ ((item.selectedOption?.price || item.product.price) * item.qty).toLocaleString('en') }}
-                </b>
+                <template v-if="item.product">
+                  <div class="im">
+                    <ProductIllustration
+                      :type="item.product?.type"
+                      :color="item.product?.color"
+                      :image="item.product?.image"
+                      :width="40"
+                      :alt="item.product?.name"
+                    />
+                    <span class="mini-qty">{{ item.qty }}</span>
+                  </div>
+                  <span class="mini-name">{{ item.product?.name }}</span>
+                  <b class="mini-price">
+                    {{ (((item.selectedOption?.price || item.product?.price || item.seenPrice || 0) * item.qty)).toLocaleString('en') }}
+                  </b>
+                </template>
+                <template v-else>
+                  <div class="im skeleton-box" style="width: 40px; height: 40px; border-radius: 6px; background: var(--sf);">
+                    <span class="mini-qty">{{ item.qty }}</span>
+                  </div>
+                  <span class="mini-name" style="color: var(--mu);">جاري التحميل...</span>
+                  <b class="mini-price">
+                    {{ (((item.seenPrice || 0) * item.qty)).toLocaleString('en') }}
+                  </b>
+                </template>
               </div>
             </div>
           </template>

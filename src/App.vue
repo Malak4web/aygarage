@@ -48,6 +48,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 import { api } from '@/api'
 import { storeConfig, updateStoreConfig } from '@/config/store.js'
+import { useCartStore } from '@/stores/cart.js'
 import AnnouncementBar from '@/components/layout/AnnouncementBar.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import CategoryNav from '@/components/layout/CategoryNav.vue'
@@ -56,6 +57,8 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import AppToast from '@/components/common/AppToast.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 
+const cartStore = useCartStore()
+
 onMounted(async () => {
   try {
     const live = await api.getSettings()
@@ -63,6 +66,7 @@ onMounted(async () => {
   } catch (e) {
     // Keep fallback values in storeConfig
   }
+  cartStore.refreshCart()
 })
 
 const route = useRoute()

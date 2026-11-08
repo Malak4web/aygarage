@@ -23,13 +23,15 @@ export const useCartStore = defineStore('cart', {
             .map((item) => {
               const slug = item.slug || ''
               const optionCode = item.optionCode || null
+              const seenPrice = Number(item.seenPrice) || 0
               return {
                 slug,
                 optionCode,
                 qty: Math.max(1, Number(item.qty) || 1),
                 lineId: `${slug}_${optionCode || 'default'}`,
                 product: item.product || null,
-                selectedOption: item.selectedOption || null
+                selectedOption: item.selectedOption || null,
+                seenPrice
               }
             })
         }
@@ -59,7 +61,7 @@ export const useCartStore = defineStore('cart', {
 
     subtotal: (state) => {
       return state.items.reduce((sum, item) => {
-        const price = item.selectedOption?.price || item.product?.price || 0
+        const price = item.selectedOption?.price || item.product?.price || item.seenPrice || 0
         return sum + price * item.qty
       }, 0)
     },
@@ -109,7 +111,8 @@ export const useCartStore = defineStore('cart', {
         const compact = this.items.map((i) => ({
           slug: i.slug || i.product?.slug,
           optionCode: i.optionCode || i.selectedOption?.code || null,
-          qty: i.qty
+          qty: i.qty,
+          seenPrice: i.selectedOption?.price || i.product?.price || i.seenPrice || 0
         }))
         localStorage.setItem('ayg_cart', JSON.stringify(compact))
         localStorage.setItem('ayg_cart_v', '2')
@@ -237,7 +240,8 @@ export const useCartStore = defineStore('cart', {
           optionCode,
           qty: initialQty,
           selectedOption,
-          product
+          product,
+          seenPrice: selectedOption?.price || product?.price || 0
         })
         this.persist()
         return status

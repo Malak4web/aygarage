@@ -35,10 +35,14 @@ class ProductController extends Controller
             });
         }
 
-        // Filter by bike model: exact match in JSON array (Item 11)
+        // Filter by bike model: exact match in JSON array or universal product (Review 3 Item 2)
         if ($request->filled('model')) {
             $model = $request->query('model');
-            $query->whereJsonContains('fits', $model);
+            $query->where(function ($q) use ($model) {
+                $q->whereJsonContains('fits', $model)
+                  ->orWhereNull('fits')
+                  ->orWhereJsonLength('fits', 0);
+            });
         }
 
         // Filter by brand(s)
@@ -135,6 +139,8 @@ class ProductController extends Controller
         $facetTypes = [];
         $facetModels = [];
 
+        $knownModels = ['ZT350-T', 'ZT310-R', 'ZT310-X', 'ZT350-GK', 'ZT350-D', 'ZT703', 'ZT125-U'];
+
         foreach ($facetsProducts as $fp) {
             if ($fp->brand) {
                 $facetBrands[$fp->brand] = ($facetBrands[$fp->brand] ?? 0) + 1;
@@ -147,6 +153,11 @@ class ProductController extends Controller
             }
             if (!empty($fp->fits) && is_array($fp->fits)) {
                 foreach ($fp->fits as $m) {
+                    $facetModels[$m] = ($facetModels[$m] ?? 0) + 1;
+                }
+            } else {
+                // Universal products fit all bike models
+                foreach ($knownModels as $m) {
                     $facetModels[$m] = ($facetModels[$m] ?? 0) + 1;
                 }
             }
