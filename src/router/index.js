@@ -83,7 +83,7 @@ export const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth) {
-    const isAuthed = localStorage.getItem('ayg_auth') === 'true'
+    const isAuthed = Boolean(localStorage.getItem('ayg_token')) || localStorage.getItem('ayg_auth') === 'true'
     if (!isAuthed) {
       return next({ path: '/login', query: { redirect: to.fullPath } })
     }

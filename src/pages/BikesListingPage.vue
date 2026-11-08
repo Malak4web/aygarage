@@ -183,12 +183,52 @@
       <div class="modal-card" ref="sellModalRef" @click.stop role="dialog" aria-modal="true" aria-label="بيع موتوسيكلك">
         <h3>بيع موتوسيكلك مع جراج أبو يوسف</h3>
         <p>هنفحص موتوسيكلك فحص 120 نقطة ونساعدك تبيعه بأفضل سعر وأسرع وقت بعمولة عادلة وبدون وجع دماغ.</p>
+        <form @submit.prevent="handleSellSubmit" class="sell-form">
+          <div class="fl">
+            <div class="fld">
+              <FormField id="sell-name" label="الاسم بالكامل" v-model="sellName" :error="sellErrors.name" placeholder="مثال: كريم يوسف" required />
+            </div>
+            <div class="fld">
+              <FormField id="sell-phone" label="رقم الموبايل" type="tel" dir="ltr" v-model="sellPhone" :error="sellErrors.phone" placeholder="010 1234 5678" required />
+            </div>
+          </div>
+
+          <div class="fl" style="margin-top: 12px;">
+            <div class="fld">
+              <label for="sell-model" class="fld-label">موديل الموتوسيكل</label>
+              <select id="sell-model" v-model="sellModel" class="form-select-full">
+                <option v-for="m in storeConfig.models" :key="m" :value="m">{{ m }}</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="sell-year" class="fld-label">سنة الصنع</label>
+              <select id="sell-year" v-model="sellYear" class="form-select-full">
+                <option v-for="y in storeConfig.years" :key="y" :value="y">{{ y }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fld" style="margin-top: 12px;">
+            <FormField id="sell-km" label="قراءة العداد (كم)" type="number" v-model="sellKm" :error="sellErrors.km" placeholder="مثال: 15000" required />
+          </div>
+
+          <div class="fld" style="margin-top: 12px;">
+            <label for="sell-notes" class="fld-label">ملاحظات أو مواصفات إضافية (اختياري)</label>
+            <textarea id="sell-notes" v-model="sellNotes" class="form-textarea-full" rows="2" placeholder="حالة الكاوتش، رخصة سارية، صيانات دورية..."></textarea>
+          </div>
+
+          <button type="submit" class="btn full" style="margin-top: 16px;" :disabled="isSubmittingSell">
+            {{ isSubmittingSell ? 'جاري إرسال الطلب...' : 'إرسال طلب فحص وبيع' }}
+          </button>
+        </form>
+
+        <div class="sell-divider">
+          <span>أو تواصل مباشرة</span>
+        </div>
+
         <div class="sell-contacts">
-          <a :href="`https://wa.me/${storeConfig.whatsapp}`" target="_blank" rel="noopener" class="btn full">
+          <a :href="`https://wa.me/${storeConfig.whatsapp}`" target="_blank" rel="noopener" class="btn o full">
             تواصل معنا على الواتساب
-          </a>
-          <a :href="`tel:${storeConfig.phone}`" class="btn o full" style="margin-top: 10px;">
-            اتصل بالجراج: {{ storeConfig.phone }}
           </a>
         </div>
         <button type="button" class="btn o sm close-sell-btn" @click="showSellModal = false">
@@ -213,6 +253,9 @@ import SortSelect from '@/components/common/SortSelect.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import { useModalTrap } from '@/utils/modal.js'
 import AppIcon from '@/components/common/AppIcon.vue'
+import FormField from '@/components/common/FormField.vue'
+import { useToastStore } from '@/stores/toast.js'
+import { useUserStore } from '@/stores/user.js'
 
 const breadcrumbItems = [
   { label: 'الرئيسية', to: '/' },
@@ -238,6 +281,50 @@ const mobileFilterOpen = ref(false)
 const showSellModal = ref(false)
 const sellModalRef = ref(null)
 let fetchRequestId = 0
+
+const toastStore = useToastStore()
+const userStore = useUserStore()
+
+const sellName = ref(userStore.user?.name || '')
+const sellPhone = ref(userStore.user?.phone || '')
+const sellModel = ref(storeConfig.models[0] || 'ZT350-T')
+const sellYear = ref(2023)
+const sellKm = ref('')
+const sellNotes = ref('')
+const isSubmittingSell = ref(false)
+const sellErrors = ref({})
+
+const handleSellSubmit = async () => {
+  if (isSubmittingSell.value) return
+  isSubmittingSell.value = true
+  sellErrors.value = {}
+  try {
+    const res = await api.createSellRequest({
+      name: sellName.value,
+      phone: sellPhone.value,
+      bikeModel: sellModel.value,
+      year: Number(sellYear.value),
+      km: Number(sellKm.value) || 0,
+      notes: sellNotes.value || undefined
+    })
+    toastStore.show(res.message || 'تم استلام طلب بيع موتوسيكلك بنجاح!', 'success')
+    showSellModal.value = false
+    sellKm.value = ''
+    sellNotes.value = ''
+  } catch (err) {
+    if (err.errors) sellErrors.value = err.errors
+    toastStore.show(err.message || 'تعذر إرسال طلب بيع الموتوسيكل', 'error')
+  } finally {
+    isSubmittingSell.value = false
+  }
+}
+
+watch(showSellModal, (open) => {
+  if (open) {
+    if (userStore.user?.name && !sellName.value) sellName.value = userStore.user.name
+    if (userStore.user?.phone && !sellPhone.value) sellPhone.value = userStore.user.phone
+  }
+})
 
 useModalTrap(showSellModal, sellModalRef, () => {
   showSellModal.value = false
@@ -619,8 +706,10 @@ watch(
   background: #ffffff;
   padding: 24px;
   border-radius: var(--radius-card);
-  max-width: 440px;
+  max-width: 480px;
   width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-card h3 {
@@ -633,11 +722,65 @@ watch(
   color: var(--mu);
   font-size: 14px;
   line-height: 1.6;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
+}
+
+.sell-form .fl {
+  display: flex;
+  gap: 12px;
+}
+
+.sell-form .fld {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fld-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--tx);
+}
+
+.form-select-full,
+.form-textarea-full {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--ln);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--tx);
+}
+
+.form-textarea-full {
+  resize: vertical;
+}
+
+.sell-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0;
+  color: var(--mu);
+  font-size: 13px;
+}
+
+.sell-divider::before,
+.sell-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--ln);
+}
+
+.sell-divider span {
+  padding: 0 10px;
 }
 
 .close-sell-btn {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 </style>

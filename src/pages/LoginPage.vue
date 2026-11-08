@@ -6,7 +6,7 @@
           type="button"
           class="auth-tab"
           :class="{ active: mode === 'login' }"
-          @click="mode = 'login'"
+          @click="switchMode('login')"
         >
           تسجيل الدخول
         </button>
@@ -14,10 +14,15 @@
           type="button"
           class="auth-tab"
           :class="{ active: mode === 'register' }"
-          @click="mode = 'register'"
+          @click="switchMode('register')"
         >
           حساب جديد
         </button>
+      </div>
+
+      <!-- General Error Alert -->
+      <div v-if="errorMessage" class="auth-error-alert" role="alert">
+        {{ errorMessage }}
       </div>
 
       <!-- Login Form -->
@@ -28,6 +33,7 @@
           type="tel"
           dir="ltr"
           v-model="phone"
+          :error="formErrors.phone"
           placeholder="010 1234 5678"
           required
         />
@@ -37,12 +43,13 @@
           label="كلمة المرور"
           type="password"
           v-model="password"
+          :error="formErrors.password"
           placeholder="••••••••"
           required
         />
 
-        <button type="submit" class="btn full auth-btn">
-          تسجيل الدخول
+        <button type="submit" class="btn full auth-btn" :disabled="isSubmitting">
+          {{ isSubmitting ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول' }}
         </button>
 
         <button type="button" class="btn o full whatsapp-btn" @click="handleWhatsAppCode">
@@ -54,9 +61,11 @@
       <form v-else @submit.prevent="handleRegister" class="auth-form">
         <FormField
           id="reg-name"
-          label="الاسم بالكامل (اختياري)"
+          label="الاسم بالكامل"
           v-model="name"
+          :error="formErrors.name"
           placeholder="مثال: أحمد محمود"
+          required
         />
 
         <FormField
@@ -65,6 +74,7 @@
           type="tel"
           dir="ltr"
           v-model="phone"
+          :error="formErrors.phone"
           placeholder="010 1234 5678"
           required
         />
@@ -74,6 +84,7 @@
           label="كلمة المرور"
           type="password"
           v-model="password"
+          :error="formErrors.password"
           placeholder="••••••••"
           required
         />
@@ -88,8 +99,8 @@
           </select>
         </div>
 
-        <button type="submit" class="btn full auth-btn">
-          إنشاء حساب وتأكيد
+        <button type="submit" class="btn full auth-btn" :disabled="isSubmitting">
+          {{ isSubmitting ? 'جاري إنشاء الحساب...' : 'إنشاء حساب وتأكيد' }}
         </button>
       </form>
     </div>
@@ -111,90 +122,154 @@ const toastStore = useToastStore()
 
 const mode = ref('login')
 const name = ref('')
-// Item 29: Clear pre-filled credentials
 const phone = ref('')
 const password = ref('')
 const bikeModel = ref('')
+const isSubmitting = ref(false)
+const errorMessage = ref('')
+const formErrors = ref({})
+
+const switchMode = (newMode) => {
+  mode.value = newMode
+  errorMessage.value = ''
+  formErrors.value = {}
+  phone.value = ''
+  password.value = ''
+}
 
 const redirectAfterAuth = () => {
   const returnTo = route.query.redirect || '/account'
   router.push(returnTo)
 }
 
-const handleLogin = () => {
-  userStore.login(phone.value, password.value)
-  toastStore.show('مرحباً بك مجدداً في جراج أبو يوسف!', 'success')
-  redirectAfterAuth()
+const handleLogin = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  errorMessage.value = ''
+  formErrors.value = {}
+
+  try {
+    await userStore.login(phone.value, password.value)
+    toastStore.show('مرحباً بك مجدداً في جراج أبو يوسف!', 'success')
+    redirectAfterAuth()
+  } catch (err) {
+    errorMessage.value = err.message || 'بيانات الدخول غير صحيحة'
+    if (err.errors) {
+      formErrors.value = err.errors
+    }
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
-const handleRegister = () => {
-  userStore.register(name.value, phone.value, bikeModel.value)
-  toastStore.show('تم إنشاء حسابك بنجاح!', 'success')
-  redirectAfterAuth()
+const handleRegister = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  errorMessage.value = ''
+  formErrors.value = {}
+
+  try {
+    await userStore.register({
+      name: name.value.trim() || 'عميل الجراج',
+      phone: phone.value,
+      password: password.value,
+      bikeModel: bikeModel.value || undefined
+    })
+    toastStore.show('تم إنشاء حسابك بنجاح!', 'success')
+    redirectAfterAuth()
+  } catch (err) {
+    errorMessage.value = err.message || 'تعذر إنشاء الحساب'
+    if (err.errors) {
+      formErrors.value = err.errors
+    }
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
-// Item 29: Replace alert with toast
 const handleWhatsAppCode = () => {
   if (!phone.value) {
     toastStore.show('يرجى كتابة رقم الموبايل أولاً لإرسال كود الواتساب', 'warning')
     return
   }
-  toastStore.show(`تم إرسال كود تسجيل الدخول على رقم الواتساب: ${phone.value}`, 'info')
-  userStore.login(phone.value, 'whatsapp_token')
-  redirectAfterAuth()
+  toastStore.show(`خدمة تسجيل الدخول برمز واتساب ستكون متاحة قريباً. يرجى تسجيل الدخول بكلمة المرور.`, 'info')
 }
 </script>
 
 <style scoped>
 .login-page {
   padding-top: 48px;
-  padding-bottom: 64px;
+  padding-bottom: 72px;
   display: flex;
   justify-content: center;
 }
 
 .auth-card {
-  max-width: 440px;
   width: 100%;
+  max-width: 440px;
+  background: #ffffff;
   border: 1px solid var(--ln);
   border-radius: var(--radius-card);
-  padding: 32px;
-  background: #ffffff;
+  padding: 32px 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .auth-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--ln);
-  border-radius: var(--radius-btn);
-  padding: 4px;
-  background: var(--sf);
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--ln);
   margin-bottom: 24px;
 }
 
 .auth-tab {
-  height: 38px;
+  flex: 1;
+  background: none;
   border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--mu);
-  border-radius: 6px;
   cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
   transition: all 0.15s ease;
 }
 
 .auth-tab.active {
-  background: #ffffff;
-  color: var(--ink);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--pr);
+  border-bottom-color: var(--pr);
+}
+
+.auth-error-alert {
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #cf1322;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  margin-bottom: 18px;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.auth-btn {
+  margin-top: 8px;
+  padding: 12px;
+  font-size: 15px;
+}
+
+.whatsapp-btn {
+  font-size: 14px;
+  color: #128c7e;
+  border-color: #128c7e;
+}
+
+.whatsapp-btn:hover {
+  background: #e7f7f4;
 }
 
 .form-fld {
@@ -205,30 +280,17 @@ const handleWhatsAppCode = () => {
 
 .form-fld label {
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--tx);
 }
 
-.auth-input,
 .auth-select {
-  height: 46px;
+  width: 100%;
+  padding: 10px 12px;
   border: 1px solid var(--ln);
-  border-radius: var(--radius-btn);
-  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
   font-size: 14px;
-  font-family: inherit;
-  outline: none;
-}
-
-.auth-input:focus-visible,
-.auth-select:focus-visible {
-  outline: 2px solid var(--ink);
-}
-
-.auth-btn {
-  margin-top: 8px;
-}
-
-.whatsapp-btn {
-  margin-top: -6px;
+  color: var(--tx);
 }
 </style>

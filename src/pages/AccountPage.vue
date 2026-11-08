@@ -120,6 +120,9 @@
                 <RouterLink to="/p/motul-7100-10w40" class="btn o sm">
                   اطلب طقم الصيانة
                 </RouterLink>
+                <button type="button" class="btn o sm danger-btn" @click="handleDeleteBike(b.id || b.dbId)">
+                  حذف
+                </button>
               </div>
             </div>
 
@@ -303,7 +306,7 @@
           <div class="sec-head">
             <h1>عناويني المسجلة</h1>
           </div>
-          <div v-if="!userStore.user?.address?.street">
+          <div v-if="!userAddresses || userAddresses.length === 0">
             <EmptyState
               icon="pin"
               title="لم يتم تسجيل عناوين بعد"
@@ -312,9 +315,14 @@
               @action="activeTab = 'settings'"
             />
           </div>
-          <div v-else class="box">
-            <b>عنوان المنزل الرئيسي</b>
-            <p>{{ userStore.user.address.street }}، {{ userStore.user.address.area || '' }}، {{ userStore.user.address.governorate || '' }}</p>
+          <div v-else class="address-cards">
+            <div v-for="addr in userAddresses" :key="addr.id" class="box" style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <b>{{ addr.isDefault ? 'العنوان الرئيسي' : 'عنوان توصيل' }}</b>
+                <span v-if="addr.isDefault" class="tg">افتراضي</span>
+              </div>
+              <p>{{ addr.street }}، {{ addr.area || '' }}، {{ addr.governorate || '' }}</p>
+            </div>
           </div>
         </div>
 
@@ -408,6 +416,7 @@ import { useFavoritesStore } from '@/stores/favorites.js'
 import { useToastStore } from '@/stores/toast.js'
 import { api } from '@/api/index.js'
 import { useModalTrap } from '@/utils/modal.js'
+import { doesFit } from '@/utils/fit.js'
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import ProductCard from '@/components/common/ProductCard.vue'
@@ -433,16 +442,27 @@ const loadAccountData = async () => {
   loading.value = true
   accountError.value = ''
   try {
-    const [bks, ords, prods, hist] = await Promise.all([
+    const [userData, bks, ords, prods, hist] = await Promise.all([
+      userStore.fetchUser(),
       api.getUserBookings(),
       api.getUserOrders(),
       api.getProducts({ model: userStore.selectedBike || undefined, perPage: 8 }),
       api.getServiceHistory()
     ])
+    if (userData) {
+      settingsName.value = userData.name || ''
+      settingsPhone.value = userData.phone || ''
+      if (userData.address) {
+        settingsGovernorate.value = userData.address.governorate || 'القاهرة'
+        settingsArea.value = userData.address.area || ''
+        settingsStreet.value = userData.address.street || ''
+      }
+    }
     userBookings.value = bks
     userOrders.value = ords
     allProducts.value = prods
     serviceHistoryList.value = hist
+    await favStore.syncFavorites()
   } catch (e) {
     accountError.value = 'تعذر تحميل بيانات الحساب'
   } finally {
@@ -473,7 +493,20 @@ const tabs = [
 ]
 
 const favProducts = computed(() => {
-  return allProducts.value.filter((p) => favStore.isFavorite(p.id))
+  if (favStore.favoriteProducts && favStore.favoriteProducts.length > 0) {
+    return favStore.favoriteProducts
+  }
+  return allProducts.value.filter((p) => favStore.isFavorite(p.id) || favStore.isFavorite(p.slug))
+})
+
+const userAddresses = computed(() => {
+  if (userStore.user?.addresses && userStore.user.addresses.length > 0) {
+    return userStore.user.addresses
+  }
+  if (userStore.user?.address?.street) {
+    return [userStore.user.address]
+  }
+  return []
 })
 
 const compatibleProducts = computed(() => {
@@ -493,54 +526,76 @@ const newBikeModel = ref(storeConfig.models[0])
 const newBikeYear = ref(2024)
 const newBikePlate = ref('')
 const newBikeOdo = ref('')
+const isAddingBike = ref(false)
 
-const handleAddBike = () => {
-  userStore.addBike({
-    id: 'ub_' + Date.now(),
-    model: 'Zontes ' + newBikeModel.value,
-    year: Number(newBikeYear.value),
-    plate: newBikePlate.value,
-    odo: Number(newBikeOdo.value) || 0,
-    nextService: (Number(newBikeOdo.value) || 0) + 3000,
-    lastVisit: 'اليوم',
-    license: '2027',
-    col: '#2e2e2e'
-  })
-  showAddBikeModal.value = false
-  toastStore.show('تمت إضافة الموتوسيكل بنجاح', 'success')
+const handleAddBike = async () => {
+  if (isAddingBike.value) return
+  isAddingBike.value = true
+  try {
+    await userStore.addBike({
+      bikeModelCode: newBikeModel.value,
+      model: 'Zontes ' + newBikeModel.value,
+      year: Number(newBikeYear.value),
+      plate: newBikePlate.value,
+      odometer: Number(newBikeOdo.value) || 0
+    })
+    showAddBikeModal.value = false
+    newBikePlate.value = ''
+    newBikeOdo.value = ''
+    toastStore.show('تمت إضافة الموتوسيكل بنجاح', 'success')
+  } catch (err) {
+    toastStore.show(err.message || 'تعذر إضافة الموتوسيكل', 'error')
+  } finally {
+    isAddingBike.value = false
+  }
 }
 
-// Item 26: Settings with v-model
+const handleDeleteBike = async (bikeId) => {
+  if (!confirm('هل أنت متأكد من حذف هذا الموتوسيكل من حسابك؟')) return
+  try {
+    await userStore.deleteBike(bikeId)
+    toastStore.show('تم حذف الموتوسيكل بنجاح', 'success')
+  } catch (err) {
+    toastStore.show(err.message || 'تعذر حذف الموتوسيكل', 'error')
+  }
+}
+
+// Settings with v-model
 const settingsName = ref(userStore.user?.name || '')
 const settingsPhone = ref(userStore.user?.phone || '')
 const settingsGovernorate = ref(userStore.user?.address?.governorate || 'القاهرة')
 const settingsArea = ref(userStore.user?.address?.area || 'مدينة نصر')
 const settingsStreet = ref(userStore.user?.address?.street || '')
 const settingsSaved = ref(false)
+const isSavingSettings = ref(false)
 
-const handleSaveSettings = () => {
-  if (!userStore.user) return
-  userStore.user.name = settingsName.value
-  userStore.user.phone = settingsPhone.value
-  if (!settingsStreet.value.trim()) {
-    userStore.user.address = null
-  } else {
-    userStore.user.address = {
-      governorate: settingsGovernorate.value,
-      area: settingsArea.value,
-      street: settingsStreet.value.trim()
-    }
-  }
-
+const handleSaveSettings = async () => {
+  if (isSavingSettings.value) return
+  isSavingSettings.value = true
   try {
-    localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
-  } catch (e) {}
+    await userStore.updateProfile({
+      name: settingsName.value.trim()
+    })
 
-  settingsSaved.value = true
-  toastStore.show('تم حفظ التعديلات بنجاح', 'success')
-  setTimeout(() => {
-    settingsSaved.value = false
-  }, 3000)
+    if (settingsStreet.value.trim()) {
+      await api.saveAddress({
+        governorate: settingsGovernorate.value,
+        area: settingsArea.value.trim(),
+        street: settingsStreet.value.trim(),
+        is_default: true
+      })
+    }
+    await userStore.fetchUser()
+    settingsSaved.value = true
+    toastStore.show('تم حفظ التعديلات بنجاح', 'success')
+    setTimeout(() => {
+      settingsSaved.value = false
+    }, 3000)
+  } catch (err) {
+    toastStore.show(err.message || 'تعذر حفظ بيانات الحساب', 'error')
+  } finally {
+    isSavingSettings.value = false
+  }
 }
 
 const handleLogout = () => {

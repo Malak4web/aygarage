@@ -180,9 +180,119 @@ export const api = {
     return [...serviceHistory]
   },
 
-  // --- User / Auth (Phases 3 & 4 will migrate to real Sanctum endpoints) ---
+  // --- User / Auth (Phase 3) ---
+  async login(phone, password) {
+    return await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ phone, password })
+    })
+  },
+
+  async register(userData) {
+    return await request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    })
+  },
+
+  async logout() {
+    return await request('/auth/logout', {
+      method: 'POST'
+    })
+  },
+
+  async getMe() {
+    return await request('/auth/me')
+  },
+
+  async updateMe(data) {
+    return await request('/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+  },
+
   async getUser() {
-    return { ...defaultUser }
+    try {
+      return await this.getMe()
+    } catch (_) {
+      return { ...defaultUser }
+    }
+  },
+
+  // --- Customer Bikes (Phase 3) ---
+  async getUserBikes() {
+    return await request('/me/bikes')
+  },
+
+  async addUserBike(bikeData) {
+    return await request('/me/bikes', {
+      method: 'POST',
+      body: JSON.stringify(bikeData)
+    })
+  },
+
+  async updateUserBike(id, bikeData) {
+    return await request(`/me/bikes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(bikeData)
+    })
+  },
+
+  async deleteUserBike(id) {
+    return await request(`/me/bikes/${id}`, {
+      method: 'DELETE'
+    })
+  },
+
+  // --- Customer Addresses (Phase 3) ---
+  async getUserAddresses() {
+    return await request('/me/addresses')
+  },
+
+  async saveAddress(addressData) {
+    return await request('/me/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData)
+    })
+  },
+
+  async updateAddress(id, addressData) {
+    return await request(`/me/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(addressData)
+    })
+  },
+
+  async deleteAddress(id) {
+    return await request(`/me/addresses/${id}`, {
+      method: 'DELETE'
+    })
+  },
+
+  // --- Customer Favorites (Phase 3) ---
+  async getFavorites() {
+    return await request('/me/favorites')
+  },
+
+  async addFavorite(identifier) {
+    return await request(`/me/favorites/${encodeURIComponent(identifier)}`, {
+      method: 'POST'
+    })
+  },
+
+  async removeFavorite(identifier) {
+    return await request(`/me/favorites/${encodeURIComponent(identifier)}`, {
+      method: 'DELETE'
+    })
+  },
+
+  // --- Sell Requests (Phase 3) ---
+  async createSellRequest(data) {
+    return await request('/sell-requests', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
   },
 
   async createOrder(orderData) {

@@ -8,3 +8,4 @@ backend/.env.backup
 !.vscode/extensions.json
 .idea
 .DS_Store
+scratch/

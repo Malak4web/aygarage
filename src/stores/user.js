@@ -1,31 +1,12 @@
 import { defineStore } from 'pinia'
-import { defaultUser } from '../data/user.js'
-
-const cleanPhone = (p) => String(p || '').replace(/\D+/g, '')
-
-export const isDemoPhone = (phone) => {
-  const entered = cleanPhone(phone)
-  const demo = cleanPhone(defaultUser.phone)
-  return Boolean(entered && entered === demo)
-}
-
-const createNewUser = (name = '', phone = '') => ({
-  id: 'u_' + Date.now(),
-  name: name ? name.trim() : '',
-  phone: phone || '',
-  email: '',
-  address: null,
-  savedBikes: [],
-  orders: [],
-  bookings: []
-})
+import { api } from '@/api'
+import { useFavoritesStore } from './favorites.js'
 
 export const useUserStore = defineStore('user', {
   state: () => {
     let savedBike = 'ZT350-T'
     let savedBikeYear = 2023
-    let isAuthed = false
-    let currentUser = null
+    let token = null
 
     try {
       const storedBike = localStorage.getItem('ayg_selected_bike')
@@ -34,21 +15,18 @@ export const useUserStore = defineStore('user', {
       const storedBikeYear = localStorage.getItem('ayg_selected_bike_year')
       if (storedBikeYear) savedBikeYear = parseInt(storedBikeYear, 10) || 2023
 
-      const storedAuth = localStorage.getItem('ayg_auth')
-      if (storedAuth === 'true') {
-        isAuthed = true
-        const storedUser = localStorage.getItem('ayg_user')
-        currentUser = storedUser ? JSON.parse(storedUser) : structuredClone(defaultUser)
-      }
+      token = localStorage.getItem('ayg_token')
     } catch (e) {
-      console.warn('Failed to read user data from storage:', e)
+      console.warn('Failed to read storage in user store:', e)
     }
 
     return {
-      user: currentUser,
-      isAuthenticated: isAuthed,
+      user: null,
+      token: token || null,
+      isAuthenticated: Boolean(token),
       selectedBike: savedBike,
-      selectedBikeYear: savedBikeYear
+      selectedBikeYear: savedBikeYear,
+      isLoading: false
     }
   },
 
@@ -56,7 +34,7 @@ export const useUserStore = defineStore('user', {
     userName: (state) => (state.isAuthenticated && state.user ? state.user.name : ''),
     userBikes: (state) => (state.isAuthenticated && state.user?.savedBikes ? state.user.savedBikes : []),
     userBikeYear: (state) => {
-      const matched = state.user?.savedBikes?.find((b) => b.model.includes(state.selectedBike))
+      const matched = state.user?.savedBikes?.find((b) => b.model?.includes(state.selectedBike) || b.bikeModelCode === state.selectedBike)
       if (matched?.year) return matched.year
       if (state.user?.savedBikes?.[0]?.year) return state.user.savedBikes[0].year
       return state.selectedBikeYear || 2023
@@ -90,98 +68,141 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    login(phone, password) {
-      this.isAuthenticated = true
-      if (isDemoPhone(phone)) {
-        this.user = structuredClone(defaultUser)
-        this.user.phone = phone
-      } else {
-        const existingPhone = this.user?.phone ? cleanPhone(this.user.phone) : ''
-        if (!this.user || existingPhone !== cleanPhone(phone)) {
-          this.user = createNewUser('', phone)
-        }
+    async fetchUser() {
+      const token = localStorage.getItem('ayg_token')
+      if (!token) {
+        this.user = null
+        this.token = null
+        this.isAuthenticated = false
+        localStorage.setItem('ayg_auth', 'false')
+        return null
       }
+
+      this.isLoading = true
       try {
+        const userData = await api.getMe()
+        this.user = userData
+        this.token = token
+        this.isAuthenticated = true
         localStorage.setItem('ayg_auth', 'true')
-        localStorage.setItem('ayg_user', JSON.stringify(this.user))
-      } catch (e) {
-        console.warn('Failed to save user:', e)
+        return userData
+      } catch (err) {
+        if (err.status === 401) {
+          this.logout()
+        }
+        return null
+      } finally {
+        this.isLoading = false
       }
     },
 
-    register(name, phone, bikeModel = '') {
+    async login(phone, password) {
+      const res = await api.login(phone, password)
+      this.token = res.token
+      this.user = res.user
       this.isAuthenticated = true
-      if (isDemoPhone(phone)) {
-        this.user = structuredClone(defaultUser)
-        if (name && name.trim()) {
-          this.user.name = name.trim()
-        }
-        this.user.phone = phone
-      } else {
-        this.user = createNewUser(name, phone)
+
+      try {
+        localStorage.setItem('ayg_token', res.token)
+        localStorage.setItem('ayg_auth', 'true')
+      } catch (e) {
+        console.warn('Failed to persist token:', e)
       }
 
-      if (bikeModel) {
-        this.selectedBike = bikeModel
-        if (!this.user.savedBikes) this.user.savedBikes = []
-        this.user.savedBikes.push({
-          id: 'ub_' + Date.now(),
-          model: 'Zontes ' + bikeModel,
-          year: 2024,
-          plate: 'جديد',
-          odo: 0,
-          nextService: 1000,
-          lastVisit: 'اليوم',
-          license: '2027',
-          col: '#2e2e2e'
-        })
-      }
+      // Sync favorites upon logging in
       try {
-        localStorage.setItem('ayg_auth', 'true')
-        localStorage.setItem('ayg_user', JSON.stringify(this.user))
-        localStorage.setItem('ayg_selected_bike', this.selectedBike)
-      } catch (e) {
-        console.warn('Failed to save registration:', e)
-      }
+        const favStore = useFavoritesStore()
+        await favStore.syncFavorites()
+      } catch (_) {}
+
+      return res
     },
 
-    logout() {
+    async register(userData) {
+      const res = await api.register(userData)
+      this.token = res.token
+      this.user = res.user
+      this.isAuthenticated = true
+
+      try {
+        localStorage.setItem('ayg_token', res.token)
+        localStorage.setItem('ayg_auth', 'true')
+      } catch (e) {
+        console.warn('Failed to persist token:', e)
+      }
+
+      if (userData.bikeModel) {
+        this.setSelectedBike(userData.bikeModel)
+      }
+
+      // Sync favorites
+      try {
+        const favStore = useFavoritesStore()
+        await favStore.syncFavorites()
+      } catch (_) {}
+
+      return res
+    },
+
+    async logout() {
+      try {
+        await api.logout()
+      } catch (_) {}
+
       this.isAuthenticated = false
       this.user = null
+      this.token = null
+
       try {
+        localStorage.removeItem('ayg_token')
         localStorage.setItem('ayg_auth', 'false')
-        localStorage.removeItem('ayg_user')
         sessionStorage.removeItem('ayg_pending_booking')
       } catch (e) {
-        console.warn('Failed to save auth state:', e)
+        console.warn('Failed to clear auth state:', e)
+      }
+
+      try {
+        const favStore = useFavoritesStore()
+        favStore.clearFavorites()
+      } catch (_) {}
+    },
+
+    async addBike(bikeData) {
+      const newBike = await api.addUserBike(bikeData)
+      if (!this.user) {
+        this.user = { savedBikes: [] }
+      }
+      if (!this.user.savedBikes) {
+        this.user.savedBikes = []
+      }
+      this.user.savedBikes.push(newBike)
+
+      const bikeCode = newBike.bikeModelCode || (newBike.model ? newBike.model.replace(/^Zontes\s+/i, '') : '')
+      if (bikeCode) {
+        this.setSelectedBike(bikeCode, newBike.year)
+      }
+      return newBike
+    },
+
+    async deleteBike(bikeId) {
+      await api.deleteUserBike(bikeId)
+      if (this.user?.savedBikes) {
+        this.user.savedBikes = this.user.savedBikes.filter((b) => b.id != bikeId && b.dbId != bikeId)
       }
     },
 
-    addBike(bike) {
-      if (!this.user) {
-        this.user = createNewUser()
+    async updateProfile(profileData) {
+      const res = await api.updateMe(profileData)
+      if (res.user) {
+        this.user = { ...this.user, ...res.user }
       }
-      if (!this.user.savedBikes) this.user.savedBikes = []
-      this.user.savedBikes.push(bike)
-      this.setSelectedBike(bike.model.replace('Zontes ', ''))
-      try {
-        localStorage.setItem('ayg_user', JSON.stringify(this.user))
-      } catch (e) {
-        console.warn('Failed to save user:', e)
-      }
+      return res
     },
 
     addOrder(order) {
-      if (!this.user) {
-        this.user = createNewUser()
-      }
+      if (!this.user) return
       if (!this.user.orders) this.user.orders = []
       this.user.orders.unshift(order)
-      try {
-        localStorage.setItem('ayg_user', JSON.stringify(this.user))
-      } catch (e) {
-        console.warn('Failed to save order to user:', e)
-      }
     }
   }
 })

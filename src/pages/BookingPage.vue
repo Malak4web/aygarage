@@ -370,9 +370,6 @@ const handleConfirmBooking = async () => {
         userStore.user.bookings = []
       }
       userStore.user.bookings.unshift(createdBooking)
-      try {
-        localStorage.setItem('ayg_user', JSON.stringify(userStore.user))
-      } catch (e) {}
     }
 
     bookingConfirmed.value = true
