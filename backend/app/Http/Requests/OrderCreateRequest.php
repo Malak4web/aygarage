@@ -67,6 +67,8 @@ class OrderCreateRequest extends FormRequest
 
     public function rules(): array
     {
+        $allowedPaymentMethods = collect(Setting::get('payment_methods', []))->pluck('id')->all() ?: ['cod', 'pickup'];
+
         $rules = [
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*' => ['required', 'array'],
@@ -79,7 +81,7 @@ class OrderCreateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^01[0125]\d{8}$/'],
             'delivery_method' => ['required', 'string', 'in:home,pickup'],
-            'payment_method' => ['required', 'string', 'in:cod,pickup'],
+            'payment_method' => ['required', 'string', 'in:' . implode(',', $allowedPaymentMethods)],
             'coupon_code' => ['nullable', 'string', 'max:50'],
         ];
 
@@ -109,23 +111,30 @@ class OrderCreateRequest extends FormRequest
                         continue;
                     }
 
-                    $hasId = (!empty($item['productId']) && is_string($item['productId']))
-                        || (!empty($item['product_id']) && is_string($item['product_id']))
-                        || (!empty($item['slug']) && is_string($item['slug']));
+                    if (!$validator->errors()->has("items.{$idx}.productId")
+                        && !$validator->errors()->has("items.{$idx}.product_id")
+                        && !$validator->errors()->has("items.{$idx}.slug")) {
+                        $hasId = (!empty($item['productId']) && is_string($item['productId']))
+                            || (!empty($item['product_id']) && is_string($item['product_id']))
+                            || (!empty($item['slug']) && is_string($item['slug']));
 
-                    if (!$hasId) {
-                        $validator->errors()->add("items.{$idx}", 'معرّف المنتج مطلوب');
+                        if (!$hasId) {
+                            $validator->errors()->add("items.{$idx}", 'معرّف المنتج مطلوب');
+                        }
                     }
                 }
             }
 
-            // Validate delivery and payment method alignment
             $delivery = $this->input('delivery_method');
             $payment = $this->input('payment_method');
-            if ($delivery === 'home' && $payment !== 'cod') {
-                $validator->errors()->add('payment_method', 'طريقة الدفع غير متوافقة مع التوصيل المنزلي (المتاح كاش عند الاستلام فقط)');
-            } elseif ($delivery === 'pickup' && $payment !== 'pickup') {
-                $validator->errors()->add('payment_method', 'طريقة الدفع غير متوافقة مع استلام الجراج (المتاح الدفع عند الاستلام في الجراج)');
+
+            // Validate delivery and payment method alignment only if payment_method is fundamentally valid
+            if (!$validator->errors()->has('payment_method')) {
+                if ($delivery === 'home' && $payment !== 'cod') {
+                    $validator->errors()->add('payment_method', 'طريقة الدفع غير متوافقة مع التوصيل المنزلي (المتاح كاش عند الاستلام فقط)');
+                } elseif ($delivery === 'pickup' && $payment !== 'pickup') {
+                    $validator->errors()->add('payment_method', 'طريقة الدفع غير متوافقة مع استلام الجراج (المتاح الدفع عند الاستلام في الجراج)');
+                }
             }
 
             // Validate governorate & area against settings

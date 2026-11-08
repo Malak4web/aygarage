@@ -124,16 +124,21 @@ class UserSeeder extends Seeder
             );
         }
 
-        // Demo Booking BK-1042
+        // Demo Booking BK-1042 (Ensure non-Friday date)
         $oilService = Service::where('code', 's1')->first();
         if ($oilService) {
+            $targetDate = Carbon::now('Africa/Cairo')->addDays(5);
+            if ($targetDate->isFriday()) {
+                $targetDate->addDay();
+            }
+
             Booking::updateOrCreate(
                 ['number' => 'BK-1042'],
                 [
                     'user_id' => $karim->id,
                     'user_bike_id' => $bike->id,
                     'service_id' => $oilService->id,
-                    'date' => Carbon::now()->addDays(5)->format('Y-m-d'),
+                    'date' => $targetDate->format('Y-m-d'),
                     'time' => '11:00',
                     'price_snapshot' => $oilService->price,
                     'status' => 'confirmed',
@@ -141,6 +146,27 @@ class UserSeeder extends Seeder
                     'notes' => 'صيانة دورية للـ 15 ألف',
                 ]
             );
+
+            // Demo Past Booking with status 'done', linked to service record
+            $pastBooking = Booking::updateOrCreate(
+                ['number' => 'BK-0980'],
+                [
+                    'user_id' => $karim->id,
+                    'user_bike_id' => $bike->id,
+                    'service_id' => $oilService->id,
+                    'date' => Carbon::now('Africa/Cairo')->subDays(27)->format('Y-m-d'),
+                    'time' => '11:00',
+                    'price_snapshot' => $oilService->price,
+                    'status' => 'done',
+                    'phone' => '01012345678',
+                    'notes' => 'صيانة سابقة مكتملة',
+                ]
+            );
+
+            $latestRecord = ServiceRecord::where('user_bike_id', $bike->id)->orderByDesc('date')->first();
+            if ($latestRecord) {
+                $latestRecord->update(['booking_id' => $pastBooking->id]);
+            }
         }
 
         // Demo Orders: 1042 and 0987

@@ -3,33 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BookingSlotRequest;
 use App\Models\Booking;
 use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class BookingSlotController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(BookingSlotRequest $request): JsonResponse
     {
-        $dateStr = $request->query('date');
-
-        if (!$dateStr || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
-            return response()->json([
-                'message' => 'تاريخ الحجز مطلوب وغير صالح (الصيغة المطلوبة: YYYY-MM-DD)',
-                'errors' => ['date' => ['تاريخ الحجز مطلوب وغير صالح']],
-            ], 422);
-        }
-
-        try {
-            $targetDate = Carbon::createFromFormat('Y-m-d', $dateStr, 'Africa/Cairo')->startOfDay();
-        } catch (\Throwable $e) {
-            return response()->json([
-                'message' => 'تاريخ الحجز غير صالح',
-                'errors' => ['date' => ['تاريخ الحجز غير صالح']],
-            ], 422);
-        }
+        $dateStr = $request->query('date') ?? $request->input('date');
+        $targetDate = Carbon::createFromFormat('Y-m-d', $dateStr, 'Africa/Cairo')->startOfDay();
 
         $today = Carbon::today('Africa/Cairo');
         $isPastDate = $targetDate->lt($today);

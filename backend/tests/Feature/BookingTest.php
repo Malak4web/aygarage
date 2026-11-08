@@ -265,4 +265,212 @@ class BookingTest extends TestCase
         $number = $response->json('data.number') ?: $response->json('number');
         $this->assertEquals('01012345678', Booking::where('number', $number)->value('phone'));
     }
+
+    public function test_time_outside_slots_off_slot_bogus_time_and_friday_rejected(): void
+    {
+        $futureSaturday = Carbon::now('Africa/Cairo')->next(Carbon::SATURDAY)->format('Y-m-d');
+        $futureFriday = Carbon::now('Africa/Cairo')->next(Carbon::FRIDAY)->format('Y-m-d');
+
+        // 1. Time outside slots (11:37)
+        $res1 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '11:37',
+        ]);
+        $res1->assertStatus(422)
+            ->assertJsonValidationErrors(['time']);
+
+        // 2. Off slot (12:00)
+        $res2 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '12:00',
+        ]);
+        $res2->assertStatus(422)
+            ->assertJsonValidationErrors(['time']);
+
+        // 3. Bogus time (25:00)
+        $res3 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '25:00',
+        ]);
+        $res3->assertStatus(422)
+            ->assertJsonValidationErrors(['time']);
+
+        // 4. Friday date
+        $res4 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureFriday,
+            'time' => '11:00',
+        ]);
+        $res4->assertStatus(422)
+            ->assertJsonValidationErrors(['date']);
+    }
+
+    public function test_date_beyond_window_and_array_date_on_slots(): void
+    {
+        // 1. Array date on /booking/slots returns 422, never 500
+        $resArray = $this->getJson('/api/booking/slots?date[]=x');
+        $resArray->assertStatus(422);
+
+        // 2. Date beyond 30 days window on /booking/slots returns 422
+        $resBeyond = $this->getJson('/api/booking/slots?date=2099-01-01');
+        $resBeyond->assertStatus(422);
+
+        // 3. Date beyond 30 days on /bookings returns 422
+        $resBookingBeyond = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => '2099-01-01',
+            'time' => '11:00',
+        ]);
+        $resBookingBeyond->assertStatus(422)
+            ->assertJsonValidationErrors(['date']);
+    }
+
+    public function test_inactive_service_and_array_service_id_rejected(): void
+    {
+        $futureSaturday = Carbon::now('Africa/Cairo')->next(Carbon::SATURDAY)->format('Y-m-d');
+
+        // 1. Inactive service
+        $this->service->update(['is_active' => false]);
+        $resInactive = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '11:00',
+        ]);
+        $resInactive->assertStatus(422)
+            ->assertJsonValidationErrors(['service_id']);
+
+        // 2. Array service_id
+        $this->service->update(['is_active' => true]);
+        $resArray = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => [$this->service->id],
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '11:00',
+        ]);
+        $resArray->assertStatus(422)
+            ->assertJsonValidationErrors(['service_id']);
+    }
+
+    public function test_another_user_bike_rejected(): void
+    {
+        $futureSaturday = Carbon::now('Africa/Cairo')->next(Carbon::SATURDAY)->format('Y-m-d');
+
+        $response = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeB->id, // belongs to user B
+            'date' => $futureSaturday,
+            'time' => '11:00',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['user_bike_id']);
+    }
+
+    public function test_cancel_rules_past_done_already_cancelled(): void
+    {
+        // 1. Done booking cannot be cancelled
+        $doneBooking = Booking::create([
+            'number' => 'BK-DONE',
+            'user_id' => $this->userA->id,
+            'user_bike_id' => $this->bikeA->id,
+            'service_id' => $this->service->id,
+            'date' => Carbon::now('Africa/Cairo')->subDays(5)->format('Y-m-d'),
+            'time' => '11:00',
+            'status' => 'done',
+        ]);
+
+        $resDone = $this->actingAs($this->userA, 'sanctum')->postJson("/api/me/bookings/{$doneBooking->number}/cancel");
+        $resDone->assertStatus(422)
+            ->assertJson(['message' => 'لا يمكن إلغاء حجز صيانة مكتمل']);
+
+        // 2. Past pending/confirmed booking cannot be cancelled
+        $pastBooking = Booking::create([
+            'number' => 'BK-PAST',
+            'user_id' => $this->userA->id,
+            'user_bike_id' => $this->bikeA->id,
+            'service_id' => $this->service->id,
+            'date' => Carbon::now('Africa/Cairo')->subDays(2)->format('Y-m-d'),
+            'time' => '11:00',
+            'status' => 'confirmed',
+        ]);
+
+        $resPast = $this->actingAs($this->userA, 'sanctum')->postJson("/api/me/bookings/{$pastBooking->number}/cancel");
+        $resPast->assertStatus(422)
+            ->assertJson(['message' => 'لا يمكن إلغاء موعد حجز في الماضي']);
+
+        // 3. Future booking cancelled twice
+        $futureDate = Carbon::now('Africa/Cairo')->next(Carbon::SATURDAY)->format('Y-m-d');
+        $futureBooking = Booking::create([
+            'number' => 'BK-FUTURE',
+            'user_id' => $this->userA->id,
+            'user_bike_id' => $this->bikeA->id,
+            'service_id' => $this->service->id,
+            'date' => $futureDate,
+            'time' => '11:00',
+            'status' => 'confirmed',
+        ]);
+
+        $cancel1 = $this->actingAs($this->userA, 'sanctum')->postJson("/api/me/bookings/{$futureBooking->number}/cancel");
+        $cancel1->assertStatus(200);
+
+        $cancel2 = $this->actingAs($this->userA, 'sanctum')->postJson("/api/me/bookings/{$futureBooking->number}/cancel");
+        $cancel2->assertStatus(422)
+            ->assertJson(['message' => 'هذا الحجز تم إلغاؤه بالفعل']);
+    }
+
+    public function test_cancelled_booking_frees_slot(): void
+    {
+        $futureSaturday = Carbon::now('Africa/Cairo')->next(Carbon::SATURDAY)->format('Y-m-d');
+
+        // Fill slot (capacity 2)
+        $res1 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '11:00',
+        ]);
+        $res1->assertStatus(201);
+        $num1 = $res1->json('data.number') ?: $res1->json('number');
+
+        $res2 = $this->actingAs($this->userB, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeB->id,
+            'date' => $futureSaturday,
+            'time' => '11:00',
+        ]);
+        $res2->assertStatus(201);
+
+        // Slot is full
+        $slotFull = $this->getJson("/api/booking/slots?date={$futureSaturday}");
+        $slot11 = collect($slotFull->json('data'))->firstWhere('time', '11:00');
+        $this->assertFalse($slot11['available']);
+
+        // User A cancels their booking
+        $cancelRes = $this->actingAs($this->userA, 'sanctum')->postJson("/api/me/bookings/{$num1}/cancel");
+        $cancelRes->assertStatus(200);
+
+        // Slot is now freed
+        $slotFreed = $this->getJson("/api/booking/slots?date={$futureSaturday}");
+        $slot11Freed = collect($slotFreed->json('data'))->firstWhere('time', '11:00');
+        $this->assertTrue($slot11Freed['available']);
+        $this->assertEquals(1, $slot11Freed['booked']);
+
+        // User A can book again into that freed slot
+        $res3 = $this->actingAs($this->userA, 'sanctum')->postJson('/api/bookings', [
+            'service_id' => $this->service->id,
+            'bike_id' => $this->bikeA->id,
+            'date' => $futureSaturday,
+            'time' => '11:00',
+        ]);
+        $res3->assertStatus(201);
+    }
 }

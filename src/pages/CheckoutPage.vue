@@ -171,24 +171,31 @@
                   </template>
                 </div>
                 <!-- Line Stock Error & Action Button -->
-                <div v-if="lineErrors[idx]" class="line-stock-error">
-                  <span class="stock-err-msg">{{ lineErrors[idx].message }}</span>
-                  <button
-                    v-if="lineErrors[idx].availableStock > 0"
-                    type="button"
-                    class="btn-fix-stock"
-                    @click="fixLineQty(item.lineId, idx, lineErrors[idx].availableStock)"
-                  >
-                    عدّل الكمية للمتاح ({{ lineErrors[idx].availableStock }})
-                  </button>
-                  <button
-                    v-else
-                    type="button"
-                    class="btn-fix-stock remove"
-                    @click="removeLineItem(item.lineId, idx)"
-                  >
-                    شيل من السلة
-                  </button>
+                <div v-if="lineErrors[item.lineId]" class="line-stock-error">
+                  <span class="stock-err-msg">{{ lineErrors[item.lineId].message }}</span>
+                  <template v-if="lineErrors[item.lineId].isOptionError">
+                    <RouterLink to="/cart" class="btn-fix-stock" style="text-decoration: none;">
+                      تعديل الخيار في السلة
+                    </RouterLink>
+                  </template>
+                  <template v-else-if="lineErrors[item.lineId].availableStock > 0">
+                    <button
+                      type="button"
+                      class="btn-fix-stock"
+                      @click="fixLineQty(item.lineId, lineErrors[item.lineId].availableStock)"
+                    >
+                      عدّل الكمية للمتاح ({{ lineErrors[item.lineId].availableStock }})
+                    </button>
+                  </template>
+                  <template v-else-if="lineErrors[item.lineId].availableStock === 0">
+                    <button
+                      type="button"
+                      class="btn-fix-stock remove"
+                      @click="removeLineItem(item.lineId)"
+                    >
+                      شيل من السلة
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -286,14 +293,14 @@ watch(
   { immediate: true }
 )
 
-const fixLineQty = (lineId, idx, available) => {
+const fixLineQty = (lineId, available) => {
   cartStore.updateQty(lineId, available)
-  delete lineErrors.value[idx]
+  delete lineErrors.value[lineId]
 }
 
-const removeLineItem = (lineId, idx) => {
+const removeLineItem = (lineId) => {
   cartStore.removeItem(lineId)
-  delete lineErrors.value[idx]
+  delete lineErrors.value[lineId]
   if (cartStore.items.length === 0) {
     router.replace('/cart')
   }
@@ -374,16 +381,22 @@ const handleConfirmOrder = async () => {
   } catch (error) {
     if (error?.status === 422 && error.errors) {
       const newErrors = {}
+      const cartItems = cartStore.items
       for (const [key, msg] of Object.entries(error.errors)) {
         const match = key.match(/^items\.(\d+)/)
         if (match) {
           const idx = parseInt(match[1])
+          const lineItem = cartItems[idx]
+          const targetKey = lineItem ? lineItem.lineId : idx
           const strMsg = Array.isArray(msg) ? msg[0] : String(msg)
           const availMatch = strMsg.match(/المتاح:\s*(\d+)/)
-          const availableStock = availMatch ? parseInt(availMatch[1]) : 0
-          newErrors[idx] = {
+          const isOptionError = key.includes('option') || strMsg.includes('الاختيار ده مش متاح') || strMsg.includes('أحد الخيارات')
+          const availableStock = availMatch ? parseInt(availMatch[1]) : (strMsg.includes('غير متوفر') ? 0 : null)
+
+          newErrors[targetKey] = {
             message: strMsg,
-            availableStock
+            availableStock,
+            isOptionError
           }
         }
       }

@@ -14,7 +14,7 @@
         </p>
         <p class="desc">
           مستنينك في جراج أبو يوسف يوم <b>{{ selectedDay.name }} {{ selectedDay.num }} {{ selectedDay.month }}</b> الساعة <b>{{ selectedTime }}</b>.
-          هيوصلك تذكير على الواتساب قبل الميعاد بساعتين.
+          هنكلمك نأكد الميعاد قبل ما تيجي.
         </p>
         <div class="confirmed-actions">
           <RouterLink to="/account?tab=bookings" class="btn">
@@ -48,7 +48,12 @@
             />
           </div>
           <div v-else class="no-bikes-hint">
-            معندكش موتوسيكلات مسجلة في حسابك، حدد بيانات موتوسيكلك في الأسفل:
+            <template v-if="!userStore.isAuthenticated">
+              سجّل دخول عشان تختار موتوسيكلك المحفوظ، أو حدد موديل الموتوسيكل والعداد في الأسفل (تأكيد الحجز يتطلب تسجيل الدخول).
+            </template>
+            <template v-else>
+              معندكش موتوسيكلات مسجلة في حسابك، حدد بيانات موتوسيكلك في الأسفل:
+            </template>
           </div>
 
           <div style="margin-top: 10px">
@@ -131,7 +136,14 @@
             </button>
           </div>
 
-          <div class="times" role="group" aria-label="الأوقات المتاحة">
+          <div v-if="slotsLoading" style="padding: 16px 0; text-align: center; color: var(--mu);">
+            جاري تحميل المواعيد المتاحة...
+          </div>
+          <div v-else-if="slotsError" style="padding: 16px 0; text-align: center;">
+            <p style="color: var(--sale); margin-bottom: 8px;">{{ slotsError }}</p>
+            <button type="button" class="btn sm o" @click="loadSlots(selectedDay.dateString)">إعادة المحاولة</button>
+          </div>
+          <div v-else class="times" role="group" aria-label="الأوقات المتاحة">
             <button
               v-for="time in timeSlots"
               :key="time.val"
@@ -263,17 +275,20 @@ const restorePendingChoices = () => {
   } catch (e) {}
 }
 
-// Item 25: Dynamically generate next 7 days from today
+// Item 25: Dynamically generate next 7 days from today (local timezone safe)
 const generateNext7Days = () => {
   const dayNames = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت']
   const result = []
   const today = new Date()
   for (let i = 0; i < 7; i++) {
-    const d = new Date(today)
-    d.setDate(today.getDate() + i)
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i)
     const dayOfWeek = d.getDay()
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const dateString = `${year}-${month}-${day}`
     result.push({
-      dateString: d.toISOString().slice(0, 10),
+      dateString,
       name: dayNames[dayOfWeek],
       num: d.getDate(),
       month: d.toLocaleDateString('ar-EG-u-nu-latn', { month: 'short' }),
@@ -306,12 +321,20 @@ const defaultTimeSlots = [
 const timeSlots = ref([...defaultTimeSlots])
 const selectedTime = ref('2:00 م')
 
-const loadingSlots = ref(false)
+let slotsRequestSeq = 0
+const slotsLoading = ref(false)
+const slotsError = ref('')
+
 const loadSlots = async (dateStr) => {
   if (!dateStr) return
-  loadingSlots.value = true
+  const currentSeq = ++slotsRequestSeq
+  slotsLoading.value = true
+  slotsError.value = ''
+
   try {
     const res = await api.getSlots(dateStr)
+    if (currentSeq !== slotsRequestSeq) return
+
     const list = Array.isArray(res) ? res : (res?.data || [])
     if (list.length > 0) {
       timeSlots.value = list.map((s) => ({
@@ -321,6 +344,17 @@ const loadSlots = async (dateStr) => {
         available: !!s.available
       }))
 
+      // If today and all slots are past/off, advance to next open day (Item B.1)
+      const isToday = dateStr === days.value[0]?.dateString
+      const allOff = timeSlots.value.every((s) => s.off)
+      if (isToday && allOff) {
+        const nextDay = days.value.slice(1).find((d) => !d.off)
+        if (nextDay && selectedDay.value?.dateString === dateStr) {
+          selectedDay.value = nextDay
+          return
+        }
+      }
+
       // If current selection is off or not in list, select first available
       const current = timeSlots.value.find((s) => s.val === selectedTime.value || s.time === selectedTime.value)
       if (!current || current.off) {
@@ -329,11 +363,17 @@ const loadSlots = async (dateStr) => {
           selectedTime.value = firstAvail.val
         }
       }
+    } else {
+      timeSlots.value = []
     }
   } catch (err) {
-    // Keep fallback slots
+    if (currentSeq !== slotsRequestSeq) return
+    slotsError.value = 'تعذر تحميل المواعيد المتاحة'
+    timeSlots.value = []
   } finally {
-    loadingSlots.value = false
+    if (currentSeq === slotsRequestSeq) {
+      slotsLoading.value = false
+    }
   }
 }
 
@@ -419,6 +459,9 @@ const handleConfirmBooking = async () => {
     } catch (e) {}
   } catch (err) {
     bookingError.value = err?.message || 'حدث خطأ أثناء حجز الموعد، برجاء المحاولة لاحقاً.'
+    if (err?.message?.includes('محجوز بالكامل') || err?.status === 422) {
+      await loadSlots(selectedDay.value.dateString)
+    }
   } finally {
     isSubmitting.value = false
   }

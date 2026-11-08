@@ -12,12 +12,32 @@ class BookingResource extends JsonResource
     {
         $timeArabic = null;
         if ($this->time) {
-            $parsed = Carbon::createFromFormat('H:i', substr($this->time, 0, 5));
-            if ($parsed) {
-                $hour = (int) $parsed->format('g');
-                $minute = $parsed->format('i');
-                $ampm = $parsed->format('A') === 'AM' ? 'ص' : 'م';
-                $timeArabic = "{$hour}:{$minute} {$ampm}";
+            try {
+                $parsed = Carbon::createFromFormat('H:i', substr($this->time, 0, 5));
+                if ($parsed) {
+                    $hour = (int) $parsed->format('g');
+                    $minute = $parsed->format('i');
+                    $ampm = $parsed->format('A') === 'AM' ? 'ص' : 'م';
+                    $timeArabic = "{$hour}:{$minute} {$ampm}";
+                }
+            } catch (\Throwable $e) {
+                $timeArabic = (string) $this->time;
+            }
+        }
+
+        $dateStr = null;
+        $dateArabic = null;
+        if ($this->date) {
+            try {
+                $parsedDate = Carbon::parse($this->date)->locale('ar');
+                $dateStr = $parsedDate->format('Y-m-d');
+                $dayName = $parsedDate->translatedFormat('l');
+                $dayNum = $parsedDate->format('j');
+                $monthName = $parsedDate->translatedFormat('F');
+                $dateArabic = "{$dayName} {$dayNum} {$monthName}";
+            } catch (\Throwable $e) {
+                $dateStr = (string) $this->date;
+                $dateArabic = (string) $this->date;
             }
         }
 
@@ -40,13 +60,18 @@ class BookingResource extends JsonResource
             $costFormatted = $this->service->price > 0 ? number_format($this->service->price) . ' ج.م' : 'حسب الفحص';
         }
 
-        $canCancel = in_array($this->status, ['pending', 'confirmed'], true)
-            && $this->date
-            && Carbon::createFromFormat(
-                'Y-m-d H:i',
-                Carbon::parse($this->date)->format('Y-m-d') . ' ' . substr($this->time, 0, 5),
-                'Africa/Cairo'
-            )->isFuture();
+        $canCancel = false;
+        if (in_array($this->status, ['pending', 'confirmed'], true) && $this->date && $this->time) {
+            try {
+                $canCancel = Carbon::createFromFormat(
+                    'Y-m-d H:i',
+                    Carbon::parse($this->date)->format('Y-m-d') . ' ' . substr($this->time, 0, 5),
+                    'Africa/Cairo'
+                )->isFuture();
+            } catch (\Throwable $e) {
+                $canCancel = false;
+            }
+        }
 
         return [
             'id' => $this->number ?: (string) $this->id,
@@ -61,7 +86,9 @@ class BookingResource extends JsonResource
             'service' => $this->service?->name ?: 'صيانة',
             'serviceName' => $this->service?->name ?: 'صيانة',
             'serviceObj' => new ServiceResource($this->whenLoaded('service')),
-            'date' => $this->date ? Carbon::parse($this->date)->format('Y-m-d') : null,
+            'date' => $dateArabic ?: $dateStr,
+            'dateRaw' => $dateStr,
+            'dateFormatted' => $dateArabic ?: $dateStr,
             'time' => $timeArabic ?: substr($this->time, 0, 5),
             'timeRaw' => substr($this->time, 0, 5),
             'timeArabic' => $timeArabic,

@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Service;
 use App\Models\Setting;
 use App\Models\UserBike;
 use App\Support\Phone;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -25,6 +27,9 @@ class BookingCreateRequest extends FormRequest
         }
 
         $serviceId = $this->input('service_id') ?? $this->input('serviceId');
+        if (is_numeric($serviceId)) {
+            $serviceId = (string) $serviceId;
+        }
 
         $time = $this->input('time');
         if (is_string($time)) {
@@ -64,8 +69,8 @@ class BookingCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'service_id' => ['required'],
-            'date' => ['required', 'date_format:Y-m-d'],
+            'service_id' => ['required', 'string', 'max:50'],
+            'date' => ['required', 'string', 'date_format:Y-m-d'],
             'time' => ['required', 'string', 'max:10'],
             'user_bike_id' => ['nullable', 'integer'],
             'custom_model' => ['nullable', 'string', 'max:100'],
@@ -78,6 +83,62 @@ class BookingCreateRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
+            // 1. Validate service exists and is active (Item 4 & 10)
+            $serviceId = $this->input('service_id');
+            if (is_string($serviceId)) {
+                $service = Service::where('id', $serviceId)->orWhere('code', $serviceId)->first();
+                if (!$service) {
+                    $validator->errors()->add('service_id', 'الخدمة المطلوبة غير متوفرة');
+                } elseif (!$service->is_active) {
+                    $validator->errors()->add('service_id', 'الخدمة المختارة غير متاحة حالياً');
+                }
+            }
+
+            // 2. Validate time is a valid, open slot in booking_slots (Item 2)
+            $time = $this->input('time');
+            if (is_string($time)) {
+                $slots = Setting::get('booking_slots', []);
+                $matchedSlot = collect($slots)->first(function ($s) use ($time) {
+                    return $s['time'] === $time || (isset($s['label']) && $s['label'] === $time);
+                });
+
+                if (!$matchedSlot || !empty($matchedSlot['off'])) {
+                    $validator->errors()->add('time', 'الميعاد ده مش متاح');
+                }
+            }
+
+            // 3. Validate date is within booking window (today through 30 days) and not Friday (Item 2)
+            $date = $this->input('date');
+            if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                try {
+                    $targetDate = Carbon::createFromFormat('Y-m-d', $date, 'Africa/Cairo')->startOfDay();
+                    $today = Carbon::today('Africa/Cairo');
+                    $daysAhead = (int) Setting::get('booking_days_ahead', 30);
+                    $maxDate = (clone $today)->addDays($daysAhead);
+
+                    if ($targetDate->lt($today)) {
+                        $validator->errors()->add('date', 'الميعاد المختار قد مضى بالفعل، يرجى اختيار موعد قادم');
+                    } elseif ($targetDate->gt($maxDate)) {
+                        $validator->errors()->add('date', "تاريخ الحجز يتجاوز الحد الأقصى المسموح به للحجز ({$daysAhead} يوماً)");
+                    } elseif ($targetDate->isFriday()) {
+                        $validator->errors()->add('date', 'الجراج إجازة يوم الجمعة، يرجى اختيار يوم آخر');
+                    }
+                } catch (\Throwable $e) {
+                    $validator->errors()->add('date', 'تاريخ الحجز غير صالح');
+                }
+            }
+
+            // 4. Validate past time today (Item 2)
+            if (is_string($date) && is_string($time) && empty($validator->errors()->get('date')) && empty($validator->errors()->get('time'))) {
+                try {
+                    $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}", 'Africa/Cairo');
+                    if ($slotDateTime->isPast()) {
+                        $validator->errors()->add('time', 'الميعاد المختار قد مضى بالفعل، يرجى اختيار موعد قادم');
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            // 5. Bike validation
             $userBikeId = $this->input('user_bike_id');
             $customModel = $this->input('custom_model');
 
@@ -101,7 +162,9 @@ class BookingCreateRequest extends FormRequest
     {
         return [
             'service_id.required' => 'الخدمة المطلوبة يجب تحديدها',
+            'service_id.string' => 'معرّف الخدمة غير صالح',
             'date.required' => 'تاريخ الحجز مطلوب',
+            'date.string' => 'تاريخ الحجز غير صالح',
             'date.date_format' => 'تاريخ الحجز غير صالح (الصيغة المطلوبة: YYYY-MM-DD)',
             'time.required' => 'وقت الحجز مطلوب',
             'time.string' => 'وقت الحجز غير صالح',

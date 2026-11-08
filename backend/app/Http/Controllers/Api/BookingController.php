@@ -58,7 +58,7 @@ class BookingController extends Controller
             ], 422);
         }
 
-        // 2. Concurrency & capacity check inside transaction
+        // 2. Concurrency & capacity check inside transaction with 3 retry attempts on deadlock
         $booking = DB::transaction(function () use ($request, $date, $time) {
             $capacity = (int) Setting::get('booking_capacity_per_slot', 2);
 
@@ -80,23 +80,20 @@ class BookingController extends Controller
 
             // Price snapshot strictly from service in DB
             $serviceId = $request->input('service_id');
-            $service = Service::where('id', $serviceId)->orWhere('code', $serviceId)->first();
-            if (!$service) {
-                abort(response()->json([
-                    'message' => 'الخدمة المطلوبة غير متوفرة',
-                    'errors' => ['service_id' => ['الخدمة المطلوبة غير متوفرة']],
-                ], 422));
-            }
-
+            $service = Service::where('id', $serviceId)->orWhere('code', $serviceId)->firstOrFail();
             $priceSnapshot = $service->price;
 
-            // Sequential number generator (BK-XXXX)
+            // Sequential number generator (BK-XXXX) with uniqueness guarantee
             $lastBooking = Booking::lockForUpdate()->orderByDesc('id')->first();
             $lastNum = 1042;
             if ($lastBooking && preg_match('/BK-(\d+)/', $lastBooking->number, $m)) {
                 $lastNum = max($lastNum, intval($m[1]));
             }
-            $number = 'BK-' . ($lastNum + 1);
+            $candidate = $lastNum + 1;
+            while (Booking::where('number', 'BK-' . $candidate)->exists()) {
+                $candidate++;
+            }
+            $number = 'BK-' . $candidate;
 
             return Booking::create([
                 'number' => $number,
@@ -112,7 +109,7 @@ class BookingController extends Controller
                 'phone' => $request->input('phone'),
                 'notes' => $request->input('notes'),
             ]);
-        });
+        }, 3);
 
         return (new BookingResource($booking->load(['service', 'userBike'])))
             ->response()
@@ -157,7 +154,9 @@ class BookingController extends Controller
                 ], 422);
             }
         } catch (\Throwable $e) {
-            // If date/time cannot be parsed, allow proceed or handle
+            return response()->json([
+                'message' => 'تعذر التحقق من تاريخ الميعاد لإلغائه',
+            ], 422);
         }
 
         $booking->update(['status' => 'cancelled']);
