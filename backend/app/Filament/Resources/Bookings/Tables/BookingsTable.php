@@ -130,7 +130,12 @@ class BookingsTable
                         Select::make('new_bike_model_code')
                             ->label('موديل الموتوسيكل الجديد')
                             ->options(fn () => BikeModel::pluck('name', 'code')->toArray())
-                            ->default('ZT350-T')
+                            ->default(function () use ($record) {
+                                // Use the model the customer typed on the booking when it matches a known code.
+                                $typed = strtoupper(trim(preg_replace('/^Zontes\s+/i', '', (string) ($record?->custom_model ?? ''))));
+
+                                return BikeModel::where('code', $typed)->value('code');
+                            })
                             ->visible(fn ($get) => $get('bike_choice') === 'new')
                             ->required(fn ($get) => $get('bike_choice') === 'new'),
 
@@ -173,8 +178,8 @@ class BookingsTable
                             if ($data['bike_choice'] === 'new' || str_starts_with($data['bike_choice'] ?? '', 'new')) {
                                 $bike = UserBike::create([
                                     'user_id' => $record->user_id,
-                                    'bike_model_code' => $data['new_bike_model_code'] ?? 'ZT350-T',
-                                    'model_name' => $record->custom_model,
+                                    'bike_model_code' => $data['new_bike_model_code'],
+                                    'model_name' => BikeModel::where('code', $data['new_bike_model_code'])->value('name') ?? $record->custom_model,
                                     'plate' => $data['new_bike_plate'] ?? null,
                                     'year' => (int) date('Y'),
                                     'odometer' => (int) $data['odometer'],

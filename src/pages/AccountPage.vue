@@ -133,7 +133,7 @@
               <div class="box">
                 <div class="box-head">
                   <h3>سجل الصيانة</h3>
-                  <a href="#pdf" @click.prevent="downloadServicePdf">تحميل PDF</a>
+                  <a href="#print" @click.prevent="downloadServicePdf">طباعة / حفظ PDF</a>
                 </div>
 
                 <div v-if="serviceHistoryList.length === 0" style="padding: 24px; text-align: center; color: var(--mu);">
@@ -604,13 +604,14 @@ const loadAccountData = async () => {
   loading.value = true
   accountError.value = ''
   try {
-    const [userData, bks, ords, prods, hist] = await Promise.all([
+    const [userData, bks, ords, hist] = await Promise.all([
       userStore.fetchUser(),
       api.getUserBookings(),
       api.getUserOrders(),
-      api.getProducts({ model: userStore.selectedBike || undefined, perPage: 8 }),
       api.getServiceHistory()
     ])
+    // Parts for the customer's own bike, not just the model picked in the header.
+    const prods = await api.getProducts({ model: accountBikeModel.value || undefined, perPage: 8 })
     if (userData) {
       settingsName.value = userData.name || ''
       settingsPhone.value = userData.phone || ''
@@ -694,9 +695,17 @@ const userAddresses = computed(() => {
   return []
 })
 
+// The header choice if it is one of the customer's bikes, otherwise their first bike.
+const accountBikeModel = computed(() => {
+  const bikes = userStore.user?.savedBikes || []
+  const picked = userStore.selectedBike
+  if (picked && bikes.some((b) => b.bikeModelCode === picked)) return picked
+  return bikes[0]?.bikeModelCode || picked || null
+})
+
 const compatibleProducts = computed(() => {
-  if (userStore.selectedBike) {
-    return allProducts.value.filter((p) => doesFit(p, userStore.selectedBike) !== false).slice(0, 5)
+  if (accountBikeModel.value) {
+    return allProducts.value.filter((p) => doesFit(p, accountBikeModel.value) !== false).slice(0, 5)
   }
   return allProducts.value.slice(0, 5)
 })
@@ -968,8 +977,30 @@ const handleLogout = () => {
   router.push('/login')
 }
 
+// Opens a clean printable page of the service history; the browser's print
+// dialog also offers "Save as PDF".
 const downloadServicePdf = () => {
-  toastStore.show('جاري تجهيز وتحميل كشف سجل الصيانة بصيغة PDF.', 'info')
+  if (serviceHistoryList.value.length === 0) {
+    toastStore.show('لسه مفيش زيارات صيانة مسجلة', 'info')
+    return
+  }
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+  const rows = serviceHistoryList.value
+    .map((r) => `<tr><td>${esc(r.date)}</td><td>${esc(r.odo ?? r.odometer)}</td><td>${esc(r.work)}</td><td>${esc(r.tech ?? r.technician)}</td><td>${esc(r.cost)}</td></tr>`)
+    .join('')
+  const win = window.open('', '_blank')
+  if (!win) {
+    toastStore.show('المتصفح منع فتح صفحة الطباعة، اسمح بالنوافذ المنبثقة وحاول تاني', 'warning')
+    return
+  }
+  win.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل الصيانة - جراج أبو يوسف</title>
+<style>body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#111}h1{font-size:20px;margin:0 0 4px}p{color:#555;margin:0 0 16px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border:1px solid #ccc;padding:8px;text-align:right}th{background:#f3f3f3}</style></head>
+<body><h1>سجل الصيانة · جراج أبو يوسف</h1><p>${esc(userStore.user?.name)} · ${esc(userStore.user?.phone)}</p>
+<table><thead><tr><th>التاريخ</th><th>العداد</th><th>الشغل</th><th>الفني</th><th>التكلفة</th></tr></thead><tbody>${rows}</tbody></table></body></html>`)
+  win.document.close()
+  win.focus()
+  win.print()
 }
 </script>
 

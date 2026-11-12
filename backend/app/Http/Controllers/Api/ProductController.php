@@ -29,14 +29,18 @@ class ProductController extends Controller
 
         // Search query q (Review 3 Item 9: match name, brand, sku, description, and category name/slug)
         if ($request->filled('q')) {
-            $search = '%' . trim($request->query('q')) . '%';
-            $query->where(function ($q) use ($search) {
+            $term = trim($request->query('q'));
+            $search = '%' . $term . '%';
+            $categorySlugs = self::categoriesForSearchTerm($term);
+            $query->where(function ($q) use ($search, $categorySlugs) {
                 $q->where('name', 'like', $search)
                   ->orWhere('brand', 'like', $search)
                   ->orWhere('sku', 'like', $search)
                   ->orWhere('description', 'like', $search)
-                  ->orWhereHas('category', function ($catQ) use ($search) {
-                      $catQ->where('name', 'like', $search)->orWhere('slug', 'like', $search);
+                  ->orWhereHas('category', function ($catQ) use ($search, $categorySlugs) {
+                      $catQ->where('name', 'like', $search)
+                          ->orWhere('slug', 'like', $search)
+                          ->orWhereIn('slug', $categorySlugs);
                   });
             });
         }
@@ -251,5 +255,36 @@ class ProductController extends Controller
             ->get();
 
         return response()->json(ReviewResource::collection($reviews));
+    }
+
+    /**
+     * Words customers type for a category, in singular or plural, so
+     * searching "زيت" also finds every product in "زيوت".
+     */
+    private static function categoriesForSearchTerm(string $term): array
+    {
+        $words = [
+            'oils' => ['زيت', 'زيوت', 'oil'],
+            'filters' => ['فلتر', 'فلاتر', 'filter'],
+            'brakes' => ['فرامل', 'فرملة', 'تيل', 'brake'],
+            'batteries' => ['بطارية', 'بطاريه', 'بطاريات', 'كهرباء', 'شمعة', 'بوجيه', 'battery'],
+            'tires' => ['إطار', 'اطار', 'إطارات', 'اطارات', 'كاوتش', 'tire', 'tyre'],
+            'transmission' => ['جنزير', 'سلسلة', 'ترس', 'نقل حركة', 'chain'],
+            'helmets' => ['خوذة', 'خوذه', 'خوذ', 'جوانتي', 'جاكيت', 'helmet'],
+            'accessories' => ['إكسسوار', 'اكسسوار', 'إكسسوارات', 'اكسسوارات'],
+        ];
+
+        $term = mb_strtolower($term);
+        $slugs = [];
+        foreach ($words as $slug => $list) {
+            foreach ($list as $word) {
+                if (str_contains($term, mb_strtolower($word))) {
+                    $slugs[] = $slug;
+                    break;
+                }
+            }
+        }
+
+        return $slugs;
     }
 }

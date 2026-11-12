@@ -187,6 +187,36 @@ class FinalReviewTest extends TestCase
         $this->assertSame(0, $product->images()->count());
     }
 
+    public function test_dashboard_widgets_render_with_real_counts(): void
+    {
+        $this->actingAs($this->admin());
+
+        Livewire::test(\App\Filament\Widgets\StatsOverview::class)
+            ->assertOk()
+            ->assertSee('حجوزات صيانة اليوم')
+            ->assertSee('الطلبات الجديدة');
+
+        // Yuasa battery is seeded with stock 0, so it must show as low stock.
+        Livewire::test(\App\Filament\Widgets\LowStockProductsTable::class)
+            ->assertOk()
+            ->assertSee('Yuasa');
+
+        Livewire::test(\App\Filament\Widgets\TodayBookingsTable::class)->assertOk();
+    }
+
+    public function test_search_singular_word_finds_whole_category(): void
+    {
+        $oils = Product::whereHas('category', fn ($q) => $q->where('slug', 'oils'))
+            ->where('is_active', true)
+            ->count();
+
+        $json = $this->getJson('/api/products?perPage=48&q='.urlencode('زيت'))->assertOk()->json();
+        $slugs = collect($json['data'])->pluck('slug');
+
+        $this->assertGreaterThanOrEqual($oils, $slugs->count());
+        $this->assertContains('castrol-power1-racing-10w40', $slugs->all());
+    }
+
     public function test_malformed_booking_settings_never_return_500(): void
     {
         $customer = User::where('role', 'customer')->firstOrFail();
