@@ -117,6 +117,8 @@ class UsedBikeForm
                     ->relationship('images')
                     ->label('صور الموتوسيكل')
                     ->orderColumn('sort')
+                    ->reorderable()
+                    ->addActionLabel('إضافة صورة')
                     ->schema([
                         FileUpload::make('path')
                             ->label('الصورة')
@@ -126,10 +128,6 @@ class UsedBikeForm
                             ->directory('bikes')
                             ->visibility('public')
                             ->required(),
-                        TextInput::make('sort')
-                            ->label('الترتيب')
-                            ->numeric()
-                            ->default(0),
                     ])
                     ->columns(2)
                     ->collapsible()

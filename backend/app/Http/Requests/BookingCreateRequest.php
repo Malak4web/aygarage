@@ -35,7 +35,10 @@ class BookingCreateRequest extends FormRequest
         if (is_string($time)) {
             $time = trim($time);
             $slots = Setting::get('booking_slots', []);
-            foreach ($slots as $s) {
+            foreach (is_array($slots) ? $slots : [] as $s) {
+                if (! is_array($s) || ! isset($s['time']) || ! is_string($s['time'])) {
+                    continue;
+                }
                 if ($time === $s['time'] || (isset($s['label']) && $time === $s['label'])) {
                     $time = $s['time'];
                     break;

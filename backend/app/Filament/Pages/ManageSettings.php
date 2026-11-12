@@ -102,14 +102,17 @@ class ManageSettings extends Page
                                 TextInput::make('delivery_fee')
                                     ->label('سعر التوصيل الأساسي (ج.م)')
                                     ->numeric()
+                                    ->minValue(0)
                                     ->required(),
                                 TextInput::make('free_delivery_threshold')
                                     ->label('الحد الأدنى للشحن المجاني (ج.م)')
                                     ->numeric()
+                                    ->minValue(0)
                                     ->required(),
                                 TextInput::make('delivery_days_count')
                                     ->label('عدد أيام التوصيل (رقم)')
                                     ->numeric()
+                                    ->minValue(0)
                                     ->required(),
                                 TextInput::make('delivery_estimate_days')
                                     ->label('نص مدة التوصيل التقديرية')
@@ -123,10 +126,12 @@ class ManageSettings extends Page
                                 TextInput::make('booking_capacity_per_slot')
                                     ->label('سعة ميعاد الحجز الواحد (عدد الموتوسيكلات)')
                                     ->numeric()
+                                    ->minValue(1)
                                     ->required(),
                                 TextInput::make('booking_days_ahead')
                                     ->label('الحد الأقصى لأيام الحجز المسبق')
                                     ->numeric()
+                                    ->minValue(1)
                                     ->default(30)
                                     ->required(),
                                 Repeater::make('booking_slots')
@@ -134,7 +139,10 @@ class ManageSettings extends Page
                                     ->schema([
                                         TextInput::make('time')
                                             ->label('التوقيت (24h مثل 13:00)')
-                                            ->required(),
+                                            ->required()
+                                            ->regex('/^([01]\d|2[0-3]):[0-5]\d$/')
+                                            ->validationMessages(['regex' => 'اكتب الوقت بالشكل 13:00'])
+                                            ->distinct(),
                                         TextInput::make('label')
                                             ->label('الاسم الظاهر (مثل 1:00 م)')
                                             ->required(),
@@ -143,6 +151,7 @@ class ManageSettings extends Page
                                             ->default(false),
                                     ])
                                     ->columns(3)
+                                    ->minItems(1)
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ])
@@ -163,6 +172,7 @@ class ManageSettings extends Page
                                             ->required(),
                                     ])
                                     ->columns(2)
+                                    ->minItems(1)
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ]),
@@ -173,8 +183,14 @@ class ManageSettings extends Page
                                 Repeater::make('payment_methods')
                                     ->label('طرق الدفع المتاحة في المتجر')
                                     ->schema([
-                                        TextInput::make('id')
-                                            ->label('رمز الطريقة (مثل cod, pickup)')
+                                        // Only these two are supported by checkout and the order rules.
+                                        \Filament\Forms\Components\Select::make('id')
+                                            ->label('الطريقة')
+                                            ->options([
+                                                'cod' => 'كاش عند الاستلام (توصيل)',
+                                                'pickup' => 'الدفع في الجراج (استلام)',
+                                            ])
+                                            ->distinct()
                                             ->required(),
                                         TextInput::make('title')
                                             ->label('اسم الطريقة الظاهر')
@@ -184,6 +200,8 @@ class ManageSettings extends Page
                                             ->required(),
                                     ])
                                     ->columns(3)
+                                    ->minItems(1)
+                                    ->maxItems(2)
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ]),

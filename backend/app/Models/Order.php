@@ -52,9 +52,9 @@ class Order extends Model
                 // When transitioning to cancelled: return stock
                 if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
                     \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
-                        foreach ($order->items as $item) {
+                        foreach ($order->items()->orderBy('product_id')->get() as $item) {
                             if ($item->product_id) {
-                                Product::where('id', $item->product_id)->increment('stock', $item->qty);
+                                Product::whereKey($item->product_id)->lockForUpdate()->first()?->increment('stock', $item->qty);
                             }
                         }
                     });

@@ -63,7 +63,9 @@ class OrderForm
                         ];
                         return array_merge($defaults, $opts);
                     })
-                    ->required(),
+                    // Chosen by the customer at checkout; shown for reference only.
+                    ->disabled()
+                    ->dehydrated(false),
                 DatePicker::make('delivery_date')
                     ->label('تاريخ التسليم المتوقع')
                     ->native(false),
@@ -73,7 +75,13 @@ class OrderForm
                 TextInput::make('phone')
                     ->label('رقم هاتف المستلم')
                     ->tel()
-                    ->required(),
+                    ->required()
+                    ->dehydrateStateUsing(fn ($state) => \App\Support\Phone::normalize((string) $state))
+                    ->rule(fn () => function (string $attribute, $value, \Closure $fail) {
+                        if (! preg_match('/^01[0125]\d{8}$/', \App\Support\Phone::normalize((string) $value))) {
+                            $fail('رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01');
+                        }
+                    }),
                 TextInput::make('governorate')
                     ->label('المحافظة'),
                 TextInput::make('area')

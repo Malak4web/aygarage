@@ -24,21 +24,41 @@ class UserForm
                     ->tel()
                     ->required()
                     ->dehydrateStateUsing(fn ($state) => Phone::normalize((string) $state))
+                    // Validate the normalized number, so "+20 10…" and "010…" count as the same phone.
                     ->rules([
-                        function () {
-                            return function (string $attribute, $value, \Closure $fail) {
-                                $normalized = Phone::normalize((string) $value);
-                                if (!preg_match('/^01[0125]\d{8}$/', $normalized)) {
-                                    $fail('رقم الهاتف يجب أن يكون رقم مصري صحيح مكون من 11 رقم يبدأ بـ 01');
-                                }
-                            };
+                        fn (?User $record) => function (string $attribute, $value, \Closure $fail) use ($record) {
+                            $normalized = Phone::normalize((string) $value);
+                            if (! preg_match('/^01[0125]\d{8}$/', $normalized)) {
+                                $fail('رقم الهاتف يجب أن يكون رقم مصري صحيح مكون من 11 رقم يبدأ بـ 01');
+
+                                return;
+                            }
+                            $taken = User::where('phone', $normalized)
+                                ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
+                                ->exists();
+                            if ($taken) {
+                                $fail('الرقم ده مسجل لعميل تاني');
+                            }
                         },
-                    ])
-                    ->unique(table: 'users', column: 'phone', ignoreRecord: true),
+                    ]),
                 TextInput::make('email')
                     ->label('البريد الإلكتروني (اختياري)')
                     ->email()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->dehydrateStateUsing(fn ($state) => filled($state) ? strtolower(trim($state)) : null)
+                    ->rules([
+                        fn (?User $record) => function (string $attribute, $value, \Closure $fail) use ($record) {
+                            if (blank($value)) {
+                                return;
+                            }
+                            $taken = User::whereRaw('LOWER(email) = ?', [strtolower(trim((string) $value))])
+                                ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
+                                ->exists();
+                            if ($taken) {
+                                $fail('الإيميل ده مسجل لعميل تاني');
+                            }
+                        },
+                    ]),
                 Select::make('role')
                     ->label('الصلاحية')
                     ->options([

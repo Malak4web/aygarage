@@ -131,6 +131,8 @@ class ProductForm
                     ->relationship('images')
                     ->label('صور المنتج')
                     ->orderColumn('sort')
+                    ->reorderable()
+                    ->addActionLabel('إضافة صورة')
                     ->schema([
                         FileUpload::make('path')
                             ->label('الصورة')
@@ -140,10 +142,6 @@ class ProductForm
                             ->directory('products')
                             ->visibility('public')
                             ->required(),
-                        TextInput::make('sort')
-                            ->label('الترتيب')
-                            ->numeric()
-                            ->default(0),
                     ])
                     ->columns(2)
                     ->collapsible()

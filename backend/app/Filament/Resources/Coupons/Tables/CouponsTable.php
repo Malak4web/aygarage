@@ -30,7 +30,7 @@ class CouponsTable
                     ->sortable(),
                 TextColumn::make('min_subtotal')
                     ->label('الحد الأدنى')
-                    ->money('EGP'),
+                    ->money('EGP', divideBy: 0, decimalPlaces: 0),
                 ToggleColumn::make('is_active')
                     ->label('مفعّل'),
                 TextColumn::make('expires_at')

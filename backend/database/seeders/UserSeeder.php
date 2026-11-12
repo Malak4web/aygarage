@@ -239,7 +239,7 @@ class UserSeeder extends Seeder
                 'delivery_fee' => 0,
                 'total' => 4200,
                 'delivery_method' => 'pickup',
-                'payment_method' => 'card',
+                'payment_method' => 'pickup',
                 'payment_status' => 'paid',
                 'name' => 'كريم محمود',
                 'phone' => '01012345678',

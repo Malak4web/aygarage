@@ -18,6 +18,13 @@ class Login extends BaseLogin
             ->autofocus();
     }
 
+    protected function throwFailureValidationException(): never
+    {
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'data.login' => 'رقم الهاتف أو كلمة المرور غير صحيحة',
+        ]);
+    }
+
     protected function getCredentialsFromFormData(array $data): array
     {
         $login = trim((string) ($data['login'] ?? ''));

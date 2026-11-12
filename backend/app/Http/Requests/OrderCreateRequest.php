@@ -67,7 +67,13 @@ class OrderCreateRequest extends FormRequest
 
     public function rules(): array
     {
-        $allowedPaymentMethods = collect(Setting::get('payment_methods', []))->pluck('id')->all() ?: ['cod', 'pickup'];
+        $configuredMethods = Setting::get('payment_methods', []);
+        $allowedPaymentMethods = collect(is_array($configuredMethods) ? $configuredMethods : [])
+            ->filter(fn ($m) => is_array($m) && is_string($m['id'] ?? null))
+            ->pluck('id')
+            ->intersect(['cod', 'pickup'])
+            ->values()
+            ->all() ?: ['cod', 'pickup'];
 
         $rules = [
             'items' => ['required', 'array', 'min:1', 'max:50'],
@@ -144,12 +150,14 @@ class OrderCreateRequest extends FormRequest
 
                 if ($govName) {
                     $govs = Setting::get('governorates', []);
-                    $validGov = collect($govs)->firstWhere('name', $govName);
+                    $validGov = collect(is_array($govs) ? $govs : [])
+                        ->filter(fn ($g) => is_array($g))
+                        ->firstWhere('name', $govName);
                     if (!$validGov) {
                         $validator->errors()->add('governorate', 'المحافظة المختارة غير متاحة للتوصيل');
                     } elseif ($areaName) {
-                        $areas = $validGov['areas'] ?? [];
-                        if (!in_array($areaName, $areas)) {
+                        $areas = is_array($validGov['areas'] ?? null) ? $validGov['areas'] : [];
+                        if (!in_array($areaName, $areas, true)) {
                             $validator->errors()->add('area', 'المنطقة المختارة غير متاحة للتوصيل في هذه المحافظة');
                         }
                     }

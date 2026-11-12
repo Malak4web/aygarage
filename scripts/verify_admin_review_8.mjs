@@ -1,5 +1,13 @@
 import puppeteer from 'puppeteer-core';
 
+const ADMIN_LOGIN = process.env.ADMIN_LOGIN;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_LOGIN || !ADMIN_PASSWORD) {
+  console.error('Set ADMIN_LOGIN and ADMIN_PASSWORD in the environment first.');
+  process.exit(1);
+}
+
+
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
 async function main() {
@@ -35,10 +43,10 @@ async function main() {
     if (!loginInput) {
       throw new Error('Could not find login input field');
     }
-    await loginInput.type('01000000001');
+    await loginInput.type(ADMIN_LOGIN);
 
     const passInput = await page.$('input[type="password"]');
-    await passInput.type('admin123456');
+    await passInput.type(ADMIN_PASSWORD);
 
     // Submit form
     const submitBtn = await page.$('button[type="submit"]');

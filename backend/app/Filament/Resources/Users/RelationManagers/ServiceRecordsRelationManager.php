@@ -93,7 +93,7 @@ class ServiceRecordsRelationManager extends RelationManager
                     ->label('الفني'),
                 TextColumn::make('cost')
                     ->label('التكلفة')
-                    ->money('EGP')
+                    ->money('EGP', divideBy: 0, decimalPlaces: 0)
                     ->sortable(),
             ])
             ->defaultSort('date', 'desc')
