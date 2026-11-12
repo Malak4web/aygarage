@@ -707,7 +707,12 @@ const handleConfirmOrder = async () => {
   position: relative;
 }
 
+.mini .im :deep(.prod-image) {
+  border-radius: 8px;
+}
+
 .mini-qty {
+  z-index: 2;
   position: absolute;
   top: -6px;
   inset-inline-end: -6px;

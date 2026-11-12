@@ -72,6 +72,7 @@ const formattedPrice = computed(() => {
 
 .bike .im {
   aspect-ratio: 16 / 10;
+  overflow: hidden;
   background: var(--sf);
   display: grid;
   place-items: center;

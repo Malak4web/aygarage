@@ -3,8 +3,9 @@
     v-if="image"
     :src="image"
     :alt="alt || 'موتوسيكل'"
-    :width="width"
     class="bike-img"
+    loading="lazy"
+    decoding="async"
   />
   <svg
     v-else
@@ -67,9 +68,16 @@ const st = computed(() => props.stroke || '#3a3a3a')
 </script>
 
 <style scoped>
-.bike-svg, .bike-img {
+.bike-svg {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+.bike-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

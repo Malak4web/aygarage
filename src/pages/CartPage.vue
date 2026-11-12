@@ -358,6 +358,7 @@ const companionProducts = computed(() => {
 
 .line .im {
   aspect-ratio: 1;
+  overflow: hidden;
   border-radius: 10px;
   background: var(--sf);
   display: grid;

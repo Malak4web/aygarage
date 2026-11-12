@@ -559,6 +559,8 @@ const handleBuyNow = () => {
 .thumb-btn {
   width: 64px;
   height: 64px;
+  overflow: hidden;
+  padding: 0;
   border: 1.5px solid var(--ln);
   border-radius: var(--radius-btn);
   background: var(--sf);
@@ -576,6 +578,7 @@ const handleBuyNow = () => {
 .gal .big {
   flex: 1;
   aspect-ratio: 1;
+  overflow: hidden;
   border: 1px solid var(--ln);
   border-radius: var(--radius-card);
   display: grid;

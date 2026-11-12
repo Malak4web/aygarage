@@ -3,8 +3,9 @@
     v-if="image"
     :src="image"
     :alt="alt || ''"
-    :width="width"
     class="prod-image"
+    loading="lazy"
+    decoding="async"
   />
   <svg
     v-else
@@ -66,9 +67,17 @@ const svgContent = computed(() => {
 </script>
 
 <style scoped>
-.prod-svg, .prod-image {
+.prod-svg {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+/* Real photos fill their box (cards, thumbs, gallery) */
+.prod-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

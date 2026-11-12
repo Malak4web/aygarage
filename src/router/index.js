@@ -64,6 +64,11 @@ const routes = [
     component: () => import('@/pages/LoginPage.vue')
   },
   {
+    path: '/credits',
+    name: 'credits',
+    component: () => import('@/pages/CreditsPage.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }

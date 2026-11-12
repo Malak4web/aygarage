@@ -4,9 +4,14 @@
     <section class="hero-grid in">
       <HeroCarousel :slides="heroSlides" v-slot="{ currentSlide }">
         <div class="ban main">
-          <div class="art">
-            <BikeIllustration :color="currentSlide.bikeColor" :width="460" stroke="#4a4a4a" />
-          </div>
+          <img
+            :key="currentSlide.image"
+            class="ban-photo"
+            :src="currentSlide.image"
+            alt=""
+            fetchpriority="high"
+            decoding="async"
+          />
           <div class="tx">
             <h2>{{ currentSlide.title }}</h2>
             <p>{{ currentSlide.desc }}</p>
@@ -24,27 +29,23 @@
 
       <!-- Side Banners -->
       <div class="side2">
-        <div class="ban s">
+        <RouterLink to="/c/helmets" class="ban s">
+          <img class="ban-photo" src="/images/banners/helmets.jpg" alt="" loading="lazy" decoding="async" />
           <div class="tx">
             <h3>خوذ LS2 الجديدة</h3>
             <p>موديلات 2026 وصلت</p>
-            <RouterLink to="/c/helmets">تسوّق الخوذ</RouterLink>
+            <span class="ban-link">تسوّق الخوذ</span>
           </div>
-          <div class="art">
-            <ProductIllustration type="helmet" :width="120" alt="" />
-          </div>
-        </div>
+        </RouterLink>
 
-        <div class="ban s">
+        <RouterLink to="/bikes" class="ban s">
+          <img class="ban-photo" src="/images/banners/bikes.jpg" alt="" loading="lazy" decoding="async" />
           <div class="tx">
             <h3>موتوسيكلات مفحوصة</h3>
             <p>فحصنا أكتر من {{ storeConfig.totalInspectedBikes }} موتوسيكل</p>
-            <RouterLink to="/bikes">شوف المعروض</RouterLink>
+            <span class="ban-link">شوف المعروض</span>
           </div>
-          <div class="art">
-            <BikeIllustration color="#56634a" :width="150" />
-          </div>
-        </div>
+        </RouterLink>
       </div>
     </section>
 
@@ -103,7 +104,14 @@
           class="cat-circle"
         >
           <div class="im">
-            <ProductIllustration :type="cat.icon" :width="80" alt="" />
+            <img
+              v-if="categoryImages[cat.slug]"
+              :src="categoryImages[cat.slug]"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <ProductIllustration v-else :type="cat.icon" :width="80" alt="" />
           </div>
           <span class="cat-name">{{ cat.name }}</span>
         </RouterLink>
@@ -181,7 +189,7 @@
       <div class="svc">
         <div class="tx">
           <h2>احجز صيانة موتوسيكلك أونلاين</h2>
-          <p>اختار الخدمة والميعاد، ويوصلك تأكيد على الواتساب. الدفع في الجراج.</p>
+          <p>اختار الخدمة والميعاد، وهنكلمك نأكد الحجز. الدفع في الجراج.</p>
           <ul>
             <li v-for="svc in storeConfig.serviceFeatures" :key="svc.title">
               <span>{{ svc.title }}</span>
@@ -191,7 +199,7 @@
           <RouterLink to="/booking" class="btn">احجز ميعاد</RouterLink>
         </div>
         <div class="art">
-          <BikeIllustration color="#d6d6d6" stroke="#5a5a5a" :width="400" />
+          <img src="/images/banners/workshop.jpg" alt="فني بيصلّح موتوسيكل في الورشة" loading="lazy" decoding="async" />
         </div>
       </div>
     </section>
@@ -224,7 +232,6 @@ import ProductCardSkeleton from '@/components/common/ProductCardSkeleton.vue'
 import BikeCard from '@/components/common/BikeCard.vue'
 import BikeCardSkeleton from '@/components/common/BikeCardSkeleton.vue'
 import ProductIllustration from '@/components/common/ProductIllustration.vue'
-import BikeIllustration from '@/components/common/BikeIllustration.vue'
 import HeroCarousel from '@/components/common/HeroCarousel.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
@@ -268,20 +275,32 @@ onMounted(() => {
   loadHomeData()
 })
 
+// Photos for the category circles (Unsplash, see /credits)
+const categoryImages = {
+  oils: '/images/categories/oils.jpg',
+  filters: '/images/categories/filters.jpg',
+  brakes: '/images/categories/brakes.jpg',
+  batteries: '/images/categories/batteries.jpg',
+  tires: '/images/categories/tires.jpg',
+  transmission: '/images/categories/transmission.jpg',
+  helmets: '/images/categories/helmets.jpg',
+  accessories: '/images/categories/accessories.jpg'
+}
+
 // Hero Carousel slides - computed for reactivity on settings update (Item 16)
 const heroSlides = computed(() => [
   {
     title: `طقم صيانة الـ 15,000 كم بخصم ${storeConfig.heroKitDiscount}`,
     desc: 'زيت موتول 7100 + فلتر أصلي + تيل Brembo. يوصلك البيت أو نركّبهولك في الجراج.',
     btnPrimary: `اطلب الطقم · ${storeConfig.heroKitPriceFormatted}`,
-    bikeColor: '#9e2b25',
+    image: '/images/hero/kit.jpg',
     action: 'kit'
   },
   {
     title: 'زيوت موتول التخليقية 100%',
     desc: 'حماية كاملة لمحرك موتوسيكلك في درجات الحرارة العالية وسلاسة فائقة في نقل السرعات.',
     btnPrimary: 'تسوّق الزيوت',
-    bikeColor: '#2d4f80',
+    image: '/images/hero/oils.jpg',
     action: 'category',
     category: 'oils'
   },
@@ -289,7 +308,7 @@ const heroSlides = computed(() => [
     title: 'فحص شامل 120 نقطة قبل الشراء',
     desc: 'لا تشتري موتوسيكل مستعمل بدون تقرير فحص معتمد من مهندسي جراج أبو يوسف.',
     btnPrimary: 'احجز فحص فوري',
-    bikeColor: '#56634a',
+    image: '/images/hero/inspection.jpg',
     action: 'booking'
   }
 ])
@@ -364,17 +383,43 @@ const handleFinderSubmit = () => {
   position: relative;
 }
 
+.ban.main .ban-photo {
+  filter: brightness(1.25) contrast(1.05);
+}
+
 .ban.main .tx {
   position: relative;
   z-index: 2;
 }
 
-.ban.main .art {
+.ban-photo {
   position: absolute;
-  inset-inline-end: 30px;
-  bottom: 30px;
-  pointer-events: none;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  animation: ban-in 0.6s ease both;
+}
+
+/* Darken the text side (right in RTL) so white copy stays readable */
+.ban.main::after,
+.ban.s::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to left, rgba(10, 10, 10, 0.86) 0%, rgba(10, 10, 10, 0.5) 42%, rgba(10, 10, 10, 0) 78%);
+}
+
+@keyframes ban-in {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ban-photo { animation: none; }
 }
 
 .ban.main h2 {
@@ -418,8 +463,25 @@ const handleFinderSubmit = () => {
 
 .ban.s {
   padding: 24px 26px;
-  background: var(--sf);
+  background: #161616;
+  color: #ffffff;
   position: relative;
+  min-height: 190px;
+  text-decoration: none;
+}
+
+.ban.s .tx {
+  position: relative;
+  z-index: 2;
+}
+
+.ban.s .ban-photo {
+  filter: brightness(1.08);
+  transition: transform 0.5s ease;
+}
+
+.ban.s:hover .ban-photo {
+  transform: scale(1.04);
 }
 
 .ban.s h3 {
@@ -431,22 +493,16 @@ const handleFinderSubmit = () => {
 
 .ban.s p {
   margin: 0 0 12px;
-  color: var(--mu);
+  color: #d4d4d4;
   font-size: 14px;
 }
 
-.ban.s a {
+.ban-link {
   font-weight: 700;
   font-size: 14px;
-  color: var(--ink);
+  color: #ffffff;
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-
-.ban.s .art {
-  position: absolute;
-  inset-inline-end: 14px;
-  bottom: 14px;
 }
 
 /* Finder bar */
@@ -568,12 +624,24 @@ const handleFinderSubmit = () => {
   aspect-ratio: 1;
   width: 100%;
   max-width: 100px;
+  overflow: hidden;
   border-radius: 50%;
   background: var(--sf);
   display: grid;
   place-items: center;
   margin-bottom: 10px;
   transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.cat-circle .im img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.cat-circle:hover .im img {
+  transform: scale(1.08);
 }
 
 .cat-circle:hover .im {
@@ -643,9 +711,16 @@ const handleFinderSubmit = () => {
 
 .svc .art {
   background: #161616;
-  display: grid;
-  place-items: center;
-  padding: 20px;
+  min-height: 320px;
+  position: relative;
+}
+
+.svc .art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Trust Bar */
@@ -713,25 +788,19 @@ const handleFinderSubmit = () => {
     padding: 20px;
     overflow: hidden;
   }
-  .ban.s .tx {
-    padding-inline-end: 120px;
-  }
-  .ban.s .art {
-    inset-inline-end: 10px;
-    bottom: 12px;
-  }
-  .ban.s .art :deep(svg) {
-    width: 110px !important;
-    height: auto;
+  .ban.s {
+    min-height: 160px;
   }
   .ban.main {
     padding: 30px 20px;
+    min-height: 440px;
+    align-items: flex-end;
   }
   .ban.main h2 {
     font-size: 32px;
   }
-  .ban.main .art {
-    display: none;
+  .ban.main::after {
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.92) 0%, rgba(10, 10, 10, 0.6) 60%, rgba(10, 10, 10, 0.3) 100%);
   }
   .grid.g3 {
     grid-template-columns: 1fr;
@@ -740,7 +809,8 @@ const handleFinderSubmit = () => {
     grid-template-columns: 1fr;
   }
   .svc .art {
-    display: none;
+    min-height: 220px;
+    order: -1;
   }
   .trust {
     grid-template-columns: 1fr;

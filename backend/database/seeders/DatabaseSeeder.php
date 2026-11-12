@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             ReviewSeeder::class,
             UsedBikeSeeder::class,
+            DemoImageSeeder::class,
             ServiceSeeder::class,
             CouponSeeder::class,
             SettingSeeder::class,

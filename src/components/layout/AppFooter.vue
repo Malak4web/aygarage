@@ -68,7 +68,7 @@
 
       <!-- Bottom Bar -->
       <div class="footer-bottom">
-        <span>© 2026 {{ storeConfig.name }}</span>
+        <span>© 2026 {{ storeConfig.name }} · <RouterLink to="/credits" class="credits-link">مصادر الصور</RouterLink></span>
         <div class="pay-methods">
           <span v-for="pm in storeConfig.paymentMethods" :key="pm.id">
             {{ pm.title }}
@@ -197,6 +197,12 @@ const isProductPage = computed(() => route?.name === 'product')
 .contact-info {
   margin-top: 16px;
   color: #cfcfcf;
+}
+
+.credits-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .footer-bottom {

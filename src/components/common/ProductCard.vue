@@ -143,6 +143,7 @@ const handleAddToCart = () => {
 }
 
 .pc .badge {
+  z-index: 2;
   position: absolute;
   top: 8px;
   inset-inline-start: 8px;
@@ -160,6 +161,7 @@ const handleAddToCart = () => {
 }
 
 .pc .fav {
+  z-index: 2;
   position: absolute;
   top: 8px;
   inset-inline-end: 8px;

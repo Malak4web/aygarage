@@ -151,6 +151,7 @@ class FinalReviewTest extends TestCase
         $this->actingAs($this->admin());
 
         $product = Product::where('slug', 'brembo-front-brake-pads')->firstOrFail();
+        $product->images()->delete(); // drop the seeded demo photos
         $upload = \Illuminate\Http\UploadedFile::fake()->image('brembo.jpg', 600, 600);
 
         Livewire::test(\App\Filament\Resources\Products\Pages\EditProduct::class, ['record' => $product->id])
@@ -176,6 +177,7 @@ class FinalReviewTest extends TestCase
         $this->actingAs($this->admin());
 
         $product = Product::where('slug', 'brembo-front-brake-pads')->firstOrFail();
+        $product->images()->delete();
         $upload = \Illuminate\Http\UploadedFile::fake()->create('virus.php', 10, 'application/x-php');
 
         Livewire::test(\App\Filament\Resources\Products\Pages\EditProduct::class, ['record' => $product->id])
@@ -185,6 +187,23 @@ class FinalReviewTest extends TestCase
             ->assertHasFormErrors();
 
         $this->assertSame(0, $product->images()->count());
+    }
+
+    public function test_seeded_products_and_bikes_have_demo_photos(): void
+    {
+        $json = $this->getJson('/api/products/brembo-front-brake-pads')->assertOk()->json();
+        $data = $json['data'] ?? $json;
+        $this->assertStringEndsWith('/storage/products/demo/brembo-front-brake-pads-1.jpg', $data['image']);
+        $this->assertCount(2, $data['images']);
+
+        $this->assertSame(0, Product::doesntHave('images')->count(), 'every seeded product has a photo');
+        $this->assertSame(0, \App\Models\UsedBike::doesntHave('images')->count(), 'every seeded bike has a photo');
+        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('public')->exists('bikes/demo/zt350d-2024-1.jpg'));
+
+        // Re-running the seeder must not duplicate or replace photos.
+        $before = \App\Models\ProductImage::count();
+        $this->seed(\Database\Seeders\DemoImageSeeder::class);
+        $this->assertSame($before, \App\Models\ProductImage::count());
     }
 
     public function test_dashboard_widgets_render_with_real_counts(): void
