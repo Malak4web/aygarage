@@ -134,7 +134,7 @@ jobs:
 
           # Initialize .env if missing and run post-deploy Artisan commands on Hostinger
           {
-            printf 'export DEPLOY_PATH=%q PHP_CMD=%q APP_URL=%q DB_HOST=%q DB_DATABASE=%q DB_USERNAME=%q DB_PASSWORD=%q SEED_ADMIN_PASSWORD=%q SEED_DEMO_PASSWORD=%q\n' \
+            printf 'export DEPLOY_PATH=%q PHP_CMD=%q CI_APP_URL=%q CI_DB_HOST=%q CI_DB_DATABASE=%q CI_DB_USERNAME=%q CI_DB_PASSWORD=%q CI_SEED_ADMIN_PASSWORD=%q CI_SEED_DEMO_PASSWORD=%q\n' \
               "$DEPLOY_PATH" "$PHP_CMD" "${APP_URL:-}" "${DB_HOST:-}" "${DB_DATABASE:-}" "${DB_USERNAME:-}" "${DB_PASSWORD:-}" "${SEED_ADMIN_PASSWORD:-}" "${SEED_DEMO_PASSWORD:-}"
             cat .github/scripts/remote-deploy.sh
           } | sshpass -e ssh -o StrictHostKeyChecking=no -p "$PORT" "$SSH_USER@$SSH_HOST" bash -s

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 cd "$DEPLOY_PATH/backend"
+echo "Deploying in: $(pwd)"
 "$PHP_CMD" -v
 
 if [ ! -f .env ]; then
@@ -15,7 +16,7 @@ if [ ! -f .env ]; then
       "APP_DEBUG" => "false",
     ];
     foreach (["APP_URL", "DB_HOST", "DB_DATABASE", "DB_USERNAME", "DB_PASSWORD", "SEED_ADMIN_PASSWORD", "SEED_DEMO_PASSWORD"] as $k) {
-      $v = getenv($k);
+      $v = getenv("CI_" . $k);
       if ($v !== false && $v !== "") {
         $map[$k] = $v;
         if ($k === "APP_URL") {
