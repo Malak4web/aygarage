@@ -88,6 +88,11 @@ jobs:
           SEED_DEMO_PASSWORD: ${{ secrets.SEED_DEMO_PASSWORD }}
         run: |
           set -euo pipefail
+          SSH_HOST="$(printf '%s' "${SSH_HOST:-}" | xargs)"
+          SSH_USER="$(printf '%s' "${SSH_USER:-}" | xargs)"
+          SSH_PORT="$(printf '%s' "${SSH_PORT:-}" | xargs)"
+          DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | xargs)"
+
           for var in SSH_HOST SSH_USER SSHPASS DEPLOY_PATH; do
             if [ -z "${!var:-}" ]; then
               echo "Missing required GitHub Secret (SSH_HOST, SSH_USER, SSH_PASSWORD, DEPLOY_PATH)"
@@ -113,7 +118,7 @@ jobs:
           "
 
           # Sync built frontend (dist/)
-          sshpass -e rsync -az --delete \
+          sshpass -e rsync  -az --delete \
             -e "ssh -o StrictHostKeyChecking=no -p $PORT" \
             dist/ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/dist/"
 
