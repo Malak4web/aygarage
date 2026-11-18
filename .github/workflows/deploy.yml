@@ -1,0 +1,138 @@
+name: Build & Deploy to Hostinger
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Setup PHP 8.3 & Composer 2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, pdo_mysql, pdo_sqlite, sqlite3, mbstring, openssl, fileinfo, gd, zip, bcmath, curl, xml
+          tools: composer:v2
+          coverage: none
+
+      - name: Verify toolchain versions
+        run: |
+          node -v
+          npm -v
+          php -v
+          composer -V
+
+      - name: Install frontend dependencies & build (Vue)
+        run: |
+          npm ci
+          npm run build
+          test -f dist/index.html
+
+      - name: Validate & install backend dependencies (for tests)
+        working-directory: backend
+        run: |
+          composer validate --no-check-publish
+          composer install --no-interaction --prefer-dist
+
+      - name: Run Laravel backend tests
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          php artisan test
+
+      - name: Prepare production backend (no-dev)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+        working-directory: backend
+        run: |
+          rm -f .env
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Deploy production build to Hostinger via SSH
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          PHP_BIN: ${{ secrets.PHP_BIN }}
+        run: |
+          set -euo pipefail
+          for var in SSH_HOST SSH_USER SSHPASS DEPLOY_PATH; do
+            if [ -z "${!var:-}" ]; then
+              echo "Missing required GitHub Secret (SSH_HOST, SSH_USER, SSH_PASSWORD, DEPLOY_PATH)"
+              exit 1
+            fi
+          done
+
+          PORT="${SSH_PORT:-22}"
+          PHP_CMD="${PHP_BIN:-php}"
+
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass rsync
+
+          # Ensure target directories exist on Hostinger
+          sshpass -e ssh -o StrictHostKeyChecking=no -p "$PORT" "$SSH_USER@$SSH_HOST" "
+            mkdir -p '$DEPLOY_PATH/dist' \
+                     '$DEPLOY_PATH/backend/storage/app/public' \
+                     '$DEPLOY_PATH/backend/storage/framework/cache/data' \
+                     '$DEPLOY_PATH/backend/storage/framework/sessions' \
+                     '$DEPLOY_PATH/backend/storage/framework/views' \
+                     '$DEPLOY_PATH/backend/storage/logs' \
+                     '$DEPLOY_PATH/backend/bootstrap/cache'
+          "
+
+          # Sync built frontend (dist/)
+          sshpass -e rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=no -p $PORT" \
+            dist/ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/dist/"
+
+          # Sync production-ready backend/ (with vendor/, excluding .env and runtime storage)
+          sshpass -e rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=no -p $PORT" \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='node_modules/' \
+            --exclude='tests/' \
+            --exclude='storage/' \
+            --exclude='public/storage' \
+            --exclude='public/hot' \
+            --exclude='.git/' \
+            backend/ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/backend/"
+
+          # Run post-deploy Artisan commands on Hostinger
+          sshpass -e ssh -o StrictHostKeyChecking=no -p "$PORT" "$SSH_USER@$SSH_HOST" "
+            set -e
+            cd '$DEPLOY_PATH/backend'
+            if [ ! -f .env ]; then
+              echo 'ERROR: backend/.env does not exist on the server. Create it from .env.example first.'
+              exit 1
+            fi
+            $PHP_CMD -v
+            $PHP_CMD artisan migrate --force
+            $PHP_CMD artisan storage:link || true
+            $PHP_CMD artisan optimize:clear
+            $PHP_CMD artisan optimize
+            $PHP_CMD artisan filament:optimize
+          "
+
