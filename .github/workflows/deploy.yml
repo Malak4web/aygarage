@@ -55,6 +55,9 @@ jobs:
 
       - name: Run Laravel backend tests
         working-directory: backend
+        env:
+          SEED_ADMIN_PASSWORD: test-admin-password
+          SEED_DEMO_PASSWORD: test-demo-password
         run: |
           cp .env.example .env
           php artisan key:generate --ansi
