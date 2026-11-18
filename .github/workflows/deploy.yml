@@ -79,6 +79,13 @@ jobs:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           PHP_BIN: ${{ secrets.PHP_BIN }}
+          APP_URL: ${{ secrets.APP_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+          SEED_DEMO_PASSWORD: ${{ secrets.SEED_DEMO_PASSWORD }}
         run: |
           set -euo pipefail
           for var in SSH_HOST SSH_USER SSHPASS DEPLOY_PATH; do
@@ -123,19 +130,10 @@ jobs:
             --exclude='.git/' \
             backend/ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/backend/"
 
-          # Run post-deploy Artisan commands on Hostinger
-          sshpass -e ssh -o StrictHostKeyChecking=no -p "$PORT" "$SSH_USER@$SSH_HOST" "
-            set -e
-            cd '$DEPLOY_PATH/backend'
-            if [ ! -f .env ]; then
-              echo 'ERROR: backend/.env does not exist on the server. Create it from .env.example first.'
-              exit 1
-            fi
-            $PHP_CMD -v
-            $PHP_CMD artisan migrate --force
-            $PHP_CMD artisan storage:link || true
-            $PHP_CMD artisan optimize:clear
-            $PHP_CMD artisan optimize
-            $PHP_CMD artisan filament:optimize
-          "
+          # Initialize .env if missing and run post-deploy Artisan commands on Hostinger
+          {
+            printf 'export DEPLOY_PATH=%q PHP_CMD=%q APP_URL=%q DB_HOST=%q DB_DATABASE=%q DB_USERNAME=%q DB_PASSWORD=%q SEED_ADMIN_PASSWORD=%q SEED_DEMO_PASSWORD=%q\n' \
+              "$DEPLOY_PATH" "$PHP_CMD" "${APP_URL:-}" "${DB_HOST:-}" "${DB_DATABASE:-}" "${DB_USERNAME:-}" "${DB_PASSWORD:-}" "${SEED_ADMIN_PASSWORD:-}" "${SEED_DEMO_PASSWORD:-}"
+            cat .github/scripts/remote-deploy.sh
+          } | sshpass -e ssh -o StrictHostKeyChecking=no -p "$PORT" "$SSH_USER@$SSH_HOST" bash -s
 
