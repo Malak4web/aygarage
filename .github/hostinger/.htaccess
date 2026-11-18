@@ -1,0 +1,34 @@
+<IfModule mod_rewrite.c>
+    Options -Indexes -MultiViews
+    RewriteEngine On
+
+    # Forward Authorization & XSRF headers to PHP
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Block direct web access to backend internals (except backend/public) and dotfiles
+    RewriteRule ^backend/(?!public/) - [F,L]
+    RewriteRule ^\. - [F,L]
+
+    # Stop rewriting once routed into dist/ or backend/public/
+    RewriteRule ^(dist|backend/public)(/|$) - [L]
+
+    # 1. Static files inside backend/public (/storage/..., /js/filament/..., /css/filament/..., /fonts/filament/...)
+    RewriteCond %{REQUEST_URI} ^/(api|admin|livewire[^/]*|storage|filament|js/filament|css/filament|fonts/filament|up)(/|$)
+    RewriteCond %{DOCUMENT_ROOT}/backend/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ backend/public/$1 [L]
+
+    # 2. All other Laravel / Filament / API routes -> backend/public/index.php
+    RewriteCond %{REQUEST_URI} ^/(api|admin|livewire[^/]*|storage|filament|js/filament|css/filament|fonts/filament|up)(/|$)
+    RewriteRule ^ backend/public/index.php [L]
+
+    # 3. Existing static files in dist/ (JS, CSS, images, favicon, etc.)
+    RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ dist/$1 [L]
+
+    # 4. Root "/" and Vue SPA routes -> dist/index.html
+    RewriteRule ^$ dist/index.html [L]
+    RewriteRule ^ dist/index.html [L]
+</IfModule>

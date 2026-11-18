@@ -137,6 +137,11 @@ jobs:
             --exclude='.git/' \
             backend/ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/backend/"
 
+          # Sync root .htaccess for Hostinger (routes Vue SPA -> dist/ and Laravel/Filament -> backend/public/)
+          sshpass -e rsync -az \
+            -e "ssh -o StrictHostKeyChecking=no -p $PORT" \
+            .github/hostinger/.htaccess "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/.htaccess"
+
           # Initialize .env if missing and run post-deploy Artisan commands on Hostinger
           {
             printf 'export DEPLOY_PATH=%q PHP_CMD=%q CI_APP_URL=%q CI_DB_HOST=%q CI_DB_DATABASE=%q CI_DB_USERNAME=%q CI_DB_PASSWORD=%q CI_SEED_ADMIN_PASSWORD=%q CI_SEED_DEMO_PASSWORD=%q\n' \
