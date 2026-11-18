@@ -32,3 +32,4 @@
     RewriteRule ^$ dist/index.html [L]
     RewriteRule ^ dist/index.html [L]
 </IfModule>
+
