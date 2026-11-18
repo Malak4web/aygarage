@@ -105,7 +105,7 @@ const columnsClass = computed(() => {
     grid-template-columns: repeat(2, 1fr);
   }
   .grid.g3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

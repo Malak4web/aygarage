@@ -96,7 +96,7 @@
       <div class="sh">
         <h2>تسوّق حسب القسم</h2>
       </div>
-      <div class="cats">
+      <div class="cats rail rail-cats">
         <RouterLink
           v-for="cat in categories"
           :key="cat.slug"
@@ -135,10 +135,10 @@
           <h2>الأكثر مبيعاً</h2>
           <RouterLink to="/c/oils" class="sh-more">عرض الكل</RouterLink>
         </div>
-        <div v-if="loading" class="grid">
+        <div v-if="loading" class="grid rail">
           <ProductCardSkeleton v-for="i in 5" :key="i" />
         </div>
-        <div v-else class="grid">
+        <div v-else class="grid rail">
           <ProductCard
             v-for="product in bestSellers"
             :key="product.id"
@@ -153,10 +153,10 @@
           <h2>عروض الأسبوع</h2>
           <RouterLink to="/c/oils?offer=true" class="sh-more">كل العروض</RouterLink>
         </div>
-        <div v-if="loading" class="grid">
+        <div v-if="loading" class="grid rail">
           <ProductCardSkeleton v-for="i in 5" :key="i" />
         </div>
-        <div v-else class="grid">
+        <div v-else class="grid rail">
           <ProductCard
             v-for="product in weeklyOffers"
             :key="product.id"
@@ -171,10 +171,10 @@
           <h2>موتوسيكلات مستعملة مفحوصة</h2>
           <RouterLink to="/bikes" class="sh-more">كل الموتوسيكلات ({{ totalBikesCount || featuredBikes.length }})</RouterLink>
         </div>
-        <div v-if="loading" class="grid g3">
+        <div v-if="loading" class="grid g3 rail rail-bikes">
           <BikeCardSkeleton v-for="i in 3" :key="i" />
         </div>
-        <div v-else class="grid g3">
+        <div v-else class="grid g3 rail rail-bikes">
           <BikeCard
             v-for="bike in featuredBikes"
             :key="bike.id"
@@ -757,7 +757,7 @@ const handleFinderSubmit = () => {
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .side2 {
     grid-template-columns: 1fr 1fr;
@@ -779,10 +779,10 @@ const handleFinderSubmit = () => {
 
 @media (max-width: 768px) {
   .finder {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .side2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .ban.s {
     padding: 20px;
@@ -803,17 +803,17 @@ const handleFinderSubmit = () => {
     background: linear-gradient(to top, rgba(10, 10, 10, 0.92) 0%, rgba(10, 10, 10, 0.6) 60%, rgba(10, 10, 10, 0.3) 100%);
   }
   .grid.g3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .svc {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .svc .art {
     min-height: 220px;
     order: -1;
   }
   .trust {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .trust-item + .trust-item {
     border-inline-start: none;
@@ -826,12 +826,179 @@ const handleFinderSubmit = () => {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
-  .cats {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
   .cat-circle {
     font-size: 12px;
+  }
+}
+
+/* ---------- Phone: app-style home ---------- */
+@media (max-width: 768px) {
+  .hero-grid {
+    padding-top: 12px;
+    gap: 10px;
+  }
+
+  .ban.main {
+    min-height: 380px;
+    border-radius: 22px;
+  }
+
+  .ban.main h2 {
+    font-size: 28px;
+    max-width: none;
+  }
+
+  .ban.main p {
+    font-size: 14.5px;
+    margin-bottom: 18px;
+  }
+
+  .hero-actions .btn {
+    height: 42px;
+    padding: 0 18px;
+    font-size: 14px;
+  }
+
+  .hero-grid :deep(.carousel-nav-btn) {
+    display: none;
+  }
+
+  /* Two compact promo tiles side by side */
+  .side2 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: none;
+    gap: 10px;
+  }
+
+  .ban.s {
+    min-height: 150px;
+    padding: 14px;
+    border-radius: 18px;
+    align-items: flex-end;
+  }
+
+  .ban.s::after {
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.85) 0%, rgba(10, 10, 10, 0.25) 70%, rgba(10, 10, 10, 0.05) 100%);
+  }
+
+  .ban.s h3 {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+
+  .ban.s p {
+    font-size: 11.5px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .ban-link {
+    font-size: 12px;
+  }
+
+  .finder {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 18px;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .finder-title,
+  .finder .btn {
+    grid-column: 1 / -1;
+  }
+
+  .finder-field:nth-of-type(4) {
+    grid-column: 1 / -1;
+  }
+
+  .sec {
+    padding-top: 28px;
+  }
+
+  .sh {
+    margin-bottom: 12px;
+  }
+
+  .sh {
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  .sh h2 {
+    font-size: 19px;
+  }
+
+  .sh-more {
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  /* Category circles: one swipeable row */
+  .rail.rail-cats {
+    --rail-w: 72px;
+    gap: 10px !important;
+  }
+
+  .cat-circle {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .cat-circle .im {
+    max-width: 66px;
+    margin-bottom: 7px;
+  }
+
+  .rail {
+    --rail-w: 160px;
+  }
+
+  .rail.rail-bikes {
+    --rail-w: 280px;
+  }
+
+  .svc {
+    margin-top: 28px;
+    border-radius: 20px;
+  }
+
+  .svc .tx {
+    padding: 22px 18px;
+  }
+
+  .svc h2 {
+    font-size: 22px;
+  }
+
+  .svc ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .trust {
+    margin-top: 24px;
+    grid-template-columns: 1fr 1fr;
+    border-radius: 18px;
+  }
+
+  .trust-item {
+    padding: 14px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .trust-item + .trust-item {
+    border-top: none;
+  }
+
+  .trust-item:nth-child(n + 3) {
+    border-top: 1px solid var(--ln) !important;
+  }
+
+  .trust-item:nth-child(even) {
+    border-inline-start: 1px solid var(--ln) !important;
   }
 }
 </style>

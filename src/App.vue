@@ -1,7 +1,7 @@
 <template>
   <div class="store-app">
     <!-- Announcement Bar (shown on all pages except checkout) -->
-    <AnnouncementBar v-if="!isCheckoutPage" />
+    <AnnouncementBar v-if="!isCheckoutPage" :class="{ 'phone-hidden': route.name !== 'home' }" />
 
     <!-- Standard Header -->
     <AppHeader v-if="!isCheckoutPage" @toggle-drawer="isDrawerOpen = true" />
@@ -38,6 +38,9 @@
     <!-- Footer (hidden on checkout) -->
     <AppFooter v-if="!isCheckoutPage" />
 
+    <!-- Phone: bottom tab bar -->
+    <MobileTabBar v-if="hasTabBar" @open-drawer="isDrawerOpen = true" />
+
     <!-- Global App Toast -->
     <AppToast />
   </div>
@@ -57,6 +60,8 @@ import CategoryNav from '@/components/layout/CategoryNav.vue'
 import MobileDrawer from '@/components/layout/MobileDrawer.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import AppToast from '@/components/common/AppToast.vue'
+import MobileTabBar from '@/components/layout/MobileTabBar.vue'
+import { showsTabBar } from '@/utils/mobileShell.js'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const cartStore = useCartStore()
@@ -86,6 +91,10 @@ watch(
 )
 
 const isCheckoutPage = computed(() => route.path === '/checkout')
+const hasTabBar = computed(() => showsTabBar(route))
+
+// body.has-tabbar reserves space at the bottom for the fixed tab bar
+watch(hasTabBar, (on) => document.body.classList.toggle('has-tabbar', on), { immediate: true })
 const isOrderSuccessPage = computed(() => route.name === 'order-success')
 </script>
 
@@ -100,6 +109,19 @@ const isOrderSuccessPage = computed(() => route.name === 'order-success')
 
 .main-content {
   flex: 1;
+}
+
+@media (max-width: 768px) {
+  .phone-hidden {
+    display: none;
+  }
+  .checkout-header {
+    padding: 12px var(--page-pad);
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+  .logo {
+    font-size: 20px;
+  }
 }
 
 .checkout-header {

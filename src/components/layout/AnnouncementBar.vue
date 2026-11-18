@@ -24,4 +24,16 @@ import { storeConfig } from '@/config/store.js'
   margin: 0 auto;
   max-width: 1280px;
 }
+
+@media (max-width: 768px) {
+  .announcement-bar {
+    font-size: 11.5px;
+    padding: 6px 12px;
+  }
+  .ann-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
 </style>

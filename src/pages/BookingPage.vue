@@ -836,13 +836,64 @@ const resetBooking = () => {
 
 @media (max-width: 900px) {
   .book {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .svs {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .times {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ---------- Phone: app booking flow ---------- */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 24px;
+  }
+  .book {
+    gap: 16px;
+    padding-bottom: 24px;
+  }
+  .booking-flow {
+    gap: 14px;
+  }
+  .box,
+  .sum {
+    padding: 18px 16px;
+    border-radius: 20px;
+  }
+  .box h3,
+  .sum h3 {
+    font-size: 17px;
+    margin-bottom: 12px;
+  }
+  /* Days: one swipeable row */
+  .days {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 56px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: -16px;
+    padding: 2px 16px 4px;
+    scrollbar-width: none;
+  }
+  .days::-webkit-scrollbar {
+    display: none;
+  }
+  .day-slot {
+    scroll-snap-align: start;
+    border-radius: 14px;
+  }
+  .time-slot {
+    border-radius: 12px;
+  }
+  .confirm-btn {
+    height: 52px;
+    border-radius: 14px;
+    font-size: 16px;
+  }
+}
+
 </style>

@@ -1382,20 +1382,91 @@ tr:last-child td {
 
 @media (max-width: 900px) {
   .acc {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .veh {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     text-align: center;
   }
   .kv {
     grid-template-columns: 1fr 1fr;
   }
   .fl {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .fav-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ---------- Phone: app profile screen ---------- */
+@media (max-width: 768px) {
+  .acc {
+    gap: 14px;
+    padding-top: 12px;
+  }
+
+  .side {
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  /* Profile card */
+  .side .u {
+    padding: 16px;
+    margin-bottom: 12px;
+    border: none;
+    border-radius: 20px;
+    background: var(--ink);
+    color: #ffffff;
+  }
+
+  .side .u b {
+    font-size: 18px;
+  }
+
+  .side .u small {
+    color: #bdbdbd;
+  }
+
+  /* Tabs become a swipeable chip row */
+  .acc-nav {
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+    margin-inline: calc(var(--page-pad) * -1);
+    padding: 0 var(--page-pad) 4px;
+    scrollbar-width: none;
+  }
+
+  .acc-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-link {
+    flex: 0 0 auto;
+    width: auto;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--sf);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .tab-link.on {
+    background: var(--ink);
+    color: #ffffff;
+  }
+
+  .logout-btn {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 999px;
+    padding-top: 0;
+    background: var(--salesoft);
+  }
+}
+
 </style>

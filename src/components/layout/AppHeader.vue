@@ -1,6 +1,17 @@
 <template>
   <header class="app-header">
     <div class="header-inner">
+      <!-- Mobile back button on inner screens -->
+      <button
+        v-if="!isRoot"
+        type="button"
+        class="mobile-icon-btn back-btn"
+        aria-label="رجوع"
+        @click="goBack"
+      >
+        <AppIcon name="back" :size="24" :stroke-width="2" />
+      </button>
+
       <!-- Brand Logo -->
       <RouterLink to="/" class="logo">
         <span class="logo-title">{{ storeConfig.name }}</span>
@@ -37,8 +48,27 @@
           <span v-if="favStore.count > 0" class="fav-badge">{{ favStore.count }}</span>
         </RouterLink>
 
-        <!-- Mobile search toggle icon button -->
+        <!-- Mobile: current bike chip (opens the menu to switch) -->
         <button
+          v-if="isRoot"
+          type="button"
+          class="bike-chip"
+          aria-label="غيّر الموتوسيكل"
+          @click="$emit('toggle-drawer')"
+        >
+          <AppIcon name="bike" :size="16" />
+          <span>{{ userStore.selectedBike || 'موتوسيكلك' }}</span>
+        </button>
+
+        <!-- Mobile favorites -->
+        <RouterLink v-if="isRoot" to="/account?tab=favorites" class="mobile-icon-btn mobile-fav" aria-label="المفضلة">
+          <AppIcon name="heart" :size="22" />
+          <span v-if="favStore.count > 0" class="fav-badge">{{ favStore.count }}</span>
+        </RouterLink>
+
+        <!-- Mobile search toggle icon button (inner screens only) -->
+        <button
+          v-if="!searchPinned"
           type="button"
           class="mobile-icon-btn mobile-search-toggle"
           @click="isMobileSearchOpen = !isMobileSearchOpen"
@@ -49,7 +79,7 @@
         </button>
 
         <!-- Cart -->
-        <RouterLink to="/cart" class="hi-link cart-link" aria-label="سلة المشتريات">
+        <RouterLink to="/cart" class="hi-link cart-link" :class="{ 'cart-mobile-hidden': hasTabBar }" aria-label="سلة المشتريات">
           <span class="cart-icon-wrap">
             <AppIcon name="cart" :size="26" />
             <span v-if="cartStore.count > 0" class="cart-badge">{{ cartStore.count }}</span>
@@ -74,7 +104,7 @@
 
     <!-- Mobile Search Row: opens on tap (Item 30) -->
     <Transition name="expand">
-      <div v-if="isMobileSearchOpen" class="mobile-search-row">
+      <div v-if="isMobileSearchOpen || searchPinned" class="mobile-search-row">
         <SearchBar />
       </div>
     </Transition>
@@ -88,6 +118,8 @@ import { storeConfig } from '@/config/store.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useUserStore } from '@/stores/user.js'
 import { useFavoritesStore } from '@/stores/favorites.js'
+import { useRouter } from 'vue-router'
+import { showsTabBar, isRootScreen, keepsSearchOpen } from '@/utils/mobileShell.js'
 import SearchBar from '@/components/layout/SearchBar.vue'
 import BikeSelector from '@/components/layout/BikeSelector.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
@@ -99,7 +131,16 @@ const cartStore = useCartStore()
 const userStore = useUserStore()
 const favStore = useFavoritesStore()
 
+const router = useRouter()
 const isMobileSearchOpen = ref(false)
+const isRoot = computed(() => isRootScreen(route))
+const hasTabBar = computed(() => showsTabBar(route))
+const searchPinned = computed(() => keepsSearchOpen(route))
+
+const goBack = () => {
+  if (window.history.state?.back) router.back()
+  else router.push('/')
+}
 
 // Close mobile search on route change
 watch(
@@ -273,6 +314,120 @@ const formattedTotal = computed(() => {
 
   .hi-link {
     padding: 6px;
+  }
+}
+
+.bike-chip {
+  display: none;
+}
+
+/* The pinned search row is for phones/tablets; desktop has the inline search */
+@media (min-width: 993px) {
+  .mobile-search-row {
+    display: none;
+  }
+}
+
+.mobile-fav {
+  position: relative;
+}
+
+/* ---------- Phone: app-style top bar ---------- */
+@media (max-width: 768px) {
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 970;
+    padding: 10px var(--page-pad) 12px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .header-inner {
+    gap: 6px;
+  }
+
+  .back-btn {
+    margin-inline-end: 2px;
+    margin-inline-start: -6px;
+  }
+
+  .logo-title {
+    font-size: 20px;
+  }
+
+  .logo-sub {
+    font-size: 8.5px;
+    margin-top: 3px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .mobile-menu-btn,
+  .cart-mobile-hidden {
+    display: none !important;
+  }
+
+  .bike-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--sf);
+    color: var(--ink);
+    font-family: var(--f-ui);
+    font-size: 12.5px;
+    font-weight: 800;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bike-chip:active {
+    background: var(--sf2);
+  }
+
+  .mobile-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .mobile-search-row {
+    margin-top: 10px;
+    padding-top: 0;
+  }
+
+  .mobile-search-row :deep(.search-bar) {
+    height: 44px;
+    border-radius: 14px;
+    background: var(--sf);
+    border-color: transparent;
+  }
+
+  .mobile-search-row :deep(.search-input) {
+    background: transparent;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .logo-sub {
+    display: none;
+  }
+  .bike-chip span {
+    display: none;
+  }
+  .bike-chip {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
   }
 }
 </style>

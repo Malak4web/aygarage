@@ -574,7 +574,7 @@ watch(
 
 @media (max-width: 900px) {
   .lay {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -691,7 +691,7 @@ watch(
 
 @media (max-width: 600px) {
   .grid.g3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -786,4 +786,24 @@ watch(
   width: 100%;
   margin-top: 10px;
 }
+
+/* ---------- Phone: listing screen ---------- */
+@media (max-width: 768px) {
+  .lhd {
+    padding-top: 14px;
+    align-items: center;
+  }
+  .lhd h1 {
+    font-size: 24px;
+  }
+  .lhd p {
+    font-size: 13px;
+  }
+  .mobile-filter-btn {
+    height: 38px;
+    border-radius: 999px;
+    padding: 0 16px;
+  }
+}
+
 </style>

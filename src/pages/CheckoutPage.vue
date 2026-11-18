@@ -220,6 +220,21 @@
           </template>
         </OrderSummary>
       </aside>
+
+      <!-- Phone: place-order bar pinned to the bottom -->
+      <div class="phone-order-bar">
+        <div class="pob-info">
+          <small>الإجمالي</small>
+          <b>{{ cartStore.getTotal(deliveryMethod).toLocaleString('en') }} <small>ج.م</small></b>
+        </div>
+        <button
+          type="submit"
+          class="btn pob-btn"
+          :disabled="isSubmitting || cartStore.items.length === 0"
+        >
+          {{ isSubmitting ? 'جاري التأكيد...' : 'تأكيد الطلب' }}
+        </button>
+      </div>
     </form>
     <div style="height: 48px"></div>
   </div>
@@ -787,13 +802,106 @@ const handleConfirmOrder = async () => {
 
 @media (max-width: 900px) {
   .cart {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .fl {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .fld.span-2 {
     grid-column: span 1;
   }
 }
+
+.phone-order-bar {
+  display: none;
+}
+
+/* ---------- Phone: app checkout ---------- */
+@media (max-width: 768px) {
+  .checkout-page {
+    padding-bottom: 80px;
+  }
+
+  /* Compact progress: numbers only, current step labelled */
+  .steps {
+    justify-content: center;
+    gap: 6px;
+    padding-top: 12px;
+    font-size: 12.5px;
+  }
+
+  .steps hr {
+    flex: 0 0 22px;
+  }
+
+  .step span {
+    display: none;
+  }
+
+  .step.on span {
+    display: inline;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .box {
+    padding: 18px 16px;
+    border-radius: 20px;
+  }
+
+  /* No card inside a card */
+  .sum {
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  .sum :deep(.order-summary-box) {
+    border-radius: 20px;
+    padding: 18px 16px;
+  }
+
+  .phone-order-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 990;
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+  }
+
+  .pob-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  .pob-info > small {
+    color: var(--mu);
+    font-size: 12px;
+  }
+
+  .pob-info b {
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .pob-info b small {
+    font-size: 12px;
+  }
+
+  .pob-btn {
+    flex: 1;
+    height: 48px;
+    border-radius: 14px;
+  }
+}
+
 </style>

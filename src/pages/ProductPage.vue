@@ -44,7 +44,24 @@
 
     <div class="pdp in">
       <!-- Gallery: Thumbs + Big image (Item 4) -->
-      <div class="gal">
+      <!-- Phone: swipeable full-width gallery -->
+      <div v-if="galleryImages.length" class="phone-gal">
+        <div class="phone-swipe" ref="swipeRef" @scroll.passive="onSwipe">
+          <img
+            v-for="(imgSrc, idx) in galleryImages"
+            :key="imgSrc"
+            :src="imgSrc"
+            :alt="idx === 0 ? product.name : ''"
+            :loading="idx === 0 ? 'eager' : 'lazy'"
+            decoding="async"
+          />
+        </div>
+        <div v-if="galleryImages.length > 1" class="phone-dots" aria-hidden="true">
+          <span v-for="(_, idx) in galleryImages" :key="idx" :class="{ on: swipeIndex === idx }"></span>
+        </div>
+      </div>
+
+      <div class="gal" :class="{ 'has-phone-gal': galleryImages.length }">
         <div class="th" v-if="galleryImages.length > 1">
           <button
             v-for="(imgSrc, idx) in galleryImages"
@@ -363,6 +380,15 @@ const reviewsError = ref('')
 let productRequestId = 0
 
 const activeThumb = ref(0)
+
+// Phone gallery: which photo is in view (RTL scrollLeft is negative)
+const swipeRef = ref(null)
+const swipeIndex = ref(0)
+const onSwipe = () => {
+  const el = swipeRef.value
+  if (!el) return
+  swipeIndex.value = Math.round(Math.abs(el.scrollLeft) / el.clientWidth)
+}
 const activeTab = ref('desc')
 const quantity = ref(1)
 const showBikePicker = ref(false)
@@ -815,9 +841,13 @@ const handleBuyNow = () => {
   display: none;
 }
 
+.phone-gal {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .pdp {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
   .gal {
@@ -828,20 +858,112 @@ const handleBuyNow = () => {
     order: 2;
   }
   .tabc {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .mobile-sticky-buy {
     display: flex;
     position: fixed;
     bottom: 0;
     inset-inline: 0;
-    background: #ffffff;
-    border-top: 1px solid var(--ln);
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
     padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 990;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    gap: 14px;
+  }
+  .mobile-sticky-buy .btn {
+    flex: 1;
+    height: 48px;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+
+  /* Swipeable gallery, edge to edge */
+  .phone-gal {
+    display: block;
+    position: relative;
+    margin-inline: calc(var(--page-pad) * -1);
+    margin-top: -6px;
+  }
+  .phone-swipe {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    background: var(--sf);
+  }
+  .phone-swipe::-webkit-scrollbar {
+    display: none;
+  }
+  .phone-swipe img {
+    flex: 0 0 100%;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    scroll-snap-align: center;
+  }
+  .phone-dots {
+    position: absolute;
+    bottom: 12px;
+    inset-inline: 0;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  .phone-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+  .phone-dots span.on {
+    width: 18px;
+    background: #ffffff;
+  }
+  .gal.has-phone-gal {
+    display: none;
+  }
+
+  .pdp {
+    padding-top: 0;
+    gap: 18px;
+  }
+  .product-page :deep(.crumb) {
+    display: none;
+  }
+  .buy-box h1 {
+    font-size: 21px;
+    line-height: 1.4;
+  }
+  .buy {
+    flex-wrap: wrap;
+  }
+  .add-cart-btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .buy-now-btn {
+    flex: 1 0 100%;
+  }
+  .os {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: calc(var(--page-pad) * -1);
+    padding-inline: var(--page-pad);
+    scrollbar-width: none;
+  }
+  .os::-webkit-scrollbar {
+    display: none;
+  }
+  .option-pill {
+    flex: 0 0 auto;
   }
   .mobile-sticky-info {
     display: flex;

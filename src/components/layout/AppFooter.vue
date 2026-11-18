@@ -14,8 +14,13 @@
         </div>
 
         <!-- Col 2: Shop -->
-        <div class="col-links">
-          <h5>تسوّق</h5>
+        <div class="col-links" :class="{ open: openCol === 'shop' }">
+          <h5>
+            <button type="button" class="col-toggle" :aria-expanded="openCol === 'shop'" @click="toggleCol('shop')">
+              <span>تسوّق</span>
+              <AppIcon name="down" :size="16" class="col-chev" />
+            </button>
+          </h5>
           <RouterLink to="/c/oils">زيوت</RouterLink>
           <RouterLink to="/c/filters">فلاتر</RouterLink>
           <RouterLink to="/c/brakes">فرامل</RouterLink>
@@ -24,8 +29,13 @@
         </div>
 
         <!-- Col 3: Garage -->
-        <div class="col-links">
-          <h5>الجراج</h5>
+        <div class="col-links" :class="{ open: openCol === 'garage' }">
+          <h5>
+            <button type="button" class="col-toggle" :aria-expanded="openCol === 'garage'" @click="toggleCol('garage')">
+              <span>الجراج</span>
+              <AppIcon name="down" :size="16" class="col-chev" />
+            </button>
+          </h5>
           <RouterLink to="/booking">حجز صيانة</RouterLink>
           <RouterLink to="/booking">فحص قبل الشراء</RouterLink>
           <RouterLink to="/bikes">موتوسيكلات للبيع</RouterLink>
@@ -33,8 +43,13 @@
         </div>
 
         <!-- Col 4: Help -->
-        <div class="col-links">
-          <h5>مساعدة</h5>
+        <div class="col-links" :class="{ open: openCol === 'help' }">
+          <h5>
+            <button type="button" class="col-toggle" :aria-expanded="openCol === 'help'" @click="toggleCol('help')">
+              <span>مساعدة</span>
+              <AppIcon name="down" :size="16" class="col-chev" />
+            </button>
+          </h5>
           <a href="#footer">الشحن والتوصيل</a>
           <a href="#footer">الاسترجاع والاستبدال</a>
           <RouterLink to="/account">تتبع الطلب</RouterLink>
@@ -82,11 +97,18 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import AppIcon from '@/components/common/AppIcon.vue'
 import { storeConfig } from '@/config/store.js'
 
 const route = useRoute()
 const subscribed = ref(false)
-const isProductPage = computed(() => route?.name === 'product')
+const isProductPage = computed(() => route?.name === 'product' || route?.name === 'bike-detail')
+
+// Phone: link columns collapse into an accordion
+const openCol = ref('')
+const toggleCol = (key) => {
+  openCol.value = openCol.value === key ? '' : key
+}
 </script>
 
 <style scoped>
@@ -253,13 +275,73 @@ const isProductPage = computed(() => route?.name === 'product')
   }
 }
 
+.col-toggle {
+  all: unset;
+  display: contents;
+}
+
+.col-chev {
+  display: none;
+}
+
 @media (max-width: 600px) {
   .cols {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
   }
 
   .col-brand, .col-newsletter {
     grid-column: span 1;
+  }
+
+  .col-brand {
+    padding-bottom: 16px;
+  }
+
+  .col-newsletter {
+    padding-top: 20px;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  .col-links {
+    border-top: 1px solid #2a2a2a;
+  }
+
+
+  .col-links h5 {
+    margin: 0;
+  }
+
+  .col-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .col-chev {
+    display: block;
+    color: #8a8a8a;
+    transition: transform 0.2s ease;
+  }
+
+  .col-links.open .col-chev {
+    transform: rotate(180deg);
+  }
+
+  .col-links a {
+    display: none;
+  }
+
+  .col-links.open {
+    padding-bottom: 12px;
+  }
+
+  .col-links.open a {
+    display: block;
   }
 }
 </style>

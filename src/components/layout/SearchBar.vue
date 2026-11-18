@@ -136,4 +136,23 @@ const handleSearch = () => {
     display: none;
   }
 }
+
+/* Phone: soft pill with the magnifier inside, like a native search field */
+@media (max-width: 768px) {
+  .search-submit {
+    order: -1;
+    width: 44px;
+    background: transparent;
+    color: var(--mu);
+  }
+  .search-input {
+    padding: 0 4px 0 14px;
+  }
+  .search-input:focus-visible {
+    outline: none;
+  }
+  .search-bar:focus-within {
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+}
 </style>

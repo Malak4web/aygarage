@@ -483,7 +483,7 @@ const handleDownloadReport = () => {
 
 @media (max-width: 900px) {
   .bdp {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
   .rep .r {
@@ -493,6 +493,57 @@ const handleDownloadReport = () => {
     grid-column: 1 / -1;
     color: var(--mu);
     margin-top: -6px;
+  }
+}
+
+/* ---------- Phone: app detail screen ---------- */
+@media (max-width: 768px) {
+  .bdp {
+    padding-top: 0;
+    gap: 18px;
+  }
+
+  .bike-gal .big {
+    margin-inline: calc(var(--page-pad) * -1);
+    border: none;
+    border-radius: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .thr {
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  /* Book / WhatsApp pinned to the bottom like an app action bar */
+  .bike-actions {
+    position: fixed;
+    bottom: 0;
+    inset-inline: 0;
+    z-index: 990;
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+  }
+
+  .bike-actions .btn {
+    height: 48px;
+    border-radius: 14px;
+    font-size: 14.5px;
+  }
+
+  .bike-actions .btn:first-child {
+    flex: 1.4;
+  }
+
+  .bike-actions .btn.o {
+    flex: 1;
   }
 }
 </style>

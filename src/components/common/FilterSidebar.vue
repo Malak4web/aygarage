@@ -7,7 +7,7 @@
 
     <!-- Mobile Bottom Sheet Dialog (Only rendered on mobile when open) -->
     <template v-else-if="isOpen">
-      <Transition name="fade">
+      <Transition name="fade" appear>
         <div
           class="sheet-backdrop"
           @click="$emit('close')"
@@ -15,7 +15,7 @@
         ></div>
       </Transition>
 
-      <Transition name="slide-up">
+      <Transition name="slide-up" appear>
         <div
           class="mobile-sheet"
           ref="sheetRef"
@@ -23,6 +23,7 @@
           aria-modal="true"
           :aria-label="title"
         >
+          <span class="sheet-grab" aria-hidden="true"></span>
           <div class="sheet-head">
             <h3>{{ title }}</h3>
             <button
@@ -123,7 +124,7 @@ onUnmounted(() => {
   bottom: 0;
   inset-inline: 0;
   background: #ffffff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24px 24px 0 0;
   z-index: 999;
   max-height: 85vh;
   display: flex;
@@ -131,11 +132,20 @@ onUnmounted(() => {
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
 }
 
+.sheet-grab {
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+
 .sheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
+  padding: 10px 20px 14px;
   border-bottom: 1px solid var(--ln);
 }
 
@@ -162,6 +172,7 @@ onUnmounted(() => {
 
 .sheet-actions {
   padding: 16px 20px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--ln);
 }
 

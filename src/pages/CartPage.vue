@@ -209,6 +209,15 @@
       </aside>
     </div>
 
+    <!-- Phone: checkout bar pinned above the tab bar -->
+    <div v-if="cartStore.items.length > 0" class="phone-checkout-bar">
+      <div class="pcb-info">
+        <small>الإجمالي</small>
+        <b>{{ cartStore.total.toLocaleString('en') }} <small>ج.م</small></b>
+      </div>
+      <RouterLink to="/checkout" class="btn pcb-btn">إتمام الشراء</RouterLink>
+    </div>
+
     <!-- Companion Products Row: ممكن تحتاج كمان -->
     <ProductRow title="ممكن تحتاج كمان" :products="companionProducts" />
   </div>
@@ -585,7 +594,7 @@ const companionProducts = computed(() => {
 /* Responsive */
 @media (max-width: 900px) {
   .cart {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .line {
     grid-template-columns: 80px 1fr auto;
@@ -606,4 +615,69 @@ const companionProducts = computed(() => {
     inset-inline-end: 10px;
   }
 }
+
+.phone-checkout-bar {
+  display: none;
+}
+
+/* ---------- Phone: app cart ---------- */
+@media (max-width: 768px) {
+  .cart-page {
+    padding-bottom: 76px;
+  }
+
+  .cart-title {
+    font-size: 21px;
+  }
+
+  .line {
+    border-radius: 18px;
+  }
+
+  .line .im {
+    border-radius: 14px;
+  }
+
+  .phone-checkout-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: fixed;
+    inset-inline: 0;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    z-index: 975;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+  }
+
+  .pcb-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  .pcb-info > small {
+    color: var(--mu);
+    font-size: 12px;
+  }
+
+  .pcb-info b {
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .pcb-info b small {
+    font-size: 12px;
+  }
+
+  .pcb-btn {
+    flex: 1;
+    height: 48px;
+    border-radius: 14px;
+  }
+}
+
 </style>

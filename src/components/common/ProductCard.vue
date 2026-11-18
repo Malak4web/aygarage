@@ -60,8 +60,9 @@
       @click="handleAddToCart"
       :disabled="product.stock === 0"
     >
-      <AppIcon name="cart" :size="16" />
-      <span>{{ product.stock === 0 ? 'غير متوفر' : 'أضف للسلة' }}</span>
+      <AppIcon name="cart" :size="16" class="add-icon-desktop" />
+      <svg class="add-icon-phone" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="add-label">{{ product.stock === 0 ? 'غير متوفر' : 'أضف للسلة' }}</span>
     </button>
   </div>
 </template>
@@ -214,5 +215,120 @@ const handleAddToCart = () => {
 .pc .btn {
   margin-top: auto;
   width: 100%;
+}
+
+.add-icon-phone {
+  display: none;
+}
+
+/* ---------- Phone: compact app card ---------- */
+@media (max-width: 768px) {
+  .pc {
+    padding: 6px 6px 10px;
+    border-radius: 18px;
+    border-color: #efefef;
+  }
+
+  .pc:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .pc:active {
+    transform: scale(0.98);
+  }
+
+  .pc .im {
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+
+  .pc .br,
+  .pc h4,
+  .pc .price,
+  .pc :deep(.rate),
+  .pc :deep(.fit) {
+    padding-inline: 4px;
+  }
+
+  .pc .br {
+    font-size: 11px;
+  }
+
+  .pc h4 {
+    font-size: 13px;
+    line-height: 1.45;
+    min-height: 38px;
+    margin: 1px 0 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .pc .price {
+    margin: 6px 0 0;
+    padding-inline-end: 46px;
+    min-height: 38px;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .pc .price :deep(.price-tag) {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .pc .price :deep(.current-price) {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  .pc .price :deep(.old-price) {
+    font-size: 11.5px;
+    line-height: 1.2;
+  }
+
+  /* Round add button beside the price */
+  .pc .btn {
+    position: absolute;
+    bottom: 10px;
+    inset-inline-end: 8px;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .add-icon-desktop {
+    display: none;
+  }
+
+  .add-icon-phone {
+    display: block;
+  }
+
+  .add-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .pc .fav {
+    width: 30px;
+    height: 30px;
+    top: 6px;
+    inset-inline-end: 6px;
+  }
+
+  .pc .badge {
+    top: 6px;
+    inset-inline-start: 6px;
+    font-size: 11px;
+  }
 }
 </style>
