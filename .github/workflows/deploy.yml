@@ -121,7 +121,9 @@ jobs:
           sshpass -e rsync -az --delete \
             -e "ssh -o StrictHostKeyChecking=no -p $PORT" \
             --exclude='.env' \
-            --exclude='.env.*' \
+            --exclude='.env.local' \
+            --exclude='.env.production' \
+            --exclude='.env.backup' \
             --exclude='node_modules/' \
             --exclude='tests/' \
             --exclude='storage/' \
